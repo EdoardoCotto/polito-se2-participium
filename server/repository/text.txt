@@ -1,0 +1,1 @@
+For every ComponentDAO.js should exixt a ComponentRepository.js that will transform the promise returned from the DAO in a json object

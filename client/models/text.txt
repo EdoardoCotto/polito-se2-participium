@@ -1,0 +1,9 @@
+In the file models.js we wil put only the javascript objects in order to use classes (only the classes, we will not need methods related to them)
+example:
+
+class User{
+    name,
+    surname,
+    username,
+    password
+}

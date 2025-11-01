@@ -1,0 +1,2 @@
+Here we write the css in order to not have css in-line, we use this folder like this:
+If we have a React component called Table.jsx and we need to write some css for this object, we will put a file Table.css here

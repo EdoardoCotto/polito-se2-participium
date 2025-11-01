@@ -1,0 +1,2 @@
+Here we will write all the functions that we need but that are not very related with what we have to do in other parts
+of the code (like algorithms ecc...)

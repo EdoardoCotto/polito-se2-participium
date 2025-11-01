@@ -1,0 +1,1 @@
+Here we will put all the React components (like Header, Footer, Body ecc...) that we will need for our application 
