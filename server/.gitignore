@@ -1,4 +1,6 @@
-# Database files
+
+node_modules/
+
 *.db
 *.sqlite
 *.sqlite3
