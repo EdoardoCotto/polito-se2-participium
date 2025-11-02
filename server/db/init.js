@@ -62,14 +62,6 @@ function initializeDatabase() {
                 reject(err);
                 return;
             }
-            
-            console.log('✅ Database schema created successfully\n');
-            console.log('📊 Database Structure:');
-            console.log('   - Tables: service_types, counters, tickets');
-            console.log('   - Indexes: 8 indexes for performance');
-            console.log('   - Views: active_queue, queue_statistics');
-            console.log('   - Triggers: Auto-update timestamps');
-            console.log('   - Sample Data: 4 service types, 5 counters\n');
 
             // Close database
             db.close((err) => {
