@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS Users;
 CREATE TABLE IF NOT EXISTS Users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   surname TEXT NOT NULL,
   type TEXT NOT NULL,
@@ -19,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Users (
 
 
 -- Sample data (optional - remove if you don't want test data)
-INSERT INTO Users (username, name, surname, type, password, salt) VALUES
-('admin', 'Mario', 'Rossi', 'admin', 'hashed_password_1', 'salt_1'),
-('citizen1', 'Luigi', 'Verdi', 'citizen', 'hashed_password_2', 'salt_2'),
-('citizen2', 'Maria', 'Bianchi', 'citizen', 'hashed_password_3', 'salt_3');
+INSERT INTO Users (username, email, name, surname, type, password, salt) VALUES
+('admin', 'admin@example.org', 'Mario', 'Rossi', 'admin', 'hashed_password_1', 'salt_1'),
+('citizen1', 'citizen1@example.org', 'Luigi', 'Verdi', 'citizen', 'hashed_password_2', 'salt_2'),
+('citizen2', 'citizen2@example.org', 'Maria', 'Bianchi', 'citizen', 'hashed_password_3', 'salt_3');

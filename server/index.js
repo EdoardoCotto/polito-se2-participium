@@ -4,6 +4,7 @@ const passport = require('./utils/passport');
 const { swaggerUi, swaggerSpec } = require('./swagger');
 
 const sessionRoutes = require('./routes/sessionRoutes');
+const userRoutes = require('./routes/userRoutes');
 const app = express();
 
 app.use(express.json());
@@ -21,6 +22,7 @@ app.use(passport.session());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api', sessionRoutes);
+app.use('/api', userRoutes);
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
