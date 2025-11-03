@@ -70,3 +70,44 @@ exports.getUserById = (id) => {
     });
   });
 };
+
+/**
+ * Create a new user (registration)
+ * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string }} newUser
+ * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string }>}
+ */
+exports.createUser = ({ username, email, name, surname, password, type = 'citizen' }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Check username/email uniqueness
+      const existingSql = 'SELECT id FROM Users WHERE username = ? OR email = ?';
+      db.get(existingSql, [username, email], async (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        if (row) {
+          reject(new Error('Username or email already taken'));
+          return;
+        }
+
+        // Hash password with salt
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hash = await bcrypt.hash(password, salt);
+
+        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
+          if (insertErr) {
+            reject(insertErr);
+            return;
+          }
+          resolve({ id: this.lastID, username, email, name, surname, type });
+        });
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
