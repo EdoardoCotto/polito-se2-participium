@@ -7,7 +7,7 @@ exports.getUserById = async (req, res) => {
         res.status(200).json(user)
     }catch(err) {
         if (err instanceof AppError){
-            res.status(err.status).json({error: err.message})
+            res.status(err.statusCode).json({error: err.message})
         }
         else {
             res.status(500).json({error: 'Internal Server Error'})
@@ -21,7 +21,7 @@ exports.getUser = async (req, res) => {
         res.status(200).json(user)
     }catch(err) {
         if (err instanceof AppError){
-            res.status(err.status).json({error: err.message})
+            res.status(err.statusCode).json({error: err.message})
         }
         else {
             res.status(500).json({error: 'Internal Server Error'})
@@ -36,7 +36,7 @@ exports.createUser = async (req, res) => {
     }
     catch(err) {
         if (err instanceof AppError){
-            res.status(err.status).json({error: err.message})
+            res.status(err.statusCode).json({error: err.message})
         }
         else {
             res.status(500).json({error: 'Internal Server Error'})
@@ -51,7 +51,7 @@ exports.createUserIfAdmin = async (req, res) => {
     }
     catch(err) {
         if (err instanceof AppError){
-            res.status(err.status).json({error: err.message})
+            res.status(err.statusCode).json({error: err.message})
         }
         else {
             res.status(500).json({error: 'Internal Server Error'})

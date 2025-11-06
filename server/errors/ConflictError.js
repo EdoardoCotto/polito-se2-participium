@@ -1,8 +1,9 @@
 const AppError = require('./AppError');
 
 class ConflictError extends AppError {
-  constructor(message = 'Resource conflict') {
-    super(message, 409); 
+  constructor(message) {
+    super(message);
+    this.statusCode = 409;
     this.name = 'ConflictError';
   }
 }

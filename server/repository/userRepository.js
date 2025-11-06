@@ -14,7 +14,6 @@ exports.getUserById = async (userId) => {
         return user
     }
     catch(err){
-        console.error('Internal Server Error', err.message);
         throw err;
     }
 }
@@ -29,9 +28,9 @@ exports.getUser = async (username, password) => {
       throw new NotFoundError('Username or password incorrect');
     }
     return user;
-  } catch (err) {
-    console.error('Internal Server Error', err.message);
-    throw err;
+    } 
+    catch (err) {
+        throw err;
   }
 };
 
@@ -40,18 +39,21 @@ exports.createUser = async (user) => {
         if (!user.username || !user.email || !user.name || !user.surname || !user.password) {
             throw new BadRequestError('All fields are required');
         }
-        const existingUser = await userDao.getUserByUsername(user.username)
-        if (!existingUser){
-            await userDao.createUser(user)
+        const existingUsername = await userDao.getUserByUsername(user.username)
+        const existingEmail = await userDao.getUserByEmail(user.email)
+        if (existingUsername) {
+            throw new ConflictError('Username already exists');
         }
-        else {
-            throw new ConflictError('User with that username already exists')
+        if (existingEmail) {
+            throw new ConflictError('Email already exists');
         }
+        const result = await userDao.createUser(user);
+        return result;
     }
     catch (err) {
-    console.error('Internal Server Error', err.message);
-    throw err;
-  }
+        console.error('Error in createUser repository:', err);
+        throw err;
+    }
 }
 
 
@@ -76,7 +78,6 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
         }
     }
     catch (err) {
-        console.error('Internal Server Error', err.message);
         throw err;
   }
 }
