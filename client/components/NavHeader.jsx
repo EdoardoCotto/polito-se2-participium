@@ -18,7 +18,7 @@ function NavHeader(props) {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
         <Navbar.Collapse id="main-navbar-nav" className="justify-content-end">
-          {props.loggedIn ? (
+          {props.loggedIn && props.user ? (
             <Nav className="align-items-center">
               <div className="d-flex align-items-center me-3">
                 {/*<Image

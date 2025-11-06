@@ -141,7 +141,7 @@ export default function RegistrationPage() {
                   <Form.Label>Username</Form.Label>
                   <Form.Control
                     type="text"
-                    name="surname"
+                    name="userName"
                     value={formData.userName}
                     onChange={handleChange}
                     isInvalid={!!errors.userName}

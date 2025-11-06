@@ -5,7 +5,7 @@ import { Outlet} from "react-router";
 function DefaultLayout(props) {
   return (
     <div className="d-flex flex-column min-vh-100 w-100 ">
-      <NavHeader  loggedIn={props.loggedIn} onShowLogin={props.onShowLogin} handleLogout={props.handleLogout}/>
+      <NavHeader  loggedIn={props.loggedIn} user={props.user} onShowLogin={props.onShowLogin} handleLogout={props.handleLogout}/>
       {props.message && <Row>
         <Alert variant={props.message.type} onClose={() => props.setMessage('')} dismissible>
           {props.message.msg}

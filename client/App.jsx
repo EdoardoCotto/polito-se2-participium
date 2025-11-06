@@ -13,6 +13,7 @@ function App() {
     const [loggedIn, setLoggedIn] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [user, setUser] = useState(null);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
   const checkAuth = async () => {
@@ -21,12 +22,15 @@ function App() {
       setLoggedIn(true);
       setUser(user);
     } catch (error) {
+      // User not authenticated, this is expected on first load
       setLoggedIn(false);
       setUser(null);
     }
   };
   checkAuth();
 }, []);
+
+    console.log('App rendering, loggedIn:', loggedIn, 'user:', user);
 
   const handleLogin = async (credentials) => {
     try {
@@ -53,7 +57,7 @@ function App() {
     return (
     <>
     <Routes>
-      <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} onShowLogin={handleShowLogin}/> }>
+      <Route element={ <DefaultLayout loggedIn={loggedIn} user={user} message={message} setMessage={setMessage} handleLogout={handleLogout} onShowLogin={handleShowLogin}/> }>
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
        {

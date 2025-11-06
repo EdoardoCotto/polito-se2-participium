@@ -25,6 +25,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Serve static files
+app.use('/static', express.static('static'));
+
 // 🔹 aggiungi questa riga
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

@@ -1,6 +1,6 @@
-import { useActionState, useState } from "react";
-import { Form, Button, Alert , Image, Modal} from 'react-bootstrap';
-import { useNavigate , Link} from 'react-router';
+import { useState } from "react";
+import { Form, Button, Alert, Modal} from 'react-bootstrap';
+import { Link} from 'react-router';
 // Modal di Login
 function LoginModal(props) {
   const [username, setUsername] = useState('');
@@ -37,12 +37,15 @@ function LoginModal(props) {
             </Modal.Header>
             <Modal.Body>
                 {isPending && <Alert variant="warning">Please, wait for the server's response...</Alert>}
+                {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
                 <Form onSubmit={onSubmit}>
                     <Form.Group controlId='username' className='mb-3'>
                         <Form.Label>Username</Form.Label>
                         <Form.Control 
                             type='text' 
-                            name='username' 
+                            name='username'
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)} 
                             required 
                             placeholder="Insert your username"
                         />
@@ -51,7 +54,9 @@ function LoginModal(props) {
                         <Form.Label>Password</Form.Label>
                         <Form.Control 
                             type='password' 
-                            name='password' 
+                            name='password'
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)} 
                             required 
                             minLength={6}
                             placeholder="Insert your password"
