@@ -43,3 +43,18 @@ exports.createUser = async (req, res) => {
         }
     }
 }
+
+exports.createUserIfAdmin = async (req, res) => {
+    try {
+        await userRepository.createUserIfAdmin(req.params.user)
+        res.status(201).json('User created successfully')
+    }
+    catch(err) {
+        if (err instanceof AppError){
+            res.status(err.status).json({error: err.message})
+        }
+        else {
+            res.status(500).json({error: 'Internal Server Error'})
+        }
+    }
+}
