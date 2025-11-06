@@ -72,6 +72,24 @@ exports.getUserById = (id) => {
 };
 
 /**
+ * Get user by username (usato da passport.deserializeUser)
+ * @param {string} username
+ * @returns {Promise<Object>}
+ */
+exports.getUserByUsername = (username) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT id FROM Users WHERE username = ?';
+    db.get(sql, [username], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(row);
+    });
+  });
+};
+
+/**
  * Create a new user (registration)
  * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string }>}

@@ -1,11 +1,45 @@
 const userRepository = require('../repository/userRepository')
+const AppError = require('../errors/AppError')
 
 exports.getUserById = async (req, res) => {
     try {
         const user = await userRepository.getUserById(req.params.id)
         res.status(200).json(user)
     }catch(err) {
-        console.error('Error in Controller:', err.message);
-        res.status(500).json({ error: err.message });
+        if (err instanceof AppError){
+            res.status(err.status).json({error: err.message})
+        }
+        else {
+            res.status(500).json({error: 'Internal Server Error'})
+        }
+    }
+}
+
+exports.getUser = async (req, res) => {
+    try {
+        const user = await userRepository.getUser(req.params.id, req.params.password)
+        res.status(200).json(user)
+    }catch(err) {
+        if (err instanceof AppError){
+            res.status(err.status).json({error: err.message})
+        }
+        else {
+            res.status(500).json({error: 'Internal Server Error'})
+        }
+    }
+}
+
+exports.createUser = async (req, res) => {
+    try {
+        await userRepository.createUser(req.params.user)
+        res.status(201).json('User created successfully')
+    }
+    catch(err) {
+        if (err instanceof AppError){
+            res.status(err.status).json({error: err.message})
+        }
+        else {
+            res.status(500).json({error: 'Internal Server Error'})
+        }
     }
 }
