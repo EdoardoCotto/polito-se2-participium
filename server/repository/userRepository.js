@@ -37,12 +37,12 @@ exports.getUser = async (username, password) => {
 
 exports.createUser = async (user) => {
     try {
-        if (!user.username || !user.email || !user.name || !user.surname || !user.password || !user.type) {
+        if (!user.username || !user.email || !user.name || !user.surname || !user.password) {
             throw new BadRequestError('All fields are required');
         }
-        const user = await userDao.getUserByUsername(user.username)
-        if (!user){
-            await userDao.createUser(user.username, user.email, user.name, user.surname, user.password, user.type)
+        const existingUser = await userDao.getUserByUsername(user.username)
+        if (!existingUser){
+            await userDao.createUser(user)
         }
         else {
             throw new ConflictError('User with that username already exists')
@@ -57,26 +57,26 @@ exports.createUser = async (user) => {
 
 exports.createUserIfAdmin = async (adminId, userToInsert) => {
     try {
-        const admin = userDao.getUserById(adminId);
+        const admin = await userDao.getUserById(adminId);
         if (!admin) {
             throw new NotFoundError('Admin not found')
         }
-        if (admin.type != 'user'){
+        if (admin.type != 'admin'){
             throw new UnauthorizedError('You are not an admin')
         }
-        if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password || !userToInsert.type) {
+        if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password) {
             throw new BadRequestError('All fields are required');
         }
-        const user = await userDao.getUserByUsername(user.username)
-        if (!user){
-            await userDao.createUser(userToInsert.username, userToInsert.email, userToInsert.name, userToInsert.surname, userToInsert.password, userToInsert.type)
+        const existingUser = await userDao.getUserByUsername(userToInsert.username)
+        if (!existingUser){
+            await userDao.createUser(userToInsert)
         }
         else {
             throw new ConflictError('User with that username already exists')
         }
     }
-     catch (err) {
-    console.error('Internal Server Error', err.message);
-    throw err;
+    catch (err) {
+        console.error('Internal Server Error', err.message);
+        throw err;
   }
 }

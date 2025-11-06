@@ -31,8 +31,8 @@ exports.getUser = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        await userRepository.createUser(req.params.user)
-        res.status(201).json('User created successfully')
+        const created = await userRepository.createUser(req.body)
+        res.status(201).json(created)
     }
     catch(err) {
         if (err instanceof AppError){
@@ -46,8 +46,8 @@ exports.createUser = async (req, res) => {
 
 exports.createUserIfAdmin = async (req, res) => {
     try {
-        await userRepository.createUserIfAdmin(req.params.user)
-        res.status(201).json('User created successfully')
+        const created = await userRepository.createUserIfAdmin(req.params.user)
+        res.status(201).json(created)
     }
     catch(err) {
         if (err instanceof AppError){

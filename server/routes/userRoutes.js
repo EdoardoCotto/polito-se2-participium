@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const userDao = require('../dao/userDao');
+const userController = require('../controller/userController');
 
 /**
  * @swagger
@@ -49,23 +49,7 @@ const userDao = require('../dao/userDao');
  *       409:
  *         description: Username already taken
  */
-router.post('/users', async (req, res) => {
-  const { username, email, name, surname, password } = req.body || {};
-
-  if (!username || !email || !name || !surname || !password) {
-    return res.status(400).json({ error: 'username, email, name, surname and password are required' });
-  }
-
-  try {
-    const created = await userDao.createUser({ username, email, name, surname, password, type: 'citizen' });
-    return res.status(201).json(created);
-  } catch (err) {
-    if (err && err.message && err.message.includes('Username or email')) {
-      return res.status(409).json({ error: 'Username or email already taken' });
-    }
-    return res.status(500).json({ error: 'Failed to register user' });
-  }
-});
+router.post('/users', userController.createUser);
 
 module.exports = router;
 
