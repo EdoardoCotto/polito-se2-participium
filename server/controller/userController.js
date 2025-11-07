@@ -46,7 +46,7 @@ exports.createUser = async (req, res) => {
 
 exports.createUserIfAdmin = async (req, res) => {
     try {
-        const created = await userRepository.createUserIfAdmin(req.params.user)
+        const created = await userRepository.createUserIfAdmin(req.user.id, req.body)
         res.status(201).json(created)
     }
     catch(err) {

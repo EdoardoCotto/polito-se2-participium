@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
+const { isLoggedIn } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -97,7 +98,7 @@ router.post('/users', userController.createUser);
  *       409:
  *         description: Username or email already taken
  */
-router.post('/users/admin', userController.createUserIfAdmin);
+router.post('/users/admin', isLoggedIn ,userController.createUserIfAdmin);
 
 module.exports = router;
 

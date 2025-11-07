@@ -70,12 +70,15 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
             throw new BadRequestError('All fields are required');
         }
         const existingUser = await userDao.getUserByUsername(userToInsert.username)
-        if (!existingUser){
-            await userDao.createUser(userToInsert)
+        const existingEmail =  await userDao.getUserByEmail(userToInsert.email)
+        if (existingUser) {
+            throw new ConflictError('Username already exists');
         }
-        else {
-            throw new ConflictError('User with that username already exists')
-        }
+        if (existingEmail) {
+            throw new ConflictError('Email already exists');
+        }   
+        const result = await userDao.createUser(userToInsert);
+        return result;
     }
     catch (err) {
         throw err;

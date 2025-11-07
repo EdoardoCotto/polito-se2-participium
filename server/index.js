@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('./utils/passport');
+const { errorHandler } = require('./middlewares/errorMiddleware');
 const { swaggerUi, swaggerSpec } = require('./swagger');
 
 const sessionRoutes = require('./routes/sessionRoutes');
@@ -33,6 +34,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api', sessionRoutes);
 app.use('/api', userRoutes);
+
+app.use(errorHandler);
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
