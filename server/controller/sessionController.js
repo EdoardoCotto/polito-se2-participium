@@ -1,36 +1,47 @@
 "use strict";
 const userRepository = require('../repository/userRepository');
-
-const express = require('express');
+const AppError = require('../errors/AppError');
 const passport = require('../utils/passport');
 
 exports.login = async (req, res, next) => {
-    try {
-        const { username, password } = req.body;
-        const user = await userRepository.getUser(username, password);
-        
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            if (err instanceof AppError) {
+                return res.status(err.statusCode).json({ message: err.message });
+            }
+            return next(err);
+        }
+
+        if (!user) {
+            return res.status(401).json({ 
+                message: info?.message || 'Invalid username or password' 
+            });
+        }
+
         req.login(user, (err) => {
             if (err) {
+                if (err instanceof AppError) {
+                    return res.status(err.statusCode).json({ message: err.message });
+                }
                 return next(err);
             }
-            return res.status(200).json({
+            res.status(200).json({
                 id: user.id,
                 username: user.username,
                 name: user.name,
                 surname: user.surname,
-                email: user.email,
-                type: user.type
+                type: user.type,
             });
         });
-    } catch (err) {
-        // Gli errori dal repository vengono passati al middleware di gestione errori
-        next(err);
-    }
-};
+    })(req, res, next);
+}
 
 exports.logout = (req, res, next) => {
     req.logout((err) => {
         if (err) {
+            if (err instanceof AppError) {
+                return res.status(err.statusCode).json({ message: err.message });
+            }
             return next(err);
         }
         res.status(200).json({ message: 'Logged out successfully' });
@@ -48,6 +59,6 @@ exports.getCurrentSession = (req, res) => {
             type: req.user.type
         });
     } else {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ message: 'Not authenticated' });
     }
 };

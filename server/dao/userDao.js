@@ -29,13 +29,13 @@ exports.getUser = (username, password) => {
       }
 
       // Verifica password
-      bcrypt.hash(password, row.salt, (err, hashed) => {
+      bcrypt.compare(password, row.password, (err, isMatch) => {
         if (err) {
           reject(err);
           return;
         }
 
-        if (hashed === row.password) {
+        if (isMatch) {
           // Rimuoviamo password e salt prima di restituire
           const user = {
             id: row.id,

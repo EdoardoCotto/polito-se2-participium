@@ -3,6 +3,7 @@
 const express = require('express');
 const passport = require('../utils/passport');
 const router = express.Router();
+const sessionController = require('../controller/sessionController');
 
 /**
  * @swagger
@@ -51,24 +52,7 @@ const router = express.Router();
  *       401:
  *         description: Invalid username or password
  */
-router.post('/sessions', function (req, res, next) {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);
-    if (!user)
-      return res.status(401).json({ message: info?.message || 'Incorrect username or password' });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(200).json({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        surname: user.surname,
-        type: user.type,
-      });
-    });
-  })(req, res, next);
-});
+router.post('/sessions', sessionController.login);
 
 /**
  * @swagger
@@ -82,12 +66,7 @@ router.post('/sessions', function (req, res, next) {
  *       401:
  *         description: Not authenticated
  */
-router.get('/sessions/current', (req, res) => {
-  if (req.isAuthenticated())
-    res.status(200).json(req.user);
-  else
-    res.status(401).json({ error: 'Not authenticated' });
-});
+router.get('/sessions/current', sessionController.getCurrentSession);
 
 /**
  * @swagger
@@ -99,12 +78,6 @@ router.get('/sessions/current', (req, res) => {
  *       200:
  *         description: User logged out successfully
  */
-router.delete('/sessions/current', (req, res) => {
-  req.logout((err) => {
-    if (err)
-      return res.status(500).json({ error: 'Logout failed' });
-    res.status(200).json({ message: 'Logged out successfully' });
-  });
-});
+router.delete('/sessions/current', sessionController.logout);
 
 module.exports = router;
