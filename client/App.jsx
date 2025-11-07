@@ -1,6 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import { Routes, Route , Navigate} from "react-router";
+import { Routes, Route , Navigate} from "react-router-dom";
 import { useEffect, useState } from "react";
 import DefaultLayout from "./components/DefaultLayout";
 import Body from "./components/Body";

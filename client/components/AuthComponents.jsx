@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Form, Button, Alert, Modal} from 'react-bootstrap';
-import { Link} from 'react-router';
+import { Link} from 'react-router-dom';
 // Modal di Login
 function LoginModal(props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState(null);
-
-  const navigate = useNavigate();
 
   async function onSubmit(e) {
     e.preventDefault();

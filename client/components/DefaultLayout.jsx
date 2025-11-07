@@ -1,7 +1,7 @@
 import {Alert, Row} from "react-bootstrap";
 import NavHeader from "./NavHeader";
 import Footer from "./Footer";
-import { Outlet} from "react-router";
+import { Outlet} from "react-router-dom";
 function DefaultLayout(props) {
   return (
     <div className="d-flex flex-column min-vh-100 w-100 ">
