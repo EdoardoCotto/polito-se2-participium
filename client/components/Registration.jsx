@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import API from '../API/API.js';
 
 export default function RegistrationPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,6 +16,8 @@ export default function RegistrationPage() {
 
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,27 +71,49 @@ export default function RegistrationPage() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length === 0) {
-      setShowSuccess(true);
-      console.log('Dati registrazione:', formData);
-      // Here you can add the logic to send data to the server
+      setIsSubmitting(true);
+      setApiError('');
       
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          firstName: '',
-          lastName: '',
-          userName: '',
-          email: '',
-          password: '',
-          confirmPassword: ''
-        });
-        setShowSuccess(false);
-      }, 2000);
+      try {
+        // Map form data to backend expected format
+        const userData = {
+          username: formData.userName,
+          email: formData.email,
+          name: formData.firstName,
+          surname: formData.lastName,
+          password: formData.password
+        };
+        
+        // Call API to register user
+        await API.register(userData);
+        
+        setShowSuccess(true);
+        console.log('Registration successful:', userData);
+        
+        // Reset form and redirect after successful submission
+        setTimeout(() => {
+          setFormData({
+            firstName: '',
+            lastName: '',
+            userName: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+          });
+          setShowSuccess(false);
+          navigate('/'); // Redirect to home page
+        }, 2000);
+      } catch (error) {
+        console.error('Registration error:', error);
+        setApiError(error.message || 'Registration failed. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       setErrors(newErrors);
     }
@@ -102,7 +129,13 @@ export default function RegistrationPage() {
               
               {showSuccess && (
                 <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible>
-                   Registration successful!
+                   Registration successful! Redirecting...
+                </Alert>
+              )}
+
+              {apiError && (
+                <Alert variant="danger" onClose={() => setApiError('')} dismissible>
+                  {apiError}
                 </Alert>
               )}
 
@@ -200,8 +233,14 @@ export default function RegistrationPage() {
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Button variant="primary" type="submit" className="w-100" size="lg">
-                  Registration
+                <Button 
+                  variant="primary" 
+                  type="submit" 
+                  className="w-100" 
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Registering...' : 'Registration'}
                 </Button>
               </Form>
             </Card.Body>
