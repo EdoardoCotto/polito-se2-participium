@@ -13,8 +13,8 @@ exports.login = async (req, res, next) => {
         }
 
         if (!user) {
-            return res.status(401).json({ 
-                message: info?.message || 'Invalid username or password' 
+            return res.status(401).json({
+                message: info?.message || 'Invalid username or password'
             });
         }
 
@@ -37,6 +37,10 @@ exports.login = async (req, res, next) => {
 }
 
 exports.logout = (req, res, next) => {
+    const isAuth = req.isAuthenticated();
+    if (!isAuth) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
     req.logout((err) => {
         if (err) {
             if (err instanceof AppError) {
@@ -46,6 +50,7 @@ exports.logout = (req, res, next) => {
         }
         res.status(200).json({ message: 'Logged out successfully' });
     });
+
 };
 
 exports.getCurrentSession = (req, res) => {
