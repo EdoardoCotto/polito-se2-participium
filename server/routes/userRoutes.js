@@ -2,7 +2,8 @@
 
 const express = require('express');
 const router = express.Router();
-const userDao = require('../dao/userDao');
+const userController = require('../controller/userController');
+const { isLoggedIn } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -49,23 +50,55 @@ const userDao = require('../dao/userDao');
  *       409:
  *         description: Username already taken
  */
-router.post('/users', async (req, res) => {
-  const { username, email, name, surname, password } = req.body || {};
+router.post('/users', userController.createUser);
 
-  if (!username || !email || !name || !surname || !password) {
-    return res.status(400).json({ error: 'username, email, name, surname and password are required' });
-  }
-
-  try {
-    const created = await userDao.createUser({ username, email, name, surname, password, type: 'citizen' });
-    return res.status(201).json(created);
-  } catch (err) {
-    if (err && err.message && err.message.includes('Username or email')) {
-      return res.status(409).json({ error: 'Username or email already taken' });
-    }
-    return res.status(500).json({ error: 'Failed to register user' });
-  }
-});
+/**
+ * @swagger
+ * /users/admin:
+ *   post:
+ *     summary: Create a new user (admin only)
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, email, name, surname, password, type]
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: newuser
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: newuser@example.com
+ *               name:
+ *                 type: string
+ *                 example: Mario
+ *               surname:
+ *                 type: string
+ *                 example: Rossi
+ *               password:
+ *                 type: string
+ *                 example: securePass123!
+ *               type:
+ *                 type: string
+ *                 enum: [citizen, urban_planner]
+ *                 example: urban_planner
+ *     responses:
+ *       201:
+ *         description: User successfully created by admin
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated or not admin
+ *       409:
+ *         description: Username or email already taken
+ */
+router.post('/users/admin', isLoggedIn ,userController.createUserIfAdmin);
 
 module.exports = router;
 

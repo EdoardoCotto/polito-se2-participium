@@ -29,13 +29,13 @@ exports.getUser = (username, password) => {
       }
 
       // Verifica password
-      bcrypt.hash(password, row.salt, (err, hashed) => {
+      bcrypt.compare(password, row.password, (err, isMatch) => {
         if (err) {
           reject(err);
           return;
         }
 
-        if (hashed === row.password) {
+        if (isMatch) {
           // Rimuoviamo password e salt prima di restituire
           const user = {
             id: row.id,
@@ -72,6 +72,42 @@ exports.getUserById = (id) => {
 };
 
 /**
+ * Get user by username (usato da passport.deserializeUser)
+ * @param {string} username
+ * @returns {Promise<Object>}
+ */
+exports.getUserByUsername = (username) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT id FROM Users WHERE username = ?';
+    db.get(sql, [username], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(row);
+    });
+  });
+};
+
+/**
+ * Get user by email (usato da passport.deserializeUser)
+ * @param {string} email
+ * @returns {Promise<Object>}
+ */
+exports.getUserByEmail = (email) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT id FROM Users WHERE email = ?';
+    db.get(sql, [email], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(row);
+    });
+  });
+};
+
+/**
  * Create a new user (registration)
  * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string }>}
@@ -79,32 +115,20 @@ exports.getUserById = (id) => {
 exports.createUser = ({ username, email, name, surname, password, type = 'citizen' }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Check username/email uniqueness
-      const existingSql = 'SELECT id FROM Users WHERE username = ? OR email = ?';
-      db.get(existingSql, [username, email], async (err, row) => {
-        if (err) {
-          reject(err);
+      // Hash password with salt
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hash = await bcrypt.hash(password, salt);
+
+      const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
+        if (insertErr) {
+          console.error('Error inserting user:', insertErr);
+          reject(insertErr);
           return;
         }
-        if (row) {
-          reject(new Error('Username or email already taken'));
-          return;
-        }
-
-        // Hash password with salt
-        const saltRounds = 10;
-        const salt = await bcrypt.genSalt(saltRounds);
-        const hash = await bcrypt.hash(password, salt);
-
-        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
-          if (insertErr) {
-            reject(insertErr);
-            return;
-          }
-          resolve({ id: this.lastID, username, email, name, surname, type });
-        });
+        resolve({ id: this.lastID, username, email, name, surname, type });
       });
     } catch (e) {
       reject(e);
