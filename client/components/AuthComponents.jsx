@@ -66,7 +66,7 @@ function LoginModal(props) {
                         <Button
                             as={Link}
                             to="/registration"
-                            variant="outline-primary"
+                            variant="warning"
                             className="mb-1"
                             onClick={() => props.onHide?.()}
                         >

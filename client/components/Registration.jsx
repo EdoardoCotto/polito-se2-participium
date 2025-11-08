@@ -120,6 +120,7 @@ export default function RegistrationPage() {
   };
 
   return (
+    <div className="app-root">
     <Container className="py-5">
       <Row className="justify-content-center">
         <Col md={8} lg={6}>
@@ -232,21 +233,33 @@ export default function RegistrationPage() {
                     {errors.confirmPassword}
                   </Form.Control.Feedback>
                 </Form.Group>
-
+                <div className="d-flex align-items-center justify-content-around">
                 <Button 
-                  variant="primary" 
+                  variant="secondary" 
                   type="submit" 
-                  className="w-100" 
+                  className="me-1" 
+                  size="lg"
+                  disabled={isSubmitting}
+                  onClick={() => navigate('/')}
+                >
+                   Cancel
+                </Button>
+                <Button 
+                  variant="warning" 
+                  type="submit" 
+                  className="ml-3" 
                   size="lg"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Registering...' : 'Registration'}
                 </Button>
+                </div>
               </Form>
             </Card.Body>
           </Card>
         </Col>
       </Row>
     </Container>
+    </div>
   );
 }

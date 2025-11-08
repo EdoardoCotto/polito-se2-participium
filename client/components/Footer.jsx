@@ -5,7 +5,7 @@ function Footer() {
                     <div className="col-md-12  text-center pb-2 pt-4">
                         <h4 className="h6">Participium</h4>
                         <p>
-                            Piattaforma dedicata alla partecipazione civica e al coinvolgimento dei cittadini.
+                            Platform dedicated to civic participation and citizen engagement.
                         </p>
                     </div>
                 </div>
