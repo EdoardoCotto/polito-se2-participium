@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import DefaultLayout from "./components/DefaultLayout";
 import Body from "./components/Body";
 import { LoginModal } from "./components/AuthComponents";
-import './App.css'
+import './components/styles/App.css'
 import NotFound from "./components/NotFound";
 import Registration from "./components/Registration.jsx";
 import API from "./API/API.js";

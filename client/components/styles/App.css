@@ -1,0 +1,8 @@
+/* App Root Styles */
+.app-root {
+  background-image: url(http://localhost:3001/static/TurinMap.jpeg);
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+

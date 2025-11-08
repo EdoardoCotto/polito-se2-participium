@@ -2,7 +2,7 @@ import { Image, Row, Button} from "react-bootstrap";
 function Body(props) {
     return (
         <main className="body">
-            <div className="app-root" style={{ backgroundImage: "url(http://localhost:3001/static/TurinMap.jpeg)", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '100vh' }}>
+            <div className="app-root">
             <Row className="mb-5">
                 
             </Row>

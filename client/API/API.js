@@ -107,11 +107,40 @@ const getCurrentUser = async () => {
   }
 };
 
+/**
+ * Create User by Admin
+ * Admin can create users with specific roles (urban_planner, citizen, etc.)
+ * @param {Object} userData - { username, email, name, surname, password, type }
+ * @returns {Promise<Object>} - Created user object
+ */
+const createUserByAdmin = async (userData) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/users/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Important for authentication
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
 const API = {
   register,
   login,
   logout,
   getCurrentUser,
+  createUserByAdmin,
 };
 
 export default API;
