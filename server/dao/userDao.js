@@ -61,7 +61,7 @@ exports.getUser = (username, password) => {
  */
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, name, surname, type FROM Users WHERE id = ?';
+    const sql = 'SELECT id, username, email, name, surname, type FROM Users WHERE id = ?';
     db.get(sql, [id], (err, row) => {
       if (err) {
         reject(err);
@@ -163,3 +163,22 @@ exports.updateUserTypeById = (userId, newType) => {
     });
   });
 };
+
+/**
+ * Return all municipality users (everyone who is NOT citizen or admin).
+ */
+exports.findMunicipalityUsers = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, username, email, name, surname, type
+      FROM Users
+      WHERE type NOT IN ('citizen','admin')
+      ORDER BY surname ASC, name ASC, username ASC
+    `;
+    db.all(sql, [], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows || []);
+    });
+  });
+};
+

@@ -121,3 +121,17 @@ exports.assignUserRole = async (adminId, targetUserId, newType) => {
         throw err;
     }
 }
+
+
+/**
+ * Get all municipality users (admin-only).
+ * Double-checks the acting user is an admin, even if the route is protected.
+ */
+exports.getMunicipalityUsers = async (adminId) => {
+  const admin = await userDao.getUserById(adminId);
+  if (!admin || admin.type !== 'admin') {
+    throw new UnauthorizedError('You are not an admin');
+  }
+  const users = await userDao.findMunicipalityUsers();
+  return users;
+};
