@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
 const { isLoggedIn } = require('../middlewares/authMiddleware');
+const { ALLOWED_ROLES } = require('../constants/roles');
 
 /**
  * @swagger
@@ -99,6 +100,56 @@ router.post('/users', userController.createUser);
  *         description: Username or email already taken
  */
 router.post('/users/admin', isLoggedIn ,userController.createUserIfAdmin);
+
+/**
+ * @swagger
+ * /users/{id}/type:
+ *   put:
+ *     summary: Assign a role to a user (admin only)
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [type]
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [citizen, admin, urban_planner, municipal_public_relations_officer, municipal_administrator, technical_office_staff_member]
+ *                 example: municipal_administrator
+ *     responses:
+ *       200:
+ *         description: Role successfully updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated or not admin
+ *       404:
+ *         description: User not found
+ */
+router.put('/users/:id/type', isLoggedIn, userController.assignUserRole);
+
+/**
+ * @swagger
+ * /users/roles:
+ *   get:
+ *     summary: Get allowed roles
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: List of allowed roles
+ */
+router.get('/users/roles', (_req, res) => res.status(200).json({ roles: ALLOWED_ROLES }));
 
 module.exports = router;
 
