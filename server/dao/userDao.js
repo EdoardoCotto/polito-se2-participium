@@ -2,14 +2,16 @@
 
 const sqlite = require('sqlite3');
 const bcrypt = require('bcrypt');
+const path = require('path');
 const { ALLOWED_ROLES } = require('../constants/roles');
 
-// Connessione al database (usa lo stesso file del vostro progetto)
-const db = new sqlite.Database('db/participium.db', (err) => {
+// Connessione al database
+const dbPath = path.join(__dirname, '..', 'db', 'participium.db');
+const db = new sqlite.Database(dbPath, (err) => {
   if (err) throw err;
 });
 
-/**
+/** 
  * Get user by username (login)
  * @param {string} username - username dell'utente
  * @param {string} password - password in chiaro fornita al login
