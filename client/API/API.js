@@ -152,6 +152,74 @@ const createUserByAdmin = async (userData) => {
   return await response.json();
 };
 
+/**
+ * Assign User Role
+ * Admin can assign/update a user's role/type
+ * Requires admin authentication
+ * @param {number} userId - ID of the user to update
+ * @param {string} type - New role/type to assign (e.g., 'urban_planner', 'citizen', 'admin')
+ * @returns {Promise<Object>} - Updated user object with id and type
+ * @throws {Error} - If assignment fails (validation error, unauthorized, not found, etc.)
+ */
+const assignUserRole = async (userId, type) => {
+  const response = await fetch(`${SERVER_URL}/users/${userId}/type`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ type }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to assign user role');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Allowed Roles
+ * Retrieves the list of allowed roles/types and their metadata
+ * Requires admin authentication
+ * @returns {Promise<Object>} - Object containing roles array and metadata
+ * @returns {Promise<Object.roles>} - Array of allowed role strings
+ * @returns {Promise<Object.metadata>} - Object mapping roles to their display labels
+ * @throws {Error} - If request fails (unauthorized, etc.)
+ */
+const getAllowedRoles = async () => {
+  const response = await fetch(`${SERVER_URL}/users/roles`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get allowed roles');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Municipality Users
+ * Retrieves list of all municipality users (non-citizen, non-admin)
+ * Requires admin authentication
+ * @returns {Promise<Array>} - Array of user objects with municipality roles
+ * @throws {Error} - If request fails (unauthorized, etc.)
+ */
+const getMunicipalityUsers = async () => {
+  const response = await fetch(`${SERVER_URL}/users/municipality`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get municipality users');
+  }
+
+  return await response.json();
+};
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -162,6 +230,9 @@ const API = {
   // User management
   register,
   createUserByAdmin,
+  assignUserRole,
+  getAllowedRoles,
+  getMunicipalityUsers,
 };
 
 export default API;

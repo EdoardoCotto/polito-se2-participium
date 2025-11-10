@@ -9,6 +9,7 @@ import './components/styles/App.css'
 import NotFound from "./components/NotFound";
 import Registration from "./components/Registration.jsx";
 import AdminPage from "./components/AdminPage.jsx";
+import MunicipalityPage from "./components/MunicipalityPage.jsx";
 import API from "./API/API.js";
 function App() {
     const navigate = useNavigate();
@@ -68,6 +69,7 @@ function App() {
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
+       <Route path="/municipality" element={ <MunicipalityPage user={user} /> } />
        {
        <Route path="*" element={ <NotFound /> } />
        }

@@ -8,6 +8,7 @@ function NavHeader(props) {
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm  w-100 ps-4 pe-4">
         <Navbar.Brand as={Link} to="/" className="ps-4 d-flex align-items-center text-decoration-none">
+          {/* Participium Brand */}
           <Image
             src="http://localhost:3001/static/mapIcon.png"
             alt="Map Icon"
@@ -17,6 +18,33 @@ function NavHeader(props) {
             className="me-2"
           />
           <span className="fw-bold text-primary">Participium</span>
+          
+          {/* Vertical Divider */}
+          <div 
+            className="mx-3" 
+            style={{ 
+              width: '2px', 
+              height: '40px', 
+              backgroundColor: '#dee2e6' 
+            }}
+          ></div>
+          
+          {/* Regione Piemonte Logo */}
+          <Image
+            src="http://localhost:3001/static/piemonte-logo.png"
+            alt="Regione Piemonte"
+            height={50}
+            className="me-3"
+            style={{ objectFit: 'contain' }}
+          />
+          
+          {/* Città di Torino Logo */}
+          <Image
+            src="http://localhost:3001/static/torino-clean.png"
+            alt="Città di Torino"
+            height={50}
+            style={{ objectFit: 'contain' }}
+          />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
         <Navbar.Collapse id="main-navbar-nav" className="justify-content-end">

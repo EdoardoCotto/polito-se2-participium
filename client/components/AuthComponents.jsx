@@ -34,10 +34,15 @@ function LoginModal(props) {
       handleClose();
 
       console.log('User after login:', user);
+      
+      // Navigate based on user type
       if (user?.type === 'admin') {
         navigate('/admin');
-      } else {
+      } else if (user?.type === 'citizen') {
         navigate('/');
+      } else {
+        // All other municipality roles go to municipality page
+        navigate('/municipality');
       }
     } catch (err) {
       const msg = err?.response?.data?.message ?? err?.message ?? 'Login failed. Check your credentials.';
