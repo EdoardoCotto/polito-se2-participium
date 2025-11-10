@@ -136,7 +136,7 @@ export default function RegistrationPage() {
 
               {apiError && (
                 <Alert variant="danger" onClose={() => setApiError('')} dismissible>
-                  {apiError}
+                  {typeof apiError === 'string' ? apiError : apiError?.message ?? String(apiError)}
                 </Alert>
               )}
 

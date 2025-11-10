@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { Form, Button, Alert, Modal} from 'react-bootstrap';
-import { Link} from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 // Modal di Login
 function LoginModal(props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Reset error when closing the modal
+  const handleClose = () => {
+    setError(null);
+    props.onHide?.();
+  };
+
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -16,14 +25,23 @@ function LoginModal(props) {
     const credentials = { username, password };
 
     try {
-      // props.handleLogin deve essere una funzione async che lancia in caso di errore
-      await props.handleLogin(credentials);
+      const user = await props.handleLogin?.(credentials);
+      // success
       setUsername('');
       setPassword('');
-      props.onHide?.();
+      setIsPending(false);
+      props.setMessage?.({ type: 'success', msg: 'Login effettuato' });
+      handleClose();
+
+      console.log('User after login:', user);
+      if (user?.type === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
-      setError(err?.message || 'Login failed. Check your credentials.');
-    } finally {
+      const msg = err?.response?.data?.message ?? err?.message ?? 'Login failed. Check your credentials.';
+      setError(msg);
       setIsPending(false);
     }
   }
@@ -35,7 +53,11 @@ function LoginModal(props) {
             </Modal.Header>
             <Modal.Body>
                 {isPending && <Alert variant="warning">Please, wait for the server's response...</Alert>}
-                {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+                {error && (
+                  <Alert variant="danger" dismissible onClose={() => setError(null)}>
+                    {typeof error === 'string' ? error : error?.message ?? String(error)}
+                  </Alert>
+                )}
                 <Form onSubmit={onSubmit}>
                     <Form.Group controlId='username' className='mb-3'>
                         <Form.Label>Username</Form.Label>
