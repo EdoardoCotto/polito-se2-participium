@@ -3,6 +3,7 @@
 
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Reports;
 
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
@@ -16,6 +17,15 @@ CREATE TABLE IF NOT EXISTS Users (
   salt TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Reports table
+CREATE TABLE IF NOT EXISTS Reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  latitude REAL NOT NULL,
+  longitude REAL NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DFATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 
