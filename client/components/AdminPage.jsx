@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Button, Modal, Form, Row, Col,  Alert } from 'react-bootstrap';
+import { useState, useEffect } from 'react';
+import { Button, Modal, Form, Row, Col,  Alert , Card, Table} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import API from '../API/API.js';
 
@@ -19,6 +19,48 @@ export default function MapPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // State for users table
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [usersError, setUsersError] = useState('');
+
+  // Available roles
+  const availableRoles = ['admin', 'urban_planner', 'citizen'];
+
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    setUsersError('');
+    try {
+      // Replace with your actual API endpoint
+      //const fetchedUsers = await API.getAllUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      setUsersError(err?.message || 'Failed to load users');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      // Replace with your actual API endpoint
+      //await API.updateUserRole(userId, newRole);
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, type: newRole } : user
+        )
+      );
+    } catch (err) {
+      setUsersError(err?.message || 'Failed to update role');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,7 +100,7 @@ export default function MapPage() {
         surname: formData.lastName,
         password: formData.password
       };
-      await API.register(userData);
+      await API.createUserByAdmin(userData);
       setShowSuccess(true);
       // reset form after success and navigate home after brief delay
       setTimeout(() => {
@@ -100,6 +142,69 @@ export default function MapPage() {
         </div>
       </div>
 
+      {/* Users Table Card - Centered */}
+      <div className="d-flex justify-content-center align-items-center flex-grow-1 p-4">
+        <Card style={{ width: '60%', maxWidth: '1200px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+          <Card.Header as="h4" className="bg-primary text-white">
+            Users Management
+          </Card.Header>
+          <Card.Body>
+            {usersError && (
+              <Alert variant="danger" dismissible onClose={() => setUsersError('')}>
+                {usersError}
+              </Alert>
+            )}
+            
+            {isLoadingUsers ? (
+              <div className="text-center p-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : users.length === 0 ? (
+              <Alert variant="info">No users found</Alert>
+            ) : (
+              <Table striped bordered hover responsive>
+                <thead className="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Surname</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id}>
+                      <td>{user.name}</td>
+                      <td>{user.surname}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <Dropdown>
+                          <Dropdown.Toggle variant="outline-secondary" size="sm">
+                            {user.type || 'Select Role'}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            {availableRoles.map((role) => (
+                              <Dropdown.Item
+                                key={role}
+                                active={user.type === role}
+                                onClick={() => handleRoleChange(user.id, role)}
+                              >
+                                {role}
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </Card.Body>
+        </Card>
+      </div>
 
       {/* Registration modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
