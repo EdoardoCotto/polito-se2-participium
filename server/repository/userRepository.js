@@ -3,6 +3,7 @@ const NotFoundError = require('../errors/NotFoundError')
 const ConflictError = require('../errors/ConflictError')
 const BadRequestError = require('../errors/BadRequestError')
 const UnauthorizedError = require('../errors/UnauthorizedError')
+const { ALLOWED_ROLES } = require('../constants/roles')
 
 
 exports.getUserById = async (userId) => {
@@ -85,3 +86,53 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
         throw err;
   }
 }
+
+/**
+ * Assign a role/type to a user (admin only)
+ * @param {number} adminId - acting admin user id
+ * @param {number} targetUserId - user to update
+ * @param {string} newType - new role (validated)
+ * @returns {Promise<{id:number, type:string}>}
+ */
+exports.assignUserRole = async (adminId, targetUserId, newType) => {
+    try {
+        const admin = await userDao.getUserById(adminId);
+        if (!admin) {
+            throw new NotFoundError('Admin not found')
+        }
+        if (admin.type != 'admin'){
+            throw new UnauthorizedError('You are not an admin')
+        }
+        if (!newType){
+            throw new BadRequestError('Role is required');
+        }
+        if (!ALLOWED_ROLES.includes(newType)){
+            throw new BadRequestError('Invalid role');
+        }
+        const target = await userDao.getUserById(targetUserId);
+        if (!target){
+            throw new NotFoundError('User not found');
+        }
+        const updated = await userDao.updateUserTypeById(targetUserId, newType);
+        if (!updated){
+            throw new NotFoundError('User not found');
+        }
+        return updated;
+    } catch (err){
+        throw err;
+    }
+}
+
+
+/**
+ * Get all municipality users (admin-only).
+ * Double-checks the acting user is an admin, even if the route is protected.
+ */
+exports.getMunicipalityUsers = async (adminId) => {
+  const admin = await userDao.getUserById(adminId);
+  if (!admin || admin.type !== 'admin') {
+    throw new UnauthorizedError('You are not an admin');
+  }
+  const users = await userDao.findMunicipalityUsers();
+  return users;
+};

@@ -29,7 +29,7 @@ const saltRounds = 10;
 
     db.run(
       `INSERT INTO Users (username, email, name, surname, type, password, salt)
-       VALUES (?, ?, ?, ?, 'citizen', ?, ?)`,
+       VALUES (?, ?, ?, ?, 'admin', ?, ?)`,
       [c.username, c.email, c.name, c.surname, hash, salt],
       (err) => {
         if (err) console.error(`Errore inserendo ${c.username}:`, err.message);
