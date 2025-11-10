@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Modal, Form, Row, Col,  Alert , Card, Table} from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Alert, Card, Table, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import API from '../API/API.js';
 
@@ -26,34 +26,43 @@ export default function MapPage() {
   const [usersError, setUsersError] = useState('');
 
   // Available roles
-  const availableRoles = ['admin', 'urban_planner', 'citizen'];
+  const [availableRoles, setAvailableRoles] = useState([]);
 
-  // Fetch users on component mount
+  // Fetch users and roles on component mount
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     setUsersError('');
     try {
-      // Replace with your actual API endpoint
-      //const fetchedUsers = await API.getAllUsers();
-      setUsers(fetchedUsers);
+      const fetchedUsers = await API.getMunicipalityUsers();
+      setUsers(Array.isArray(fetchedUsers) ? fetchedUsers : []);
     } catch (err) {
       setUsersError(err?.message || 'Failed to load users');
+      setUsers([]);
     } finally {
       setIsLoadingUsers(false);
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const rolesData = await API.getAllowedRoles();
+      setAvailableRoles(rolesData.roles || []);
+    } catch (err) {
+      console.error('Failed to fetch roles:', err);
+      setAvailableRoles(['admin', 'urban_planner', 'citizen']);
+    }
+  };
+
   const handleRoleChange = async (userId, newRole) => {
     try {
-      // Replace with your actual API endpoint
-      //await API.updateUserRole(userId, newRole);
-      // Update local state
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
+      await API.assignUserRole(userId, newRole);
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
           user.id === userId ? { ...user, type: newRole } : user
         )
       );
@@ -102,7 +111,7 @@ export default function MapPage() {
       };
       await API.createUserByAdmin(userData);
       setShowSuccess(true);
-      // reset form after success and navigate home after brief delay
+      await fetchUsers(); // Refresh users list
       setTimeout(() => {
         setFormData({
           firstName: '',
@@ -123,17 +132,17 @@ export default function MapPage() {
   };
 
   return (
-     <div className="app-root d-flex flex-column">
+    <div className="app-root d-flex flex-column min-vh-100">
       <div className="position-relative w-100">
         {/* top-right button */}
-        <div className="position-absolute top-0 end-0 m-3 ">
-          <Button 
-            variant="primary" 
+        <div className="position-absolute top-0 end-0 m-3">
+          <Button
+            variant="primary"
             size="lg"
             onClick={() => setShowModal(true)}
             style={{
               fontWeight: 'bold',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.3)',
               border: '2px solid #0d6efd'
             }}
           >
@@ -143,18 +152,28 @@ export default function MapPage() {
       </div>
 
       {/* Users Table Card - Centered */}
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 p-4">
-        <Card style={{ width: '60%', maxWidth: '1200px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+      <div className="d-flex justify-content-center align-items-start flex-grow-1 p-4 mt-5">
+        <Card style={{ 
+          width: '50%', 
+          maxWidth: '75rem', 
+          boxShadow: '0 0.25rem 0.75rem rgba(0,0,0,0.15)', 
+          minHeight: '70vh',
+          overflow: 'visible' // Leave space for dropdowns
+        }}>
           <Card.Header as="h4" className="bg-primary text-white">
             Users Management
           </Card.Header>
-          <Card.Body>
+          <Card.Body style={{ 
+            minHeight: '50vh', 
+            paddingBottom: '1rem',
+            overflow: 'visible' // Leave space for dropdowns
+          }}>
             {usersError && (
               <Alert variant="danger" dismissible onClose={() => setUsersError('')}>
                 {usersError}
               </Alert>
             )}
-            
+
             {isLoadingUsers ? (
               <div className="text-center p-4">
                 <div className="spinner-border text-primary" role="status">
@@ -164,43 +183,57 @@ export default function MapPage() {
             ) : users.length === 0 ? (
               <Alert variant="info">No users found</Alert>
             ) : (
-              <Table striped bordered hover responsive>
-                <thead className="table-light">
-                  <tr>
-                    <th>Name</th>
-                    <th>Surname</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.name}</td>
-                      <td>{user.surname}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <Dropdown>
-                          <Dropdown.Toggle variant="outline-secondary" size="sm">
-                            {user.type || 'Select Role'}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            {availableRoles.map((role) => (
-                              <Dropdown.Item
-                                key={role}
-                                active={user.type === role}
-                                onClick={() => handleRoleChange(user.id, role)}
-                              >
-                                {role}
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
+              <div style={{ overflow: 'visible' }}>
+                <Table striped bordered hover>
+                  <thead className="table-light">
+                    <tr>
+                      <th>Name</th>
+                      <th>Surname</th>
+                      <th>Email</th>
+                      <th>Role</th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.surname}</td>
+                        <td>{user.email}</td>
+                        <td>
+                          <Dropdown>
+                            <Dropdown.Toggle
+                              variant="outline-secondary"
+                              size="lg"
+                              style={{
+                                minWidth: '8rem',
+                                fontSize: '1rem'
+                              }}
+                            >
+                              {user.type || 'Select Role'}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu
+                              style={{
+                                minWidth: '8rem'
+                              }}
+                            >
+                              {availableRoles.map((role) => (
+                                <Dropdown.Item
+                                  key={role}
+                                  active={user.type === role}
+                                  onClick={() => handleRoleChange(user.id, role)}
+                                  style={{ padding: '0.2rem 0.2rem' }}
+                                >
+                                  {role}
+                                </Dropdown.Item>
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
             )}
           </Card.Body>
         </Card>
@@ -213,11 +246,11 @@ export default function MapPage() {
             <Modal.Title>Registration</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            {showSuccess && <Alert variant="success">Registration successful! Redirecting...</Alert>}
+            {showSuccess && <Alert variant="success">Registration successful!</Alert>}
             {apiError && (
-            <Alert variant="danger" onClose={() => setApiError('')} dismissible>
+              <Alert variant="danger" onClose={() => setApiError('')} dismissible>
                 {typeof apiError === 'string' ? apiError : apiError?.message ?? String(apiError)}
-            </Alert>
+              </Alert>
             )}
             <Row>
               <Col md={6}>
@@ -312,7 +345,7 @@ export default function MapPage() {
               <Button variant="secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Close</Button>
             </div>
             <div>
-              <Button variant="warning" type="submit" disabled={isSubmitting} className="me-2">
+              <Button variant="primary" type="submit" disabled={isSubmitting} className="me-2">
                 {isSubmitting ? 'Registering...' : 'Register'}
               </Button>
             </div>
