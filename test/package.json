@@ -10,13 +10,19 @@
     "rootDir": "..",
     "roots": ["<rootDir>/test"],
     "testEnvironment": "node",
+    "moduleDirectories": [
+      "node_modules",
+      "<rootDir>/server/node_modules"
+    ],
     "coverageProvider": "v8",
     "collectCoverage": true,
     "collectCoverageFrom": [
       "<rootDir>/server/controller/**/*.js",
       "<rootDir>/server/repository/**/*.js",
       "<rootDir>/server/utils/**/*.js",
-      "<rootDir>/server/routes/**/*.js"
+      "<rootDir>/server/routes/**/*.js",
+      "<rootDir>/server/middlewares/**/*.js",
+      "<rootDir>/server/dao/**/*.js"
     ],
     "coverageReporters": ["text", "text-summary"],
     "coverageDirectory": "/tmp/jest-coverage"
