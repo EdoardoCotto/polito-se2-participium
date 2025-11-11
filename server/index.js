@@ -7,6 +7,7 @@ const { swaggerUi, swaggerSpec } = require('./swagger');
 
 const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
+const reportRoutes = require('./routes/reportRoutes')
 const app = express();
 
 // CORS configuration - allow requests from frontend
@@ -34,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api', sessionRoutes);
 app.use('/api', userRoutes);
+app.use('/api', reportRoutes);
 
 app.use(errorHandler);
 
