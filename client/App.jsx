@@ -56,7 +56,7 @@ function App() {
       setLoggedIn(true);
       setUser(user);
       return user;
-    }catch(err) {
+    } catch(err) {
       const text = err?.message ?? String(err);
       setMessage({ msg: text, type: 'danger' });
       throw err;

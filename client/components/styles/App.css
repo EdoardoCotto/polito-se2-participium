@@ -1,8 +1,228 @@
 /* App Root Styles */
 .app-root {
-  background-image: url(http://localhost:3001/static/TurinMap.jpeg);
+  background-image: url(http://localhost:3001/static/gps-map-background.jpg);
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
+}
+
+/* Quick Actions Card Styles */
+.action-card .citizen-card-body {
+  padding: 1rem;
+}
+
+.card-description {
+  color: #495057;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(23, 162, 184, 0.03) 100%);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border-left: 3px solid #17a2b8;
+}
+
+.action-button {
+  border-radius: 10px;
+  font-weight: 700;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.2px;
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.action-button:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-primary.action-button {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-primary.action-button:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(13, 110, 253, 0.4);
+}
+
+.btn-outline-primary.action-button {
+  border: 2px solid #0d6efd;
+  color: #0d6efd;
+  background: rgba(13, 110, 253, 0.02);
+}
+
+.btn-outline-primary.action-button:hover {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.25);
+}
+
+.btn-outline-secondary.action-button {
+  border: 2px solid #6c757d;
+  color: #6c757d;
+  background: rgba(108, 117, 125, 0.02);
+}
+
+.btn-outline-secondary.action-button:hover {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+}
+
+.action-button i {
+  font-size: 1rem;
+  vertical-align: -0.15em;
+}
+
+/* Your Activity Statistics Styles */
+.stat-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #0d6efd, #17a2b8);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.stat-item:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+  border-color: #0d6efd;
+  transform: translateX(6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-item:hover::before {
+  transform: scaleY(1);
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1.1rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover .stat-icon {
+  transform: scale(1.08) rotate(5deg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon.bg-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+}
+
+.stat-icon.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.stat-icon.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 0.15rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #212529;
+  line-height: 1;
+  letter-spacing: -0.3px;
+}
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
+
+.leaflet-tile-pane {
+  z-index: 200;
+}
+
+.leaflet-overlay-pane {
+  z-index: 400;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500;
+}
+
+.leaflet-marker-pane {
+  z-index: 600;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 650;
+}
+
+.leaflet-popup-pane {
+  z-index: 700;
 }
 

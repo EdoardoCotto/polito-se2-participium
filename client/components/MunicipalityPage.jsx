@@ -1,4 +1,6 @@
-import { Container, Card, Image } from 'react-bootstrap';
+import { Container, Card } from 'react-bootstrap';
+import TurinMap from './TurinMap';
+import MapErrorBoundary from './MapErrorBoundary';
 
 export default function MunicipalityPage({ user }) {
   
@@ -42,15 +44,9 @@ export default function MunicipalityPage({ user }) {
             <h4 className="mb-0">Turin Municipality Map</h4>
           </Card.Header>
           <Card.Body className="p-0 position-relative">
-            <div className="w-100 h-100 d-flex justify-content-center align-items-center" style={{ minHeight: '500px' }}>
-              <Image
-                src="http://localhost:3001/static/TurinMap.jpeg"
-                alt="Turin Map"
-                fluid
-                className="w-100 h-100"
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
+            <MapErrorBoundary>
+              <TurinMap height="500px" />
+            </MapErrorBoundary>
           </Card.Body>
         </Card>
       </Container>
