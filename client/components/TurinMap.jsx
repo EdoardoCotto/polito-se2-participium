@@ -16,7 +16,7 @@ if (typeof window !== 'undefined') {
 
 
 // Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds}) {
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected}) {
    const isPointInsideBoundary = (lat, lng) => {
     if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
     
@@ -57,8 +57,11 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds}) {
         position: [e.latlng.lat, e.latlng.lng],
         timestamp: new Date().toLocaleString()
       };
-      setMarkers([...markers, newMarker]);
-    },
+      setMarkers([newMarker]);
+      if (typeof onLocationSelected === 'function') {
+        onLocationSelected({ lat, lng });
+      }
+      },
   });
   // Cleanup markers that are no longer in state
   useEffect(() => {
@@ -79,12 +82,30 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds}) {
   return (
     <>
       {markers.map((marker) => (
-        <Marker key={marker.id} position={marker.position}
-        eventHandlers={{
-            dblclick: () => {
-              handleRemoveMarker(marker.id);
+       <Marker
+          key={marker.id}
+          position={marker.position}
+          draggable={true}
+          eventHandlers={{
+            dblclick: () => handleRemoveMarker(marker.id),
+            dragend: (e) => {
+              const { lat, lng } = e.target.getLatLng();
+
+              // aggiorna localmente
+              setMarkers([{
+                id: marker.id,
+                position: [lat, lng],
+                timestamp: new Date().toLocaleString()
+              }]);
+
+              // aggiorna il parent (CitizenPage)
+              if (onLocationSelected) {
+                onLocationSelected({ lat, lng });
+              }
             }
-          }}>
+          }}
+        >
+
           <Popup>
             <div>
               <strong>New Marker</strong>
@@ -106,7 +127,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds}) {
   );
 }
 
-export default function TurinMap({ height = '500px' }) {
+export default function TurinMap({ onLocationSelected, height = '500px' }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -115,6 +136,8 @@ export default function TurinMap({ height = '500px' }) {
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [geoJsonError, setGeoJsonError] = useState(false);
   const [showOutOfBoundsAlert, setShowOutOfBoundsAlert] = useState(false);
+
+  
   
   useEffect(() => {
     setMapKey(1);
@@ -221,7 +244,8 @@ export default function TurinMap({ height = '500px' }) {
           </div>
         )}
         <LocationMarker markers={markers} setMarkers={setMarkers} geoJsonData={geoJsonData}
-          onOutOfBounds={handleOutOfBounds}/>
+          onOutOfBounds={handleOutOfBounds}
+          onLocationSelected={onLocationSelected} />
       </MapContainer>
     </div>
   );

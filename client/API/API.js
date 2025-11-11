@@ -220,6 +220,21 @@ const getMunicipalityUsers = async () => {
   return await response.json();
 };
 
+
+
+async function createReport({ title, description, latitude, longitude }) {
+  const response = await fetch(`${SERVER_URL}/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ title, description, latitude, longitude })
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Impossibile creare il report');
+  }
+  return await response.json();
+}
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -233,6 +248,8 @@ const API = {
   assignUserRole,
   getAllowedRoles,
   getMunicipalityUsers,
+  // Report management
+  createReport,
 };
 
 export default API;

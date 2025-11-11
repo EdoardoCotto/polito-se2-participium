@@ -1,97 +1,114 @@
-import { Container, Card, Row, Col, Button, Badge } from 'react-bootstrap';
+// components/CitizenPage.jsx
+import { Container, Card, Row, Col, Button, Form, Alert } from 'react-bootstrap';
+import { useState } from 'react';
 import TurinMap from './TurinMap';
-import MapErrorBoundary from './MapErrorBoundary';
 
 export default function CitizenPage({ user }) {
-  
+  const [selectedLocation, setSelectedLocation] = useState(null); // {lat, lng}
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitOk, setSubmitOk] = useState('');
+
+  const handleCreateReport = async () => {
+    setSubmitError('');
+    setSubmitOk('');
+
+    if (!selectedLocation) {
+      setSubmitError('Please select a point on the map within the city boundaries.');
+      return;
+    }
+    if (!title.trim()) {
+      setSubmitError('Please enter a title.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const { createReport } = (await import('../API/API.js')).default;
+
+      await createReport({
+        title: title.trim(),
+        description: description.trim(),
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng,
+      });
+
+      setSubmitOk('Report created successfully!');
+      setTitle('');
+      setDescription('');
+      // Optional: clear location after submission
+      // setSelectedLocation(null);
+    } catch (err) {
+      setSubmitError(err.message || 'An error occurred while creating the report.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
-
-      {/* Main Content */}
       <Container className="flex-grow-1 py-4">
         <Row className="g-4">
-          {/* Map Section */}
+          {/* Map */}
           <Col lg={8}>
             <Card className="citizen-card map-card shadow h-100">
               <Card.Header className="citizen-card-header">
-                <div className="d-flex align-items-center justify-content-between">
-                  <h4 className="mb-0">
-                    <i className="bi bi-map me-2"></i>
-                    Turin City Map
-                  </h4>
-                  <Badge bg="light" text="dark" className="map-badge">
-                    Interactive
-                  </Badge>
-                </div>
+                <Card.Title className="mb-0">Select a location on the map</Card.Title>
               </Card.Header>
-              <Card.Body className="p-0 position-relative">
-                <MapErrorBoundary>
-                  <TurinMap height="500px" />
-                </MapErrorBoundary>
+              <Card.Body className="p-0">
+                <TurinMap onLocationSelected={setSelectedLocation} />
               </Card.Body>
             </Card>
           </Col>
 
-          {/* Sidebar */}
+          {/* Report panel */}
           <Col lg={4}>
-            {/* Quick Actions Card */}
-            <Card className="citizen-card action-card shadow mb-3">
-              <Card.Header className="citizen-card-header bg-gradient-primary">
-                <h5 className="mb-0">
-                  <i className="bi bi-lightning-charge-fill me-2"></i>
-                  Quick Actions
-                </h5>
+            <Card className="shadow h-100">
+              <Card.Header>
+                <Card.Title className="mb-0">Create Report</Card.Title>
               </Card.Header>
-              <Card.Body className="citizen-card-body">
-                <p className="card-description mb-3">
-                  <i className="bi bi-info-circle-fill me-2 text-primary"></i>
-                  Participate in civic engagement initiatives and contribute to your community.
-                </p>
-                <div className="d-grid gap-3">
-                  <Button variant="primary" size="lg" className="action-button">
-                    <i className="bi bi-plus-circle-fill me-2"></i>
-                    Report an Issue
-                  </Button>
-                  <Button variant="outline-primary" size="lg" className="action-button">
-                    <i className="bi bi-list-ul me-2"></i>
-                    View My Reports
-                  </Button>
-                  <Button variant="outline-secondary" size="lg" className="action-button">
-                    <i className="bi bi-bell me-2"></i>
-                    Notifications
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
+              <Card.Body>
+                {submitError && <Alert variant="danger">{submitError}</Alert>}
+                {submitOk && <Alert variant="success">{submitOk}</Alert>}
 
-            {/* Statistics Card */}
-            <Card className="citizen-card stats-card shadow">
-              <Card.Header className="citizen-card-header bg-gradient-success">
-                <h5 className="mb-0">
-                  <i className="bi bi-graph-up-arrow me-2"></i>
-                  Your Activity
-                </h5>
-              </Card.Header>
-              <Card.Body className="citizen-card-body">
-                <div className="stat-item">
-                  <div className="stat-icon bg-primary">
-                    <i className="bi bi-file-text"></i>
-                  </div>
-                  <div className="stat-content">
-                    <span className="stat-label">Reports Submitted</span>
-                    <span className="stat-value">0</span>
-                  </div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-icon bg-success">
-                    <i className="bi bi-check-circle"></i>
-                  </div>
-                  <div className="stat-content">
-                    <span className="stat-label">Reports Resolved</span>
-                    <span className="stat-value">0</span>
-                  </div>
-                </div>
+                <Form className="mb-3">
+                  <Form.Group className="mb-2">
+                    <Form.Label>Title</Form.Label>
+                    <Form.Control
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Pothole on the asphalt in Via ..."
+                    />
+                  </Form.Group>
 
+                  <Form.Group className="mb-2">
+                    <Form.Label>Description (optional)</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Additional details for the municipality..."
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-2">
+                    <Form.Label>Location</Form.Label>
+                    <div className="text-muted">
+                      {selectedLocation
+                        ? <>Lat: {selectedLocation.lat.toFixed(5)} — Lon: {selectedLocation.lng.toFixed(5)}</>
+                        : <>No location selected</>}
+                    </div>
+                  </Form.Group>
+                </Form>
+
+                <div className="d-flex gap-2">
+                  <Button disabled={submitting} onClick={handleCreateReport}>
+                    {submitting ? 'Submitting...' : 'Submit Report'}
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
           </Col>
@@ -100,4 +117,3 @@ export default function CitizenPage({ user }) {
     </div>
   );
 }
-
