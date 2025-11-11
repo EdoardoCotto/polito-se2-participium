@@ -10,6 +10,7 @@ import NotFound from "./components/NotFound";
 import Registration from "./components/Registration.jsx";
 import AdminPage from "./components/AdminPage.jsx";
 import MunicipalityPage from "./components/MunicipalityPage.jsx";
+import CitizenPage from "./components/CitizenPage.jsx";
 import API from "./API/API.js";
 function App() {
     const navigate = useNavigate();
@@ -25,6 +26,19 @@ function App() {
       const user = await API.getCurrentUser();
       setLoggedIn(true);
       setUser(user);
+      
+      // Auto-redirect based on user type if on home page
+      const currentPath = window.location.pathname;
+      if (currentPath === '/') {
+        if (user?.type === 'admin') {
+          navigate('/admin');
+        } else if (user?.type === 'citizen') {
+          navigate('/citizen');
+        } else if (user?.type) {
+          // All other municipality roles
+          navigate('/municipality');
+        }
+      }
     } catch (error) {
       // User not authenticated, this is expected on first load
       setLoggedIn(false);
@@ -32,7 +46,7 @@ function App() {
     }
   };
   checkAuth();
-}, []);
+}, [navigate]);
 
     console.log('App rendering 1, loggedIn:', loggedIn, 'user:', user);
 
@@ -70,6 +84,7 @@ function App() {
        <Route path="/registration" element={ <Registration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
        <Route path="/municipality" element={ <MunicipalityPage user={user} /> } />
+       <Route path="/citizen" element={ <CitizenPage user={user} /> } />
        {
        <Route path="*" element={ <NotFound /> } />
        }
@@ -80,6 +95,7 @@ function App() {
         show={showLoginModal}
         onHide={handleHideLogin}
         handleLogin={handleLogin}
+        setMessage={setMessage}
         user={user}/>
     </>
   )

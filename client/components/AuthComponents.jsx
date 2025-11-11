@@ -39,7 +39,7 @@ function LoginModal(props) {
       if (user?.type === 'admin') {
         navigate('/admin');
       } else if (user?.type === 'citizen') {
-        navigate('/');
+        navigate('/citizen');
       } else {
         // All other municipality roles go to municipality page
         navigate('/municipality');
