@@ -4,7 +4,22 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "jest --runInBand --coverage"
+  },
+  "jest": {
+    "rootDir": "..",
+    "roots": ["<rootDir>/test"],
+    "testEnvironment": "node",
+    "coverageProvider": "v8",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "<rootDir>/server/controller/**/*.js",
+      "<rootDir>/server/repository/**/*.js",
+      "<rootDir>/server/utils/**/*.js",
+      "<rootDir>/server/routes/**/*.js"
+    ],
+    "coverageReporters": ["text", "text-summary"],
+    "coverageDirectory": "/tmp/jest-coverage"
   },
   "keywords": [],
   "author": "",

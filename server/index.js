@@ -37,5 +37,8 @@ app.use('/api', userRoutes);
 
 app.use(errorHandler);
 
-const PORT = 3001;
-app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+const PORT = process.env.PORT || 3001;
+if (require.main === module && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+}
+module.exports = app;
