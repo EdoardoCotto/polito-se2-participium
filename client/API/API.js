@@ -251,6 +251,23 @@ async function createReport({ title, description, category, latitude, longitude,
   }
   return await response.json();
 }
+
+/**
+ * Get Report Categories
+ * Fetches the list of report categories from the server
+ * @returns {Promise<Array>} - Array of report categories
+ */
+async function getCategories() {
+  const response = await fetch(`${SERVER_URL}/categories`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get categories');
+  }
+  return await response.json();
+}
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -264,8 +281,12 @@ const API = {
   assignUserRole,
   getAllowedRoles,
   getMunicipalityUsers,
+
   // Report management
   createReport,
+
+  // Constants
+  getCategories,
 };
 
 export default API;
