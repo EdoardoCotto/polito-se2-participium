@@ -5,10 +5,7 @@
 // and adds granular technical roles for realistic municipality scenarios.
 
 const ALLOWED_ROLES = [
-  // base roles
-  'citizen',
-  'admin',
-
+ 
   // non-technical municipality roles
   'municipal_public_relations_officer',
   'municipal_administrator',
@@ -28,8 +25,8 @@ const ALLOWED_ROLES = [
 
 // Optional but recommended: metadata for UI labels and future extensions.
 const ROLE_METADATA = {
-  citizen: { label: 'Citizen' },
-  admin: { label: 'System Administrator' },
+ 
+
 
   municipal_public_relations_officer: { label: 'Public Relations (URP)' },
   municipal_administrator: { label: 'Municipal Administrator' },
