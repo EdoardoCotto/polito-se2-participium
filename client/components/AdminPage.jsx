@@ -162,8 +162,7 @@ export default function MapPage() {
           boxShadow: '0 0.5rem 1.5rem rgba(0,0,0,0.2)', 
           minHeight: '70vh',
           overflow: 'visible',
-          borderRadius: '1rem',
-          border: 'none'
+
         }}>
           <Card.Header style={{ 
             backgroundColor: '#5e7bb3',
