@@ -21,7 +21,7 @@ const categories = require('../constants/reportCategories')
  *               type: array
  *               items:
  *                 type: string
- *              example: ["Water Supply – Drinking Water", "Architectural Barriers", "Sewer System"]
+ *               example: ["Water Supply – Drinking Water", "Architectural Barriers", "Sewer System"]
  *       500:
  *         description: Internal server error
  *         content:
