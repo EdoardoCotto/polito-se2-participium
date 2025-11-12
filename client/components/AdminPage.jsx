@@ -27,6 +27,7 @@ export default function MapPage() {
 
   // Available roles
   const [availableRoles, setAvailableRoles] = useState([]);
+  const [roleMetadata, setRoleMetadata] = useState({});
 
   // Fetch users and roles on component mount
   useEffect(() => {
@@ -52,10 +53,17 @@ export default function MapPage() {
     try {
       const rolesData = await API.getAllowedRoles();
       setAvailableRoles(rolesData.roles || []);
+      setRoleMetadata(rolesData.metadata || {});
     } catch (err) {
       console.error('Failed to fetch roles:', err);
       setAvailableRoles(['admin', 'urban_planner', 'citizen']);
+      setRoleMetadata({});
     }
+  };
+
+  // Helper function to get display label for a role
+  const getRoleLabel = (role) => {
+    return roleMetadata[role]?.label || role;
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -201,20 +209,20 @@ export default function MapPage() {
                 No users found
               </Alert>
             ) : (
-              <div style={{ overflow: 'visible' }}>
-                <Table striped hover responsive style={{ marginBottom: 0 }}>
+              <div className="table-responsive" style={{ overflow: 'visible' }}>
+                <Table striped hover style={{ marginBottom: 0 }}>
                   <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                     <tr>
-                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                      <th style={{ fontWeight: '600', padding: '1rem', width: '15%' }}>
                         <i className="bi bi-person me-2"></i>Name
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                      <th style={{ fontWeight: '600', padding: '1rem', width: '15%' }}>
                         <i className="bi bi-person me-2"></i>Surname
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                      <th style={{ fontWeight: '600', padding: '1rem', width: '30%' }}>
                         <i className="bi bi-envelope me-2"></i>Email
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                      <th style={{ fontWeight: '600', padding: '1rem', width: '40%' }}>
                         <i className="bi bi-shield-check me-2"></i>Role
                       </th>
                     </tr>
@@ -226,27 +234,36 @@ export default function MapPage() {
                         <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.surname}</td>
                         <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.email}</td>
                         <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
-                          <Dropdown>
+                          <Dropdown align="end">
                             <Dropdown.Toggle
                               variant="outline-primary"
                               size="sm"
                               style={{
-                                minWidth: '10rem',
-                                fontSize: '0.95rem',
+                                minWidth: '12rem',
+                                maxWidth: '20rem',
+                                fontSize: '0.9rem',
                                 borderRadius: '6px',
                                 fontWeight: '500',
                                 borderColor: '#5e7bb3',
-                                color: '#5e7bb3'
+                                color: '#5e7bb3',
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
                               }}
                             >
                               <i className="bi bi-tag me-2"></i>
-                              {user.type || 'Select Role'}
+                              {getRoleLabel(user.type) || 'Select Role'}
                             </Dropdown.Toggle>
                             <Dropdown.Menu
                               style={{
-                                minWidth: '10rem',
+                                minWidth: '15rem',
+                                maxWidth: '25rem',
+                                maxHeight: '400px',
+                                overflowY: 'auto',
                                 borderRadius: '8px',
-                                boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.15)'
+                                boxShadow: '0 0.5rem 1rem rgba(0,0,0,0.2)',
+                                border: '1px solid #dee2e6'
                               }}
                             >
                               {availableRoles.map((role) => (
@@ -255,12 +272,15 @@ export default function MapPage() {
                                   active={user.type === role}
                                   onClick={() => handleRoleChange(user.id, role)}
                                   style={{ 
-                                    padding: '0.5rem 1rem',
-                                    fontWeight: user.type === role ? '600' : '400'
+                                    padding: '0.6rem 1rem',
+                                    fontWeight: user.type === role ? '600' : '400',
+                                    fontSize: '0.9rem',
+                                    whiteSpace: 'normal',
+                                    wordWrap: 'break-word'
                                   }}
                                 >
-                                  {user.type === role && <i className="bi bi-check-circle-fill me-2"></i>}
-                                  {role}
+                                  {user.type === role && <i className="bi bi-check-circle-fill me-2" style={{ color: '#5e7bb3' }}></i>}
+                                  {getRoleLabel(role)}
                                 </Dropdown.Item>
                               ))}
                             </Dropdown.Menu>
