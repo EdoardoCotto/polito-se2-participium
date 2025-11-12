@@ -34,7 +34,6 @@ export default function CitizenPage({ user }) {
 
     fetchCategories();
   }, []);
-  console.log(photos)
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -120,7 +119,8 @@ export default function CitizenPage({ user }) {
               </Card.Header>
               <Card.Body className="p-0" style={{ height: 'calc(100% - 4rem)' }}>
                 <div style={{ height: '100%', width: '100%' }}>
-                  <TurinMap onLocationSelected={setSelectedLocation} />
+                  <TurinMap onLocationSelected={setSelectedLocation} selectedLocation={selectedLocation}  
+                  />
                 </div>
               </Card.Body>
             </Card>
@@ -180,7 +180,7 @@ export default function CitizenPage({ user }) {
 
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold">
-                      <i className="bi bi-text-left me-2"></i>Description (optional)
+                      <i className="bi bi-text-left me-2"></i>Description 
                     </Form.Label>
                     <Form.Control
                       as="textarea"
@@ -248,7 +248,7 @@ export default function CitizenPage({ user }) {
                             style={{ borderRadius: '8px', cursor: 'pointer' }}
                           >
                             <i className="bi bi-plus-circle me-2"></i>
-                            Add Photo ({photos.length}/3)
+                            Add Photo
                           </Button>
                         </label>
                       </>

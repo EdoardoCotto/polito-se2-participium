@@ -75,8 +75,9 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
 
   const handleRemoveMarker = (markerId) => {
     setMarkers(markers.filter(marker => marker.id !== markerId));
+    
   };
-  console.log("markers:", markers);
+
   
 
   return (
@@ -127,7 +128,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   );
 }
 
-export default function TurinMap({ onLocationSelected, height = '500px' }) {
+export default function TurinMap({ onLocationSelected,selectedLocation }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -137,7 +138,11 @@ export default function TurinMap({ onLocationSelected, height = '500px' }) {
   const [geoJsonError, setGeoJsonError] = useState(false);
   const [showOutOfBoundsAlert, setShowOutOfBoundsAlert] = useState(false);
 
-  
+  useEffect(() => {
+    if (selectedLocation === null) {
+      setMarkers([]);
+    }
+  }, [selectedLocation]);
   
   useEffect(() => {
     setMapKey(1);
@@ -181,14 +186,14 @@ export default function TurinMap({ onLocationSelected, height = '500px' }) {
   
   if (isLoading) {
     return (
-      <div style={{ height: height, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
+      <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
         <p>Loading map...</p>
       </div>
     );
   }
   
   return (
-    <div style={{ height: height, width: '100%' }}>
+    <div style={{ height: '100%', width: '100%' }}>
       {/* Out of bounds alert */}
       {showOutOfBoundsAlert && (
         <Alert 
