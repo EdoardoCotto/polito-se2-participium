@@ -221,13 +221,29 @@ const getMunicipalityUsers = async () => {
 };
 
 
+/**
+ * Create Report
+ * @param {object} p
+ * @param {string} p.title
+ * @param {string} p.description
+ * @param {string} p.category
+ * @param {number|string} p.latitude
+ * @param {number|string} p.longitude
+ * @param {File[]} p.files  // uno o più File dal file input
+ */
+async function createReport({ title, description, category, latitude, longitude, files = [] }) {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('category', category);
+  formData.append('latitude', String(latitude));
+  formData.append('longitude', String(longitude));
+  files.forEach((f) => formData.append('photos', f)); // 👈 stessa chiave ripetuta
 
-async function createReport({ title, description, latitude, longitude }) {
   const response = await fetch(`${SERVER_URL}/reports`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ title, description, latitude, longitude })
+    credentials: 'include',   // invia i cookie di sessione
+    body: formData            // NON impostare Content-Type manualmente
   });
 
   if (!response.ok) {
@@ -235,6 +251,23 @@ async function createReport({ title, description, latitude, longitude }) {
   }
   return await response.json();
 }
+
+/**
+ * Get Report Categories
+ * Fetches the list of report categories from the server
+ * @returns {Promise<Array>} - Array of report categories
+ */
+async function getCategories() {
+  const response = await fetch(`${SERVER_URL}/categories`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get categories');
+  }
+  return await response.json();
+}
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -248,8 +281,12 @@ const API = {
   assignUserRole,
   getAllowedRoles,
   getMunicipalityUsers,
+
   // Report management
   createReport,
+
+  // Constants
+  getCategories,
 };
 
 export default API;

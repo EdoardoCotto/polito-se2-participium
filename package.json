@@ -1,0 +1,18 @@
+{
+  "name": "polito-se2-participium",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "dependencies": {
+    "multer": "^2.0.2",
+    "sqlite3": "^5.1.7"
+  }
+}

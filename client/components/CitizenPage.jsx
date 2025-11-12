@@ -1,15 +1,57 @@
 // components/CitizenPage.jsx
-import { Container, Card, Row, Col, Button, Form, Alert } from 'react-bootstrap';
-import { useState } from 'react';
+import { Container, Card, Row, Col, Button, Form, Alert, Modal } from 'react-bootstrap';
+import { useState, useEffect} from 'react';
 import TurinMap from './TurinMap';
+import API from '../API/API.js';
 
 export default function CitizenPage({ user }) {
   const [selectedLocation, setSelectedLocation] = useState(null); // {lat, lng}
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [photos, setPhotos] = useState([]);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitOk, setSubmitOk] = useState('');
+
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await API.getCategories();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (error) {
+        setCategoriesError(error.message);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && photos.length < 3) {
+      setPhotos([...photos, { name: file.name, file: file, preview: URL.createObjectURL(file) }]);
+    e.target.value = ''; // Reset input
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    URL.revokeObjectURL(photos[index].preview);
+    setPhotos(photos.filter((_, i) => i !== index));
+  };
+
+  const handlePhotoClick = (photo) => {
+    setSelectedPhoto(photo);
+    setShowPhotoModal(true);
+  };
 
   const handleCreateReport = async () => {
     setSubmitError('');
@@ -23,23 +65,38 @@ export default function CitizenPage({ user }) {
       setSubmitError('Please enter a title.');
       return;
     }
-
+    if (!category.trim()) {
+      setSubmitError('Please select a category.');
+      return;
+    }
+    if (photos.length < 1) {
+      setSubmitError('Please upload at least one photo.');
+      return;
+    }
     try {
       setSubmitting(true);
       const { createReport } = (await import('../API/API.js')).default;
 
+      const files = photos.map(p => p.file);
+
       await createReport({
         title: title.trim(),
+        category: category.trim(),
         description: description.trim(),
         latitude: selectedLocation.lat,
         longitude: selectedLocation.lng,
+        files: files,
       });
+
+      // Cleanup URLs
+      photos.forEach(p => URL.revokeObjectURL(p.preview));
 
       setSubmitOk('Report created successfully!');
       setTitle('');
+      setCategory('');
       setDescription('');
-      // Optional: clear location after submission
-      // setSelectedLocation(null);
+      setPhotos([]);
+      setSelectedLocation(null);
     } catch (err) {
       setSubmitError(err.message || 'An error occurred while creating the report.');
     } finally {
@@ -60,8 +117,11 @@ export default function CitizenPage({ user }) {
                   Select a location on the map
                 </Card.Title>
               </Card.Header>
-              <Card.Body className="p-0">
-                <TurinMap onLocationSelected={setSelectedLocation} />
+              <Card.Body className="p-0" style={{ height: 'calc(100% - 4rem)' }}>
+                <div style={{ height: '100%', width: '100%' }}>
+                  <TurinMap onLocationSelected={setSelectedLocation} selectedLocation={selectedLocation}  
+                  />
+                </div>
               </Card.Body>
             </Card>
           </Col>
@@ -104,7 +164,23 @@ export default function CitizenPage({ user }) {
 
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold">
-                      <i className="bi bi-text-left me-2"></i>Description (optional)
+                      <i className="bi bi-tags me-2"></i>Category 
+                    </Form.Label>
+                    <Form.Select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      style={{ borderRadius: '8px' }}
+                    >
+                      <option value="">Select a category...</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">
+                      <i className="bi bi-text-left me-2"></i>Description 
                     </Form.Label>
                     <Form.Control
                       as="textarea"
@@ -114,6 +190,75 @@ export default function CitizenPage({ user }) {
                       placeholder="Provide additional details to help the municipality address this issue..."
                       style={{ borderRadius: '8px' }}
                     />
+                  </Form.Group>
+
+                  {/* Photos Section */}
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold">
+                      <i className="bi bi-camera me-2"></i>Photos  (min 1, max 3)
+                    </Form.Label>
+                    {/* Lista foto caricate */}
+                    {photos.length > 0 && (
+                      <div className="mb-2">
+                        {photos.map((photo, index) => (
+                          <div 
+                            key={index} 
+                            className="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
+                            style={{ border: '1px solid #dee2e6' }}
+                          >
+                            <div 
+                              className="d-flex align-items-center flex-grow-1"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handlePhotoClick(photo)}
+                            >
+                              <i className="bi bi-file-earmark-image me-2 text-primary"></i>
+                              <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
+                                {photo.name}
+                              </span>
+                              <i className="bi bi-eye ms-2 text-muted small"></i>
+                            </div>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="text-danger p-0"
+                              onClick={() => handleRemovePhoto(index)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div>
+                    {/* Bottone per aggiungere foto */}
+                    {photos.length < 3 && (
+                      <>
+                        <Form.Control
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          style={{ display: 'none' }}
+                          id="photo-upload"
+                        />
+                        <label htmlFor="photo-upload">
+                          <Button
+                            as="span"
+                            variant="outline-primary"
+                            className="w-100"
+                            style={{ borderRadius: '8px', cursor: 'pointer' }}
+                          >
+                            <i className="bi bi-plus-circle me-2"></i>
+                            Add Photo
+                          </Button>
+                        </label>
+                      </>
+                    )}
+                    </div>
+                    {photos.length === 3 && (
+                      <Alert variant="info" className="mt-2 mb-0 py-2">
+                        <small>Maximum 3 photos reached</small>
+                      </Alert>
+                    )}
                   </Form.Group>
 
                   <Form.Group className="mb-4">
@@ -173,6 +318,22 @@ export default function CitizenPage({ user }) {
           </Col>
         </Row>
       </Container>
+
+      {/* Modal per visualizzare la foto */}
+      <Modal show={showPhotoModal} onHide={() => setShowPhotoModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedPhoto?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          {selectedPhoto && (
+            <img 
+              src={selectedPhoto.preview} 
+              alt={selectedPhoto.name} 
+              style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

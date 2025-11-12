@@ -33,7 +33,6 @@ function LoginModal(props) {
       props.setMessage?.({ type: 'success', msg: 'Login effettuato' });
       handleClose();
 
-      console.log('User after login:', user);
       
       // Navigate based on user type
       if (user?.type === 'admin') {

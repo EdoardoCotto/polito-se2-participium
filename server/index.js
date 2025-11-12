@@ -3,11 +3,12 @@ const cors = require('cors');
 const session = require('express-session');
 const passport = require('./utils/passport');
 const { errorHandler } = require('./middlewares/errorMiddleware');
-const { swaggerUi, swaggerSpec } = require('./swagger');
+const { swaggerUi, swaggerSpec, swaggerUiOptions } = require('./swagger');
 
 const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const reportRoutes = require('./routes/reportRoutes')
+const constantRoutes = require('./routes/constantRoutes');
 const app = express();
 
 // CORS configuration - allow requests from frontend
@@ -30,12 +31,13 @@ app.use(passport.session());
 // Serve static files
 app.use('/static', express.static('static'));
 
-// 🔹 aggiungi questa riga
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger API docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.use('/api', sessionRoutes);
 app.use('/api', userRoutes);
 app.use('/api', reportRoutes);
+app.use('/api', constantRoutes);
 
 app.use(errorHandler);
 
