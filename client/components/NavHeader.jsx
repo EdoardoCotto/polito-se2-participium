@@ -17,7 +17,12 @@ function NavHeader(props) {
             rounded
             className="me-2"
           />
-          <span className="fw-bold text-primary">Participium</span>
+          <span className="fw-bold" style={{ 
+            background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>Participium</span>
           
           {/* Vertical Divider */}
           <div 
@@ -68,6 +73,7 @@ function NavHeader(props) {
               variant="primary"
               onClick={props.onShowLogin}//LoginForm
               className="d-flex align-items-center"
+              style={{ backgroundColor: '#5e7bb3', borderColor: '#5e7bb3' }}
             >
                 <i className="bi bi-box-arrow-in-right fs-4 me-2"></i>
               Login

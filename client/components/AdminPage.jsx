@@ -141,12 +141,15 @@ export default function MapPage() {
             size="lg"
             onClick={() => setShowModal(true)}
             style={{
-              fontWeight: 'bold',
+              backgroundColor: '#5e7bb3',
+              borderColor: '#5e7bb3',
+              fontWeight: '600',
               boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.3)',
-              border: '2px solid #0d6efd'
+              borderRadius: '8px'
             }}
           >
-            Registration municipality user
+            <i className="bi bi-person-plus-fill me-2"></i>
+            Add Municipality User
           </Button>
         </div>
       </div>
@@ -156,12 +159,23 @@ export default function MapPage() {
         <Card style={{ 
           width: '50%', 
           maxWidth: '75rem', 
-          boxShadow: '0 0.25rem 0.75rem rgba(0,0,0,0.15)', 
+          boxShadow: '0 0.5rem 1.5rem rgba(0,0,0,0.2)', 
           minHeight: '70vh',
-          overflow: 'visible' // Leave space for dropdowns
+          overflow: 'visible',
+          borderRadius: '1rem',
+          border: 'none'
         }}>
-          <Card.Header as="h4" className="bg-primary text-white">
-            Users Management
+          <Card.Header style={{ 
+            backgroundColor: '#5e7bb3',
+            color: 'white',
+            padding: '1.5rem',
+            borderTopLeftRadius: '1rem',
+            borderTopRightRadius: '1rem'
+          }}>
+            <h4 className="mb-0 d-flex align-items-center">
+              <i className="bi bi-people-fill me-3"></i>
+              Users Management
+            </h4>
           </Card.Header>
           <Card.Body style={{ 
             minHeight: '50vh', 
@@ -170,50 +184,70 @@ export default function MapPage() {
           }}>
             {usersError && (
               <Alert variant="danger" dismissible onClose={() => setUsersError('')}>
+                <i className="bi bi-exclamation-triangle me-2"></i>
                 {usersError}
               </Alert>
             )}
 
             {isLoadingUsers ? (
-              <div className="text-center p-4">
-                <div className="spinner-border text-primary" role="status">
+              <div className="text-center p-5">
+                <div className="spinner-border" role="status" style={{ color: '#5e7bb3', width: '3rem', height: '3rem' }}>
                   <span className="visually-hidden">Loading...</span>
                 </div>
+                <p className="mt-3 text-muted">Loading users...</p>
               </div>
             ) : users.length === 0 ? (
-              <Alert variant="info">No users found</Alert>
+              <Alert variant="info" className="d-flex align-items-center">
+                <i className="bi bi-info-circle me-2"></i>
+                No users found
+              </Alert>
             ) : (
               <div style={{ overflow: 'visible' }}>
-                <Table striped bordered hover>
-                  <thead className="table-light">
+                <Table striped hover responsive style={{ marginBottom: 0 }}>
+                  <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                     <tr>
-                      <th>Name</th>
-                      <th>Surname</th>
-                      <th>Email</th>
-                      <th>Role</th>
+                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                        <i className="bi bi-person me-2"></i>Name
+                      </th>
+                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                        <i className="bi bi-person me-2"></i>Surname
+                      </th>
+                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                        <i className="bi bi-envelope me-2"></i>Email
+                      </th>
+                      <th style={{ fontWeight: '600', padding: '1rem' }}>
+                        <i className="bi bi-shield-check me-2"></i>Role
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((user) => (
                       <tr key={user.id}>
-                        <td>{user.name}</td>
-                        <td>{user.surname}</td>
-                        <td>{user.email}</td>
-                        <td>
+                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.name}</td>
+                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.surname}</td>
+                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.email}</td>
+                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
                           <Dropdown>
                             <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="lg"
+                              variant="outline-primary"
+                              size="sm"
                               style={{
-                                minWidth: '8rem',
-                                fontSize: '1rem'
+                                minWidth: '10rem',
+                                fontSize: '0.95rem',
+                                borderRadius: '6px',
+                                fontWeight: '500',
+                                borderColor: '#5e7bb3',
+                                color: '#5e7bb3'
                               }}
                             >
+                              <i className="bi bi-tag me-2"></i>
                               {user.type || 'Select Role'}
                             </Dropdown.Toggle>
                             <Dropdown.Menu
                               style={{
-                                minWidth: '8rem'
+                                minWidth: '10rem',
+                                borderRadius: '8px',
+                                boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.15)'
                               }}
                             >
                               {availableRoles.map((role) => (
@@ -221,8 +255,12 @@ export default function MapPage() {
                                   key={role}
                                   active={user.type === role}
                                   onClick={() => handleRoleChange(user.id, role)}
-                                  style={{ padding: '0.2rem 0.2rem' }}
+                                  style={{ 
+                                    padding: '0.5rem 1rem',
+                                    fontWeight: user.type === role ? '600' : '400'
+                                  }}
                                 >
+                                  {user.type === role && <i className="bi bi-check-circle-fill me-2"></i>}
                                   {role}
                                 </Dropdown.Item>
                               ))}
@@ -242,41 +280,62 @@ export default function MapPage() {
       {/* Registration modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
         <Form onSubmit={handleSubmit}>
-          <Modal.Header closeButton>
-            <Modal.Title>Registration</Modal.Title>
+          <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0' }}>
+            <Modal.Title style={{ 
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              <i className="bi bi-person-plus-fill me-2" style={{ WebkitTextFillColor: 'initial' }}></i>
+              Add New User
+            </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            {showSuccess && <Alert variant="success">Registration successful!</Alert>}
+          <Modal.Body className="p-4">
+            {showSuccess && (
+              <Alert variant="success" className="d-flex align-items-center">
+                <i className="bi bi-check-circle-fill me-2"></i>
+                Registration successful!
+              </Alert>
+            )}
             {apiError && (
               <Alert variant="danger" onClose={() => setApiError('')} dismissible>
+                <i className="bi bi-exclamation-triangle me-2"></i>
                 {typeof apiError === 'string' ? apiError : apiError?.message ?? String(apiError)}
               </Alert>
             )}
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>First Name</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-person me-2"></i>First Name
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
                     isInvalid={!!errors.firstName}
-                    placeholder="First name"
+                    placeholder="Enter first name"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">{errors.firstName}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Last Name</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-person me-2"></i>Last Name
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
                     isInvalid={!!errors.lastName}
-                    placeholder="Last name"
+                    placeholder="Enter last name"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">{errors.lastName}</Form.Control.Feedback>
                 </Form.Group>
@@ -284,27 +343,33 @@ export default function MapPage() {
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label>Username</Form.Label>
+              <Form.Label className="fw-semibold">
+                <i className="bi bi-at me-2"></i>Username
+              </Form.Label>
               <Form.Control
                 type="text"
                 name="userName"
                 value={formData.userName}
                 onChange={handleChange}
                 isInvalid={!!errors.userName}
-                placeholder="Username"
+                placeholder="Choose a username"
+                style={{ borderRadius: '8px', padding: '0.6rem' }}
               />
               <Form.Control.Feedback type="invalid">{errors.userName}</Form.Control.Feedback>
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label className="fw-semibold">
+                <i className="bi bi-envelope me-2"></i>Email
+              </Form.Label>
               <Form.Control
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 isInvalid={!!errors.email}
-                placeholder="Email"
+                placeholder="Enter email address"
+                style={{ borderRadius: '8px', padding: '0.6rem' }}
               />
               <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
             </Form.Group>
@@ -312,43 +377,73 @@ export default function MapPage() {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-lock me-2"></i>Password
+                  </Form.Label>
                   <Form.Control
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     isInvalid={!!errors.password}
-                    placeholder="Password"
+                    placeholder="Create password (min. 8 chars)"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-shield-lock me-2"></i>Confirm Password
+                  </Form.Label>
                   <Form.Control
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     isInvalid={!!errors.confirmPassword}
-                    placeholder="Confirm password"
+                    placeholder="Re-enter password"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
           </Modal.Body>
-          <Modal.Footer className="d-flex justify-content-between align-items-center w-100">
-            <div>
-              <Button variant="secondary" onClick={() => setShowModal(false)} disabled={isSubmitting}>Close</Button>
-            </div>
-            <div>
-              <Button variant="primary" type="submit" disabled={isSubmitting} className="me-2">
-                {isSubmitting ? 'Registering...' : 'Register'}
-              </Button>
-            </div>
+          <Modal.Footer className="d-flex justify-content-between align-items-center w-100 border-0 pt-0">
+            <Button 
+              variant="outline-secondary" 
+              onClick={() => setShowModal(false)} 
+              disabled={isSubmitting}
+              style={{ borderRadius: '8px' }}
+            >
+              <i className="bi bi-x-circle me-2"></i>
+              Cancel
+            </Button>
+            <Button 
+              variant="primary" 
+              type="submit" 
+              disabled={isSubmitting}
+              style={{ 
+                backgroundColor: '#5e7bb3', 
+                borderColor: '#5e7bb3',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-person-plus-fill me-2"></i>
+                  Create User
+                </>
+              )}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>

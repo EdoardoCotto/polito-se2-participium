@@ -25,23 +25,49 @@ export default function MunicipalityPage({ user }) {
     <div className="app-root d-flex flex-column min-vh-100">
       {/* Welcome Section */}
       <Container className="py-4">
-        <Card className="shadow-sm">
-          <Card.Body>
-            <h2 className="text-primary mb-3">
-              Welcome, {user?.name} {user?.surname}
+        <Card className="shadow-lg" style={{ borderRadius: '1rem', border: 'none' }}>
+          <Card.Body className="p-4">
+            <h2 className="mb-3" style={{ 
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontSize: '2rem'
+            }}>
+              <i className="bi bi-person-circle me-2" style={{ WebkitTextFillColor: 'initial' }}></i>
+              Welcome, {user?.name} {user?.surname}!
             </h2>
-            <p className="text-muted mb-0">
-              <strong>Role:</strong> {getRoleDisplayName(user?.type)}
-            </p>
+            <div className="d-flex align-items-center">
+              <span className="badge" style={{ 
+                backgroundColor: '#5e7bb3', 
+                fontSize: '1rem',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                fontWeight: '500'
+              }}>
+                <i className="bi bi-shield-check me-2"></i>
+                {getRoleDisplayName(user?.type)}
+              </span>
+            </div>
           </Card.Body>
         </Card>
       </Container>
 
       {/* Map Section */}
       <Container className="flex-grow-1 py-4">
-        <Card className="shadow-sm h-100">
-          <Card.Header className="bg-primary text-white">
-            <h4 className="mb-0">Turin Municipality Map</h4>
+        <Card className="shadow-lg h-100" style={{ borderRadius: '1rem', border: 'none' }}>
+          <Card.Header style={{ 
+            backgroundColor: '#5e7bb3',
+            color: 'white',
+            padding: '1.5rem',
+            borderTopLeftRadius: '1rem',
+            borderTopRightRadius: '1rem'
+          }}>
+            <h4 className="mb-0 d-flex align-items-center">
+              <i className="bi bi-map me-3"></i>
+              Turin Municipality Map
+            </h4>
           </Card.Header>
           <Card.Body className="p-0 position-relative">
             <MapErrorBoundary>
@@ -53,16 +79,26 @@ export default function MunicipalityPage({ user }) {
 
       {/* Info Section */}
       <Container className="py-4">
-        <Card className="shadow-sm">
-          <Card.Body>
-            <h5 className="text-secondary mb-3">Your Dashboard</h5>
-            <p className="text-muted">
-              As a <strong>{getRoleDisplayName(user?.type)}</strong>, you have access to municipality 
-              resources and can manage civic engagement projects in your area of expertise.
-            </p>
-            <p className="text-muted mb-0">
-              Use the map above to view and interact with projects in your jurisdiction.
-            </p>
+        <Card className="shadow-lg" style={{ borderRadius: '1rem', border: 'none' }}>
+          <Card.Body className="p-4">
+            <h5 className="mb-3 d-flex align-items-center" style={{ 
+              fontWeight: '600',
+              color: '#5e7bb3'
+            }}>
+              <i className="bi bi-speedometer2 me-2"></i>
+              Your Dashboard
+            </h5>
+            <div className="mb-3">
+              <p className="text-muted mb-2">
+                <i className="bi bi-check-circle-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                As a <strong style={{ color: '#5e7bb3' }}>{getRoleDisplayName(user?.type)}</strong>, you have access to municipality 
+                resources and can manage civic engagement projects in your area of expertise.
+              </p>
+              <p className="text-muted mb-0">
+                <i className="bi bi-info-circle-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                Use the map above to view and interact with projects in your jurisdiction.
+              </p>
+            </div>
           </Card.Body>
         </Card>
       </Container>

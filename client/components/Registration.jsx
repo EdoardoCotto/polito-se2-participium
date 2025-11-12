@@ -57,15 +57,15 @@ export default function RegistrationPage() {
     }
 
     if (!formData.password) {
-      newErrors.password = 'The password is required';
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'La password deve essere di almeno 8 caratteri';
+      newErrors.password = 'Password must be at least 8 characters long';
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Conferma la password';
+      newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Le password non coincidono';
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     return newErrors;
@@ -124,62 +124,89 @@ export default function RegistrationPage() {
     <Container className="py-5">
       <Row className="justify-content-center">
         <Col md={8} lg={6}>
-          <Card className="shadow">
-            <Card.Body className="p-4">
-              <h2 className="text-center mb-4">Registration</h2>
+          <Card className="shadow-lg" style={{ borderRadius: '1rem', border: 'none' }}>
+            <Card.Body className="p-5">
+              <h2 className="text-center mb-2" style={{ 
+                fontWeight: 'bold',
+                background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontSize: '2.5rem'
+              }}>
+                Join Participium
+              </h2>
+              <p className="text-center text-muted mb-4">Create your account to start participating</p>
               
               {showSuccess && (
-                <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible>
-                   Registration successful! Redirecting...
+                <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible className="d-flex align-items-center">
+                  <i className="bi bi-check-circle-fill me-2"></i>
+                  Registration successful! Redirecting...
                 </Alert>
               )}
 
               {apiError && (
                 <Alert variant="danger" onClose={() => setApiError('')} dismissible>
+                  <i className="bi bi-exclamation-triangle me-2"></i>
                   {typeof apiError === 'string' ? apiError : apiError?.message ?? String(apiError)}
                 </Alert>
               )}
 
               <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    isInvalid={!!errors.firstName}
-                    placeholder="Insert your first name"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.firstName}
-                  </Form.Control.Feedback>
-                </Form.Group>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        <i className="bi bi-person me-2"></i>First Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        isInvalid={!!errors.firstName}
+                        placeholder="Enter your first name"
+                        style={{ borderRadius: '8px', padding: '0.6rem' }}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.firstName}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        <i className="bi bi-person me-2"></i>Last Name
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        isInvalid={!!errors.lastName}
+                        placeholder="Enter your last name"
+                        style={{ borderRadius: '8px', padding: '0.6rem' }}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.lastName}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Last Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    isInvalid={!!errors.lastName}
-                    placeholder="Insert your last name"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.lastName}
-                  </Form.Control.Feedback>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Username</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-at me-2"></i>Username
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="userName"
                     value={formData.userName}
                     onChange={handleChange}
                     isInvalid={!!errors.userName}
-                    placeholder="Insert your username"
+                    placeholder="Choose a username"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.userName}
@@ -187,14 +214,17 @@ export default function RegistrationPage() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-envelope me-2"></i>Email
+                  </Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     isInvalid={!!errors.email}
-                    placeholder="Insert your email"
+                    placeholder="Enter your email address"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.email}
@@ -202,57 +232,79 @@ export default function RegistrationPage() {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-lock me-2"></i>Password
+                  </Form.Label>
                   <Form.Control
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     isInvalid={!!errors.password}
-                    placeholder="Insert your password"
+                    placeholder="Create a password (min. 8 characters)"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.password}
                   </Form.Control.Feedback>
                   <Form.Text className="text-muted">
-                    The password must be at least 8 characters long
+                    <i className="bi bi-info-circle me-1"></i>
+                    Password must be at least 8 characters long
                   </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-4">
-                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-shield-lock me-2"></i>Confirm Password
+                  </Form.Label>
                   <Form.Control
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     isInvalid={!!errors.confirmPassword}
-                    placeholder="Conferma la password"
+                    placeholder="Re-enter your password"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.confirmPassword}
                   </Form.Control.Feedback>
                 </Form.Group>
-                <div className="d-flex align-items-center justify-content-around">
-                <Button 
-                  variant="secondary" 
-                  type="submit" 
-                  className="me-1" 
-                  size="lg"
-                  disabled={isSubmitting}
-                  onClick={() => navigate('/')}
-                >
-                   Cancel
-                </Button>
-                <Button 
-                  variant="warning" 
-                  type="submit" 
-                  className="ml-3" 
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Registering...' : 'Registration'}
-                </Button>
+                <div className="d-grid gap-2">
+                  <Button 
+                    variant="primary" 
+                    type="submit" 
+                    size="lg"
+                    disabled={isSubmitting}
+                    style={{ 
+                      backgroundColor: '#5e7bb3', 
+                      borderColor: '#5e7bb3',
+                      borderRadius: '8px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Creating your account...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-person-plus-fill me-2"></i>
+                        Create Account
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline-secondary" 
+                    size="lg"
+                    disabled={isSubmitting}
+                    onClick={() => navigate('/')}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    <i className="bi bi-arrow-left me-2"></i>
+                    Back to Login
+                  </Button>
                 </div>
               </Form>
             </Card.Body>

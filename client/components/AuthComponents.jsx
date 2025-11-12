@@ -53,30 +53,49 @@ function LoginModal(props) {
 
     return (
         <Modal show={props.show} onHide={props.onHide} centered>
-            <Modal.Header closeButton>
-                <Modal.Title>Insert your credentials</Modal.Title>
+            <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0' }}>
+                <Modal.Title style={{ 
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                }}>
+                    Welcome Back!
+                </Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-                {isPending && <Alert variant="warning">Please, wait for the server's response...</Alert>}
+            <Modal.Body className="p-4">
+                {isPending && (
+                    <Alert variant="info" className="d-flex align-items-center">
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Authenticating...
+                    </Alert>
+                )}
                 {error && (
                   <Alert variant="danger" dismissible onClose={() => setError(null)}>
+                    <i className="bi bi-exclamation-triangle me-2"></i>
                     {typeof error === 'string' ? error : error?.message ?? String(error)}
                   </Alert>
                 )}
                 <Form onSubmit={onSubmit}>
                     <Form.Group controlId='username' className='mb-3'>
-                        <Form.Label>Username</Form.Label>
+                        <Form.Label className="fw-semibold">
+                            <i className="bi bi-person me-2"></i>Username
+                        </Form.Label>
                         <Form.Control 
                             type='text' 
                             name='username'
                             value={username}
                             onChange={(e) => setUsername(e.target.value)} 
                             required 
-                            placeholder="Insert your username"
+                            placeholder="Enter your username"
+                            style={{ borderRadius: '8px', padding: '0.6rem' }}
                         />
                     </Form.Group>
-                    <Form.Group controlId='password' className='mb-3'>
-                        <Form.Label>Password</Form.Label>
+                    <Form.Group controlId='password' className='mb-4'>
+                        <Form.Label className="fw-semibold">
+                            <i className="bi bi-lock me-2"></i>Password
+                        </Form.Label>
                         <Form.Control 
                             type='password' 
                             name='password'
@@ -84,31 +103,35 @@ function LoginModal(props) {
                             onChange={(e) => setPassword(e.target.value)} 
                             required 
                             minLength={6}
-                            placeholder="Insert your password"
+                            placeholder="Enter your password"
+                            style={{ borderRadius: '8px', padding: '0.6rem' }}
                         />
                     </Form.Group>
-                    <Modal.Footer className="d-flex justify-content-between align-items-center">
-                         {/* Left: Registration CTA with small text */}
-                        <div className="d-flex flex-column align-items-start pt-3">
+                    <Modal.Footer className="d-flex justify-content-between align-items-center border-0 pt-0">
+                         {/* Left: Registration CTA */}
+                        <div className="d-flex flex-column align-items-start">
                         <Button
                             as={Link}
                             to="/registration"
                             variant="warning"
                             className="mb-1"
                             onClick={() => props.onHide?.()}
+                            style={{ borderRadius: '8px' }}
                         >
-                            Registration
+                            <i className="bi bi-person-plus me-2"></i>
+                            Register
                         </Button>
-                        <small className="text-muted">Do your registration here.</small>
+                        <small className="text-muted">Don't have an account?</small>
                         </div>
 
-                        {/* Right: Cancel and Login buttons - aligned */}
+                        {/* Right: Cancel and Login buttons */}
                         <div className="d-flex align-items-center">
                         <Button 
                             variant="secondary" 
                             onClick={props.onHide}
                             disabled={isPending}
                             className="me-2"
+                            style={{ borderRadius: '8px' }}
                         >
                             Cancel
                         </Button>
@@ -116,8 +139,24 @@ function LoginModal(props) {
                             type='submit' 
                             variant="primary"
                             disabled={isPending}
+                            style={{ 
+                                backgroundColor: '#5e7bb3', 
+                                borderColor: '#5e7bb3',
+                                borderRadius: '8px',
+                                fontWeight: '600'
+                            }}
                         >
-                            {isPending ? 'Logging in...' : 'Login'}
+                            {isPending ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Signing in...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-box-arrow-in-right me-2"></i>
+                                    Login
+                                </>
+                            )}
                         </Button>
                         </div>
                         
@@ -128,7 +167,7 @@ function LoginModal(props) {
     );
 }
 function LogoutButton(props) {
-  return <Button variant='primary' onClick={props.handleLogout} >
+  return <Button variant='primary' onClick={props.handleLogout} style={{ backgroundColor: '#5e7bb3', borderColor: '#5e7bb3' }}>
     {/*<Image
     src="http://localhost:3001/static/icons8-immettere-48.png"
     alt="Login Icon"
