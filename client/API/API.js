@@ -227,6 +227,7 @@ const getMunicipalityUsers = async () => {
  * Requires citizen authentication
  * @param {string} title - Title of the report
  * @param {string} description - Description of the report
+ * @param {string} category - Category of the report
  * @param {number} latitude - Latitude of the report location
  * @param {number} longitude - Longitude of the report location
  * @param {File} photo1 - First photo file
