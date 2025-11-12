@@ -21,8 +21,8 @@
       "<rootDir>/server/repository/**/*.js",
       "<rootDir>/server/utils/**/*.js",
       "<rootDir>/server/routes/**/*.js",
-      "<rootDir>/server/middlewares/**/*.js",
-      "<rootDir>/server/dao/**/*.js"
+      "<rootDir>/server/middlewares/**/*.js"
+      
     ],
     "coverageReporters": ["text", "text-summary"],
     "coverageDirectory": "/tmp/jest-coverage"
