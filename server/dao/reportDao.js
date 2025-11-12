@@ -10,15 +10,21 @@ const db = new sqlite.Database(dbPath, (err) => {
 });
 
 /**
- * Create a new report with location (latitude and longitude)
- * @param {{ userId: number, latitude: number, longitude: number }} reportData
- * @returns {Promise<{ id: number, userId: number, latitude: number, longitude: number, created_at: string, updated_at: string }>}
+ * Create a new report with details and photos.
+ * @param {{ userId: number, latitude: number, longitude: number, title: string, description: string, category: string, photos: string[] }} reportData
+ * @returns {Promise<Object>}
  */
-exports.createReport = ({ userId, latitude, longitude }) => {
+exports.createReport = ({ userId, latitude, longitude, title, description, category, photos }) => {
   return new Promise((resolve, reject) => {
-    const insertSql = `INSERT INTO Reports (userId, latitude, longitude)
-                       VALUES (?, ?, ?)`;
-    db.run(insertSql, [userId, latitude, longitude], function (insertErr) {
+    const [photo1, photo2, photo3] = [
+      photos[0],
+      photos[1] || null,
+      photos[2] || null,
+    ];
+
+    const insertSql = `INSERT INTO Reports (userId, latitude, longitude, title, description, category, image_path1, image_path2, image_path3)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.run(insertSql, [userId, latitude, longitude, title, description, category, photo1, photo2, photo3], function (insertErr) {
       if (insertErr) {
         console.error('Error inserting report:', insertErr);
         reject(insertErr);

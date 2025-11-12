@@ -31,8 +31,34 @@ const reportController = require('../controller/reportController')
  *               longitude:
  *                 type: number
  *                 example: 7.662697
+ *               title:
+ *                 type: string
+ *                 example: "Pothole in via Garibaldi"
+ *               description:
+ *                 type: string
+ *                 example: "Large pothole causing danger for cyclists"
+ *               category:
+ *                 type: string
+ *                 enum:
+ *                   - Water Supply – Drinking Water
+ *                   - Architectural Barriers
+ *                   - Sewer System
+ *                   - Public Lighting
+ *                   - Waste
+ *                   - Road Signs and Traffic Lights
+ *                   - Roads and Urban Furnishings
+ *                   - Public Green Areas and Playgrounds
+ *                   - Other
+ *               photos:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 3
+ *                 items:
+ *                   type: string
+ *                 example:
+ *                   - "/static/uploads/report-123/photo-1.jpg"
  *     responses:
- *       200:
+ *       201:
  *         description: Report inserted correctly
  *         content:
  *           application/json:
@@ -45,8 +71,18 @@ const reportController = require('../controller/reportController')
  *                   type: number
  *                 longitude:
  *                   type: number
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 category:
+ *                   type: string
+ *                 photos:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       400:
- *          description: All fields are required
+ *          description: Validation error
  *       401:
  *         description: User is not a citizen
  */

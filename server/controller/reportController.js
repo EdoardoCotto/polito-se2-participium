@@ -10,7 +10,14 @@ const AppError = require('../errors/AppError');
  */
 exports.createReport = async (req, res) => {
   try {
-    const { latitude, longitude } = req.body || {};
+    const {
+      latitude,
+      longitude,
+      title,
+      description,
+      category,
+      photos,
+    } = req.body || {};
     
     if (!req.user || !req.user.id) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -19,7 +26,11 @@ exports.createReport = async (req, res) => {
     const reportData = {
       userId: req.user.id,
       latitude,
-      longitude
+      longitude,
+      title,
+      description,
+      category,
+      photos,
     };
 
     const created = await reportRepository.createReport(reportData);
