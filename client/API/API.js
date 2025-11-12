@@ -223,34 +223,27 @@ const getMunicipalityUsers = async () => {
 
 /**
  * Create Report
- * Creates a new report with details and photos
- * Requires citizen authentication
- * @param {string} title - Title of the report
- * @param {string} description - Description of the report
- * @param {string} category - Category of the report
- * @param {number} latitude - Latitude of the report location
- * @param {number} longitude - Longitude of the report location
- * @param {File} photo1 - First photo file
- * @param {File} photo2 - Second photo file (optional)
- * @param {File} photo3 - Third photo file (optional) 
- * @returns 
+ * @param {object} p
+ * @param {string} p.title
+ * @param {string} p.description
+ * @param {string} p.category
+ * @param {number|string} p.latitude
+ * @param {number|string} p.longitude
+ * @param {File[]} p.files  // uno o più File dal file input
  */
-async function createReport({ title, description, category, latitude, longitude, photo1, photo2, photo3 }) {
+async function createReport({ title, description, category, latitude, longitude, files = [] }) {
   const formData = new FormData();
   formData.append('title', title);
   formData.append('description', description);
   formData.append('category', category);
-  formData.append('latitude', latitude);
-  formData.append('longitude', longitude);
-  let photos = []
-  if (photo1) photos.append('photos', photo1);
-  if (photo2) photos.append('photos', photo2);
-  if (photo3) photos.append('photos', photo3);
-  formData.append('photos', photos);
+  formData.append('latitude', String(latitude));
+  formData.append('longitude', String(longitude));
+  files.forEach((f) => formData.append('photos', f)); // 👈 stessa chiave ripetuta
+
   const response = await fetch(`${SERVER_URL}/reports`, {
     method: 'POST',
-    credentials: 'include',
-    body: formData
+    credentials: 'include',   // invia i cookie di sessione
+    body: formData            // NON impostare Content-Type manualmente
   });
 
   if (!response.ok) {
