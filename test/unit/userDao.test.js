@@ -1,213 +1,229 @@
-// const bcrypt = require('bcrypt');
+"use strict";
 
-// // Mock the sqlite database instance completely
-// jest.mock('sqlite3', () => {
-//   const mockDb = {
-//     get: jest.fn(),
-//     run: jest.fn(),
-//     all: jest.fn(),
-//   };
-//   const mockConstructor = jest.fn(() => mockDb);
-//   return { Database: mockConstructor, __mockDb: mockDb };
-// });
+const bcrypt = require("bcrypt");
 
-// const { Database, __mockDb: db } = require('sqlite3');
+// Mocks for sqlite3
+const dbRunMock = jest.fn();
+const dbGetMock = jest.fn();
+const dbAllMock = jest.fn();
 
+jest.mock("sqlite3", () => {
+  const mDb = function () {
+    return { run: dbRunMock, get: dbGetMock, all: dbAllMock };
+  };
+  return { Database: mDb };
+});
 
-// Database.mockImplementation((path, cb) => {
-//   if (cb) cb(null);
-//   return db;
-// });
+const userDao = require("../../server/dao/userDao");
+const { ALLOWED_ROLES } = require("../../server/constants/roles");
 
-// const userDao = require('../../server/dao/userDao');
+describe("userDao", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
+  describe("getUser", () => {
+    it("rejects on DB error", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) => cb(new Error("DB fail")));
+      await expect(userDao.getUser("a", "b")).rejects.toThrow("DB fail");
+    });
 
-// describe('userDao', () => {
-//   beforeEach(() => {
-//     jest.clearAllMocks();
-//   });
+    it("resolves false when user not found", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) => cb(null, undefined));
+      const res = await userDao.getUser("a", "b");
+      expect(res).toBe(false);
+    });
 
-//   // --- getUser ---------------------------------------------------
-//   describe('getUser', () => {
-//     it('should resolve false if user not found', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(null, undefined));
-//       const result = await userDao.getUser('fakeUser', 'pass');
-//       expect(result).toBe(false);
-//     });
+    it("rejects when bcrypt.compare throws", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) =>
+        cb(null, { id: 1, username: "x", password: "hashed" })
+      );
+      bcrypt.compare = jest.fn((pw, hash, cb) => cb(new Error("compare fail")));
+      await expect(userDao.getUser("a", "b")).rejects.toThrow("compare fail");
+    });
 
-//     it('should reject if db.get returns an error', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(new Error('DB fail')));
-//       await expect(userDao.getUser('user', 'pass')).rejects.toThrow('DB fail');
-//     });
+    it("resolves false when password mismatch", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) =>
+        cb(null, { id: 1, username: "x", password: "hashed" })
+      );
+      bcrypt.compare = jest.fn((pw, hash, cb) => cb(null, false));
+      const res = await userDao.getUser("a", "b");
+      expect(res).toBe(false);
+    });
 
-//     it('should resolve false if password does not match', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(null, { password: 'hashed' }));
-//       jest.spyOn(bcrypt, 'compare').mockImplementation((pw, hash, cb) => cb(null, false));
-//       const result = await userDao.getUser('user', 'wrong');
-//       expect(result).toBe(false);
-//     });
+    it("resolves user when password matches", async () => {
+      const row = {
+        id: 1,
+        username: "john",
+        name: "John",
+        surname: "Doe",
+        type: "citizen",
+        password: "hashed",
+      };
+      dbGetMock.mockImplementation((sql, params, cb) => cb(null, row));
+      bcrypt.compare = jest.fn((pw, hash, cb) => cb(null, true));
 
-//     it('should reject if bcrypt.compare throws error', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(null, { password: 'x' }));
-//       jest.spyOn(bcrypt, 'compare').mockImplementation((pw, hash, cb) => cb(new Error('bcrypt error')));
-//       await expect(userDao.getUser('u', 'p')).rejects.toThrow('bcrypt error');
-//     });
+      const res = await userDao.getUser("john", "pw");
+      expect(res).toEqual({
+        id: 1,
+        username: "john",
+        name: "John",
+        surname: "Doe",
+        type: "citizen",
+      });
+    });
+  });
 
-//     it('should resolve user object if credentials are valid', async () => {
-//       const mockRow = { id: 1, username: 'u', name: 'n', surname: 's', type: 'citizen', password: 'hash' };
-//       db.get.mockImplementation((sql, params, cb) => cb(null, mockRow));
-//       jest.spyOn(bcrypt, 'compare').mockImplementation((pw, hash, cb) => cb(null, true));
-//       const result = await userDao.getUser('u', 'p');
-//       expect(result).toMatchObject({
-//         id: 1,
-//         username: 'u',
-//         name: 'n',
-//         surname: 's',
-//         type: 'citizen',
-//       });
-//     });
-//   });
+  describe("getUserById", () => {
+    it("rejects on DB error", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) => cb(new Error("DB err")));
+      await expect(userDao.getUserById(1)).rejects.toThrow("DB err");
+    });
 
-//   // --- getUserById ----------------------------------------------
-//   describe('getUserById', () => {
-//     it('should resolve user row', async () => {
-//       const mockRow = { id: 1, username: 'a' };
-//       db.get.mockImplementation((sql, params, cb) => cb(null, mockRow));
-//       const result = await userDao.getUserById(1);
-//       expect(result).toEqual(mockRow);
-//     });
+    it("resolves with user row", async () => {
+      const row = { id: 1, username: "x" };
+      dbGetMock.mockImplementation((sql, params, cb) => cb(null, row));
+      const res = await userDao.getUserById(1);
+      expect(res).toEqual(row);
+    });
+  });
 
-//     it('should reject if db.get fails', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(new Error('boom')));
-//       await expect(userDao.getUserById(1)).rejects.toThrow('boom');
-//     });
-//   });
+  describe("getUserByUsername", () => {
+    it("rejects on DB error", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) => cb(new Error("fail")));
+      await expect(userDao.getUserByUsername("a")).rejects.toThrow("fail");
+    });
 
-//   // --- getUserByUsername -----------------------------------------
-//   describe('getUserByUsername', () => {
-//     it('should resolve row if found', async () => {
-//       const mockRow = { id: 10 };
-//       db.get.mockImplementation((sql, params, cb) => cb(null, mockRow));
-//       const result = await userDao.getUserByUsername('u');
-//       expect(result).toEqual(mockRow);
-//     });
+    it("resolves with row", async () => {
+      const row = { id: 99 };
+      dbGetMock.mockImplementation((sql, params, cb) => cb(null, row));
+      const res = await userDao.getUserByUsername("a");
+      expect(res).toEqual(row);
+    });
+  });
 
-//     it('should reject if db.get throws', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(new Error('err')));
-//       await expect(userDao.getUserByUsername('u')).rejects.toThrow('err');
-//     });
-//   });
+  describe("getUserByEmail", () => {
+    it("rejects on DB error", async () => {
+      dbGetMock.mockImplementation((sql, params, cb) => cb(new Error("fail")));
+      await expect(userDao.getUserByEmail("a@b.c")).rejects.toThrow("fail");
+    });
 
-//   // --- getUserByEmail --------------------------------------------
-//   describe('getUserByEmail', () => {
-//     it('should resolve row if found', async () => {
-//       const mockRow = { id: 5 };
-//       db.get.mockImplementation((sql, params, cb) => cb(null, mockRow));
-//       const result = await userDao.getUserByEmail('mail');
-//       expect(result).toEqual(mockRow);
-//     });
+    it("resolves with row", async () => {
+      const row = { id: 7 };
+      dbGetMock.mockImplementation((sql, params, cb) => cb(null, row));
+      const res = await userDao.getUserByEmail("a@b.c");
+      expect(res).toEqual(row);
+    });
+  });
 
-//     it('should reject if db.get throws', async () => {
-//       db.get.mockImplementation((sql, params, cb) => cb(new Error('err')));
-//       await expect(userDao.getUserByEmail('x')).rejects.toThrow('err');
-//     });
-//   });
+  describe("createUser", () => {
+    it("rejects on genSalt error", async () => {
+      bcrypt.genSalt = jest.fn().mockRejectedValue(new Error("salt fail"));
+      await expect(
+        userDao.createUser({ username: "a", email: "e", name: "n", surname: "s", password: "p" })
+      ).rejects.toThrow("salt fail");
+    });
 
-//   // --- createUser ------------------------------------------------
-//   describe('createUser', () => {
-//     it('should insert user and resolve object', async () => {
-//       jest.spyOn(bcrypt, 'genSalt').mockResolvedValue('salt');
-//       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed');
-//       db.run.mockImplementation(function (sql, params, cb) {
-//         this.lastID = 123;
-//         cb.call(this, null);
-//       });
+    it("rejects on hash error", async () => {
+      bcrypt.genSalt = jest.fn().mockResolvedValue("salt");
+      bcrypt.hash = jest.fn().mockRejectedValue(new Error("hash fail"));
+      await expect(
+        userDao.createUser({ username: "a", email: "e", name: "n", surname: "s", password: "p" })
+      ).rejects.toThrow("hash fail");
+    });
 
-//       const user = await userDao.createUser({
-//         username: 'u',
-//         email: 'e',
-//         name: 'n',
-//         surname: 's',
-//         password: 'p',
-//       });
+    it("rejects on db.run error", async () => {
+      bcrypt.genSalt = jest.fn().mockResolvedValue("salt");
+      bcrypt.hash = jest.fn().mockResolvedValue("hash");
+      dbRunMock.mockImplementation((sql, p, cb) => cb(new Error("db run fail")));
+      await expect(
+        userDao.createUser({ username: "a", email: "e", name: "n", surname: "s", password: "p" })
+      ).rejects.toThrow("db run fail");
+    });
 
-//       expect(user).toEqual({
-//         id: 123,
-//         username: 'u',
-//         email: 'e',
-//         name: 'n',
-//         surname: 's',
-//         type: 'citizen',
-//       });
-//     });
+    it("resolves correctly on success", async () => {
+      bcrypt.genSalt = jest.fn().mockResolvedValue("salt");
+      bcrypt.hash = jest.fn().mockResolvedValue("hash");
+      dbRunMock.mockImplementation(function (sql, params, cb) {
+        cb.call({ lastID: 123 }, null);
+      });
+      const res = await userDao.createUser({
+        username: "a",
+        email: "e",
+        name: "n",
+        surname: "s",
+        password: "p",
+      });
+      expect(res).toEqual({
+        id: 123,
+        username: "a",
+        email: "e",
+        name: "n",
+        surname: "s",
+        type: "citizen",
+      });
+    });
+  });
 
-//     it('should reject if db.run fails', async () => {
-//       jest.spyOn(bcrypt, 'genSalt').mockResolvedValue('salt');
-//       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed');
-//       db.run.mockImplementation(function (sql, params, cb) {
-//         cb(new Error('insert fail'));
-//       });
-//       await expect(
-//         userDao.createUser({ username: 'a', email: 'b', name: 'c', surname: 'd', password: 'p' })
-//       ).rejects.toThrow('insert fail');
-//     });
+  describe("updateUserTypeById", () => {
+    it("rejects invalid role", async () => {
+      await expect(userDao.updateUserTypeById(1, "xxx")).rejects.toThrow("Invalid role");
+    });
 
-//     it('should reject if bcrypt throws', async () => {
-//       jest.spyOn(bcrypt, 'genSalt').mockRejectedValue(new Error('bcrypt fail'));
-//       await expect(
-//         userDao.createUser({ username: 'a', email: 'b', name: 'c', surname: 'd', password: 'p' })
-//       ).rejects.toThrow('bcrypt fail');
-//     });
-//   });
+    it("rejects on DB error", async () => {
+      dbRunMock.mockImplementation((sql, p, cb) => cb(new Error("fail")));
+      await expect(userDao.updateUserTypeById(1, ALLOWED_ROLES[0])).rejects.toThrow("fail");
+    });
 
-//   // --- updateUserTypeById ---------------------------------------
-//   describe('updateUserTypeById', () => {
-//     it('should reject if newType not allowed', async () => {
-//       await expect(userDao.updateUserTypeById(1, 'invalid')).rejects.toThrow('Invalid role');
-//     });
+    it("resolves null if no row updated", async () => {
+      dbRunMock.mockImplementation(function (sql, p, cb) {
+        cb.call({ changes: 0 }, null);
+      });
+      const res = await userDao.updateUserTypeById(1, ALLOWED_ROLES[0]);
+      expect(res).toBeNull();
+    });
 
-//     it('should reject if db.run fails', async () => {
-//       db.run.mockImplementation((sql, params, cb) => cb(new Error('fail')));
-//       await expect(userDao.updateUserTypeById(1, 'citizen')).rejects.toThrow('fail');
-//     });
+    it("resolves updated user if row updated", async () => {
+      dbRunMock.mockImplementation(function (sql, p, cb) {
+        cb.call({ changes: 1 }, null);
+      });
+      const res = await userDao.updateUserTypeById(1, ALLOWED_ROLES[0]);
+      expect(res).toEqual({ id: 1, type: ALLOWED_ROLES[0] });
+    });
 
-//     it('should resolve null if no rows updated', async () => {
-//       db.run.mockImplementation(function (sql, params, cb) {
-//         this.changes = 0;
-//         cb.call(this, null);
-//       });
-//       const result = await userDao.updateUserTypeById(1, 'citizen');
-//       expect(result).toBeNull();
-//     });
+    it("rejects if db.run throws synchronously", async () => {
+      dbRunMock.mockImplementation(() => {
+        throw new Error("sync fail");
+      });
+      await expect(userDao.updateUserTypeById(1, ALLOWED_ROLES[0])).rejects.toThrow("sync fail");
+    });
 
-//     it('should resolve updated object if successful', async () => {
-//       db.run.mockImplementation(function (sql, params, cb) {
-//         this.changes = 1;
-//         cb.call(this, null);
-//       });
-//       const result = await userDao.updateUserTypeById(42, 'citizen');
-//       expect(result).toEqual({ id: 42, type: 'citizen' });
-//     });
-//   });
+    it("handles missing this.changes safely", async () => {
+      dbRunMock.mockImplementation((sql, p, cb) => cb(null));
+      const result = await userDao.updateUserTypeById(1, ALLOWED_ROLES[0]);
+      // If no 'this.changes', assume success path
+      expect(result).toEqual({ id: 1, type: ALLOWED_ROLES[0] });
+    });
 
-//   // --- findMunicipalityUsers ------------------------------------
-//   describe('findMunicipalityUsers', () => {
-//     it('should resolve rows array', async () => {
-//       const mockRows = [{ id: 1, type: 'operator' }];
-//       db.all.mockImplementation((sql, params, cb) => cb(null, mockRows));
-//       const result = await userDao.findMunicipalityUsers();
-//       expect(result).toEqual(mockRows);
-//     });
+  });
 
-//     it('should reject if db.all fails', async () => {
-//       db.all.mockImplementation((sql, params, cb) => cb(new Error('boom')));
-//       await expect(userDao.findMunicipalityUsers()).rejects.toThrow('boom');
-//     });
+  describe("findMunicipalityUsers", () => {
+    it("rejects on DB error", async () => {
+      dbAllMock.mockImplementation((sql, p, cb) => cb(new Error("fail")));
+      await expect(userDao.findMunicipalityUsers()).rejects.toThrow("fail");
+    });
 
-//     it('should resolve empty array if no rows', async () => {
-//       db.all.mockImplementation((sql, params, cb) => cb(null, undefined));
-//       const result = await userDao.findMunicipalityUsers();
-//       expect(result).toEqual([]);
-//     });
-//   });
-// });
+    it("resolves with rows", async () => {
+      const rows = [{ id: 1 }, { id: 2 }];
+      dbAllMock.mockImplementation((sql, p, cb) => cb(null, rows));
+      const res = await userDao.findMunicipalityUsers();
+      expect(res).toEqual(rows);
+    });
+
+    it("resolves empty array when rows undefined", async () => {
+      dbAllMock.mockImplementation((sql, p, cb) => cb(null, undefined));
+      const res = await userDao.findMunicipalityUsers();
+      expect(res).toEqual([]);
+    });
+  });
+});

@@ -1,51 +1,137 @@
-// __tests__/report.repository.test.js
-jest.mock('../../server/dao/reportDao', () => ({
-  createReport: jest.fn(),
-  getReportById: jest.fn(),
-}));
+"use strict";
 
-const repo = require('../../server/repository/reportRepository');
-const dao = require('../../server/dao/reportDao');
+// Mock for sqlite3
+const dbRunMock = jest.fn();
+const dbGetMock = jest.fn();
 
-describe('reportRepository.createReport', () => {
-  beforeEach(() => jest.clearAllMocks());
+jest.mock("sqlite3", () => {
+  const mDb = function () {
+    return { run: dbRunMock, get: dbGetMock };
+  };
+  return { Database: mDb };
+});
 
-  it('valida e chiama dao, ritorna DTO corretto', async () => {
-    dao.createReport.mockResolvedValue({
-      id: 10, userId: 1, latitude: 45, longitude: 7, title: 'T', description: 'D',
-      category: 'Public Lighting', status: 'OPEN', created_at: '2025-01-01', updated_at: '2025-01-01',
-      image_path1: '/static/uploads/a.jpg', image_path2: null, image_path3: null,
+const reportDao = require("../../server/dao/reportDao");
+
+describe("reportDao", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("createReport", () => {
+    it("rejects when db.run fails", async () => {
+      dbRunMock.mockImplementation((sql, p, cb) => cb(new Error("insert fail")));
+      await expect(
+        reportDao.createReport({
+          userId: 1,
+          latitude: 1,
+          longitude: 2,
+          title: "t",
+          description: "d",
+          category: "c",
+          photos: ["a"],
+        })
+      ).rejects.toThrow("insert fail");
     });
 
-    const out = await repo.createReport({
-      userId: 1, latitude: 45, longitude: 7, title: '  T  ', description: ' D ',
-      category: 'Public Lighting', photos: ['/static/uploads/a.jpg'],
+    it("rejects when db.get fails after insert", async () => {
+      dbRunMock.mockImplementation(function (sql, params, cb) {
+        cb.call({ lastID: 99 }, null);
+      });
+      dbGetMock.mockImplementation((sql, p, cb) => cb(new Error("select fail")));
+
+      await expect(
+        reportDao.createReport({
+          userId: 1,
+          latitude: 1,
+          longitude: 2,
+          title: "t",
+          description: "d",
+          category: "c",
+          photos: ["a"],
+        })
+      ).rejects.toThrow("select fail");
     });
 
-    expect(dao.createReport).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'T', description: 'D',
-    }));
-    expect(out.photos).toEqual(['/static/uploads/a.jpg']);
+    it("resolves with created report", async () => {
+      dbRunMock.mockImplementation(function (sql, params, cb) {
+        cb.call({ lastID: 10 }, null);
+      });
+      const fakeRow = { id: 10, title: "t" };
+      dbGetMock.mockImplementation((sql, p, cb) => cb(null, fakeRow));
+
+      const res = await reportDao.createReport({
+        userId: 1,
+        latitude: 45,
+        longitude: 7,
+        title: "t",
+        description: "d",
+        category: "c",
+        photos: ["p1", "p2"],
+      });
+
+      expect(res).toEqual(fakeRow);
+      expect(dbRunMock).toHaveBeenCalledTimes(1);
+      expect(dbGetMock).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('errore se photos vuoto', async () => {
-    await expect(repo.createReport({
-      userId: 1, latitude: 45, longitude: 7, title: 'T', description: 'D',
-      category: 'Public Lighting', photos: [],
-    })).rejects.toThrow(/Photos array must contain between 1 and 3 items/i);
+  describe("getReportById", () => {
+    it("rejects when db.get fails", async () => {
+      dbGetMock.mockImplementation((sql, p, cb) => cb(new Error("db fail")));
+      await expect(reportDao.getReportById(1)).rejects.toThrow("db fail");
+    });
+
+    it("resolves with report row", async () => {
+      const row = { id: 1, title: "T" };
+      dbGetMock.mockImplementation((sql, p, cb) => cb(null, row));
+      const res = await reportDao.getReportById(1);
+      expect(res).toEqual(row);
+    });
+
+    it("resolves with undefined row (no match)", async () => {
+      dbGetMock.mockImplementation((sql, p, cb) => cb(null, undefined));
+      const res = await reportDao.getReportById(999);
+      expect(res).toBeUndefined();
+    });
+
   });
 
-  it('errore se categoria invalida', async () => {
-    await expect(repo.createReport({
-      userId: 1, latitude: 45, longitude: 7, title: 'T', description: 'D',
-      category: 'INVALID', photos: ['/x.jpg'],
-    })).rejects.toThrow(/Category is invalid/i);
-  });
+    it("handles missing optional photos (null values)", async () => {
+      dbRunMock.mockImplementation(function (sql, params, cb) {
+        cb.call({ lastID: 1 }, null);
+      });
+      const fakeRow = { id: 1, title: "null photos" };
+      dbGetMock.mockImplementation((sql, p, cb) => cb(null, fakeRow));
 
-  it('errore se lat/lon fuori range', async () => {
-    await expect(repo.createReport({
-      userId: 1, latitude: -200, longitude: 7, title: 'T', description: 'D',
-      category: 'Public Lighting', photos: ['/x.jpg'],
-    })).rejects.toThrow(/Latitude must be a number between -90 and 90/i);
-  });
+      const res = await reportDao.createReport({
+        userId: 1,
+        latitude: 10,
+        longitude: 20,
+        title: "t",
+        description: "d",
+        category: "c",
+        photos: ["p1"], // only one photo, rest must become null
+      });
+      expect(res).toEqual(fakeRow);
+    });
+
+    it("logs and rejects insert error explicitly", async () => {
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      dbRunMock.mockImplementation((sql, p, cb) => cb(new Error("manual insert fail")));
+      await expect(
+        reportDao.createReport({
+          userId: 1,
+          latitude: 1,
+          longitude: 2,
+          title: "x",
+          description: "y",
+          category: "z",
+          photos: ["a"],
+        })
+      ).rejects.toThrow("manual insert fail");
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
 });
