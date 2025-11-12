@@ -157,8 +157,8 @@ export default function MapPage() {
       {/* Users Table Card - Centered */}
       <div className="d-flex justify-content-center align-items-start flex-grow-1 p-4 mt-5">
         <Card style={{ 
-          width: '50%', 
-          maxWidth: '75rem', 
+          width: '90%', 
+          maxWidth: '120rem', 
           boxShadow: '0 0.5rem 1.5rem rgba(0,0,0,0.2)', 
           minHeight: '70vh',
           overflow: 'visible',
