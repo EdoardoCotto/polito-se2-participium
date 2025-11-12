@@ -34,21 +34,18 @@ export default function CitizenPage({ user }) {
 
     fetchCategories();
   }, []);
-  console.log('Categories loaded:', categories);
+  console.log(photos)
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && photos.length < 3) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos([...photos, { name: file.name, data: reader.result }]);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = ''; // Reset input
+      setPhotos([...photos, { name: file.name, file: file, preview: URL.createObjectURL(file) }]);
+    e.target.value = ''; // Reset input
     }
   };
 
   const handleRemovePhoto = (index) => {
+    URL.revokeObjectURL(photos[index].preview);
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
@@ -73,7 +70,7 @@ export default function CitizenPage({ user }) {
       setSubmitError('Please select a category.');
       return;
     }
-    if (photos.length === 0) {
+    if (photos.length < 1) {
       setSubmitError('Please upload at least one photo.');
       return;
     }
@@ -81,16 +78,19 @@ export default function CitizenPage({ user }) {
       setSubmitting(true);
       const { createReport } = (await import('../API/API.js')).default;
 
+      const files = photos.map(p => p.file);
+
       await createReport({
         title: title.trim(),
         category: category.trim(),
         description: description.trim(),
         latitude: selectedLocation.lat,
         longitude: selectedLocation.lng,
-        photo1: photos[0]?.data,
-        photo2: photos[1]?.data || null,
-        photo3: photos[2]?.data || null
+        files: files,
       });
+
+      // Cleanup URLs
+      photos.forEach(p => URL.revokeObjectURL(p.preview));
 
       setSubmitOk('Report created successfully!');
       setTitle('');
@@ -212,7 +212,7 @@ export default function CitizenPage({ user }) {
                               onClick={() => handlePhotoClick(photo)}
                             >
                               <i className="bi bi-file-earmark-image me-2 text-primary"></i>
-                              <span className="text-truncate" style={{ maxWidth: '200px' }}>
+                              <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
                                 {photo.name}
                               </span>
                               <i className="bi bi-eye ms-2 text-muted small"></i>
@@ -248,7 +248,7 @@ export default function CitizenPage({ user }) {
                             style={{ borderRadius: '8px', cursor: 'pointer' }}
                           >
                             <i className="bi bi-plus-circle me-2"></i>
-                            Add Photo ({photos.length+1}/3)
+                            Add Photo ({photos.length}/3)
                           </Button>
                         </label>
                       </>
@@ -327,7 +327,7 @@ export default function CitizenPage({ user }) {
         <Modal.Body className="text-center">
           {selectedPhoto && (
             <img 
-              src={selectedPhoto.data} 
+              src={selectedPhoto.preview} 
               alt={selectedPhoto.name} 
               style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
             />
