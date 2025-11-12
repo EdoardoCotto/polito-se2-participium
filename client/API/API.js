@@ -222,12 +222,21 @@ const getMunicipalityUsers = async () => {
 
 
 
-async function createReport({ title, description, latitude, longitude }) {
+async function createReport({ title, description, latitude, longitude, photo1, photo2, photo3 }) {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('latitude', latitude);
+  formData.append('longitude', longitude);
+  let photos = []
+  if (photo1) photos.append('photos', photo1);
+  if (photo2) photos.append('photos', photo2);
+  if (photo3) photos.append('photos', photo3);
+  formData.append('photos', photos);
   const response = await fetch(`${SERVER_URL}/reports`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ title, description, latitude, longitude })
+    body: formData
   });
 
   if (!response.ok) {
