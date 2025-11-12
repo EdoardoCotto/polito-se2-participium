@@ -3,40 +3,29 @@
 const express = require('express');
 const router = express.Router();
 const reportController = require('../controller/reportController')
-
-
-/**
- * @swagger
- * tags:
- *   name: Reports
- *   description: Reports management
- */
-
+const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
+const { isLoggedIn, isAdmin } = require('../middlewares/authMiddleware');
 /**
  * @swagger
  * /reports:
  *   post:
- *     summary: Add one new report
+ *     summary: Add one new report (with photos upload)
  *     tags: [Reports]
+ *     // Se NON vuoi la security globale, metti qui:
+ *     // security:
+ *     //   - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required: [latitude, longitude, title, description, category, photos]
  *             properties:
- *               latitude:
- *                 type: number
- *                 example: 45.062394
- *               longitude:
- *                 type: number
- *                 example: 7.662697
- *               title:
- *                 type: string
- *                 example: "Pothole in via Garibaldi"
- *               description:
- *                 type: string
- *                 example: "Large pothole causing danger for cyclists"
+ *               latitude: { type: number, example: 45.062394 }
+ *               longitude: { type: number, example: 7.662697 }
+ *               title: { type: string, example: "Pothole in via Garibaldi" }
+ *               description: { type: string, example: "Large pothole causing danger for cyclists" }
  *               category:
  *                 type: string
  *                 enum:
@@ -53,39 +42,31 @@ const reportController = require('../controller/reportController')
  *                 type: array
  *                 minItems: 1
  *                 maxItems: 3
+ *                 description: "Attach 1–3 images using the same key 'photos'."
  *                 items:
  *                   type: string
- *                 example:
- *                   - "/static/uploads/report-123/photo-1.jpg"
+ *                   format: binary
  *     responses:
  *       201:
- *         description: Report inserted correctly
+ *         description: Report created
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 latitude:
- *                   type: number
- *                 longitude:
- *                   type: number
- *                 title:
- *                   type: string
- *                 description:
- *                   type: string
- *                 category:
- *                   type: string
- *                 photos:
- *                   type: array
- *                   items:
- *                     type: string
+ *               $ref: '#/components/schemas/Report'
  *       400:
- *          description: Validation error
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: User is not a citizen
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/reports', reportController.createReport)
+
+router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createReport);
 
 module.exports = router
