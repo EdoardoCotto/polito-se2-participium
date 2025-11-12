@@ -234,10 +234,11 @@ const getMunicipalityUsers = async () => {
  * @param {File} photo3 - Third photo file (optional) 
  * @returns 
  */
-async function createReport({ title, description, latitude, longitude, photo1, photo2, photo3 }) {
+async function createReport({ title, description, category, latitude, longitude, photo1, photo2, photo3 }) {
   const formData = new FormData();
   formData.append('title', title);
   formData.append('description', description);
+  formData.append('category', category);
   formData.append('latitude', latitude);
   formData.append('longitude', longitude);
   let photos = []
