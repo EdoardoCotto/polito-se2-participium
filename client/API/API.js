@@ -221,7 +221,19 @@ const getMunicipalityUsers = async () => {
 };
 
 
-
+/**
+ * Create Report
+ * Creates a new report with details and photos
+ * Requires citizen authentication
+ * @param {string} title - Title of the report
+ * @param {string} description - Description of the report
+ * @param {number} latitude - Latitude of the report location
+ * @param {number} longitude - Longitude of the report location
+ * @param {File} photo1 - First photo file
+ * @param {File} photo2 - Second photo file (optional)
+ * @param {File} photo3 - Third photo file (optional) 
+ * @returns 
+ */
 async function createReport({ title, description, latitude, longitude, photo1, photo2, photo3 }) {
   const formData = new FormData();
   formData.append('title', title);
