@@ -24,15 +24,14 @@ CREATE TABLE IF NOT EXISTS Reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   latitude REAL NOT NULL,
   longitude REAL NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  image_path1 TEXT NOT NULL,
+  image_path2 TEXT,
+  image_path3 TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DFATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE 
 );
-
-
--- Sample data (optional - remove if you don't want test data)
-INSERT INTO Users (username, email, name, surname, type, password, salt) VALUES
-('admin', 'admin@example.org', 'Mario', 'Rossi', 'admin', 'hashed_password_1', 'salt_1'),
-('citizen1', 'citizen1@example.org', 'Luigi', 'Verdi', 'citizen', 'hashed_password_2', 'salt_2'),
-('citizen2', 'citizen2@example.org', 'Maria', 'Bianchi', 'citizen', 'hashed_password_3', 'salt_3');
