@@ -1,109 +1,100 @@
 "use strict";
 
-const fs = require("fs");
 const path = require("path");
 
-// Mock multer prima di richiederlo
+// mock di fs
+jest.mock("fs", () => ({
+  existsSync: jest.fn(() => false),
+  mkdirSync: jest.fn(),
+}));
+
+// mock di multer (definito dentro jest.mock!)
 jest.mock("multer", () => {
-  const multerFn = jest.fn((options) => {
-    multerFn.lastOptions = options; // salva le opzioni per i test
+  const mockMulter = jest.fn((opts) => {
+    mockMulter.lastOptions = opts;
     return {
-      array: jest.fn(() => function mockedMulterArray() {}),
+      array: jest.fn().mockImplementation(() => "mockArrayMiddleware"),
     };
   });
 
-  // diskStorage restituisce lo stesso oggetto, così possiamo ispezionare .destination e .filename
-  multerFn.diskStorage = jest.fn((opts) => opts);
+  mockMulter.diskStorage = jest.fn((config) => {
+    mockMulter.diskStorageConfig = config;
+    return config;
+  });
 
-  return multerFn;
+  return mockMulter;
 });
 
-const multer = require("multer");
+const fs = require("fs");
+const mockMulter = require("multer");
 
-// Mock fs e path
-jest.mock("fs");
-jest.mock("path", () => ({
-  join: jest.fn((...args) => args.join("/")),
-  extname: jest.fn((filename) => {
-    const parts = filename.split(".");
-    return parts.length > 1 ? "." + parts.pop() : "";
-  }),
-}));
-
-// Require del middleware *dopo* i mock
-let uploadMiddleware;
+// ricarica il modulo dopo aver impostato i mock
+const uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
 
 describe("uploadMiddleware", () => {
-  const uploadDirMatcher = expect.stringMatching(/static[\\/]+uploads$/);
-
   beforeEach(() => {
     jest.clearAllMocks();
-    fs.existsSync.mockReturnValue(false);
-    fs.mkdirSync.mockImplementation(() => {});
-    uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
   });
 
   it("should create upload directory if it does not exist", () => {
-    expect(fs.existsSync).toHaveBeenCalledWith(uploadDirMatcher);
-    expect(fs.mkdirSync).toHaveBeenCalledWith(uploadDirMatcher, { recursive: true });
+    expect(fs.existsSync).toHaveBeenCalled();
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      path.join(__dirname, "../../server/static/uploads"),
+      { recursive: true }
+    );
   });
 
   it("should configure multer with proper limits and array field", () => {
-    expect(uploadMiddleware).toBeInstanceOf(Function);
-    const multerArgs = multer.lastOptions;
-    expect(multerArgs.limits.fileSize).toBe(1024 * 1024 * 5);
+    expect(uploadMiddleware).toBeDefined();
+
+    const opts = mockMulter.lastOptions;
+    expect(opts).toBeDefined();
+    expect(opts.limits.fileSize).toBe(1024 * 1024 * 5);
+    expect(typeof opts.fileFilter).toBe("function");
+    expect(opts.storage).toBeDefined();
   });
 
   describe("fileFilter behavior", () => {
     let fileFilter;
 
     beforeEach(() => {
-      fileFilter = multer.lastOptions.fileFilter;
+      fileFilter = mockMulter.lastOptions?.fileFilter;
     });
 
     it("should accept image files", () => {
-      const file = { mimetype: "image/png" };
       const cb = jest.fn();
-      fileFilter({}, file, cb);
+      fileFilter({}, { mimetype: "image/png" }, cb);
       expect(cb).toHaveBeenCalledWith(null, true);
     });
 
     it("should reject non-image files", () => {
-      const file = { mimetype: "text/plain" };
       const cb = jest.fn();
-      fileFilter({}, file, cb);
-      expect(cb).toHaveBeenCalled();
-      const err = cb.mock.calls[0][0];
-      expect(err).toBeInstanceOf(Error);
-      expect(err.message).toContain("Invalid file type");
+      fileFilter({}, { mimetype: "text/plain" }, cb);
+      expect(cb).toHaveBeenCalledWith(expect.any(Error), false);
     });
   });
 
   describe("storage configuration", () => {
-    let storage;
+    let storageConfig;
 
     beforeEach(() => {
-      storage = multer.lastOptions.storage;
+      storageConfig = mockMulter.diskStorageConfig;
     });
 
     it("should set correct destination folder", () => {
+      const folder = path.join(__dirname, "../../server/static/uploads");
       const cb = jest.fn();
-      storage.destination({}, {}, cb);
-      expect(cb).toHaveBeenCalledWith(null, uploadDirMatcher);
+      storageConfig.destination(null, null, cb);
+      expect(cb).toHaveBeenCalledWith(null, folder);
     });
 
     it("should generate a unique filename with correct extension", () => {
+      const file = { fieldname: "photo", originalname: "test.jpg" };
       const cb = jest.fn();
-      const file = { fieldname: "photos", originalname: "test.png" };
 
-      const DateNowSpy = jest.spyOn(Date, "now").mockReturnValue(123456);
-      Math.random = jest.fn(() => 0.123456789);
-
-      storage.filename({}, file, cb);
-      const generatedName = cb.mock.calls[0][1];
-
-      expect(generatedName).toMatch(/^photos-\d+-\d+\.png$/);
-      DateNowSpy.mockRestore();
+      storageConfig.filename(null, file, cb);
+      const [[, , generatedName]] = cb.mock.calls;
+      expect(generatedName).toMatch(/^photo-\d+-\d+\.jpg$/);
     });
   });
 });

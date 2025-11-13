@@ -1,4 +1,4 @@
-/*"use strict";
+"use strict";
 
 jest.mock("sqlite3", () => {
   const mockDb = {
@@ -107,4 +107,3 @@ describe("reportDao Functions", () => {
     });
   });
 });
-*/
