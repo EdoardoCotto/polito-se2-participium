@@ -24,22 +24,26 @@ exports.createReport = ({ userId, latitude, longitude, title, description, categ
 
     const insertSql = `INSERT INTO Reports (userId, latitude, longitude, title, description, category, image_path1, image_path2, image_path3)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.run(insertSql, [userId, latitude, longitude, title, description, category, photo1, photo2, photo3], function (insertErr) {
-      if (insertErr) {
-        console.error('Error inserting report:', insertErr);
-        reject(insertErr);
-        return;
-      }
-      // Retrieve the created report
-      const selectSql = 'SELECT * FROM Reports WHERE id = ?';
-      db.get(selectSql, [this.lastID], (err, row) => {
-        if (err) {
-          reject(err);
+    db.run(
+      insertSql,
+      [userId, latitude, longitude, title, description, category, photo1, photo2, photo3],
+      function (insertErr) {
+        if (insertErr) {
+          console.error('Error inserting report:', insertErr);
+          reject(insertErr);
           return;
         }
-        resolve(row);
-      });
-    });
+        // Retrieve the created report
+        const selectSql = 'SELECT * FROM Reports WHERE id = ?';
+        db.get(selectSql, [this.lastID], (err, row) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(row);
+        });
+      }
+    );
   });
 };
 
@@ -61,4 +65,53 @@ exports.getReportById = (reportId) => {
   });
 };
 
+/**
+ * Update report status / review info
+ * @param {number} reportId
+ * @param {{ status: string, rejectionReason?: string|null, technicalOffice?: string|null }} data
+ * @returns {Promise<Object|null>}
+ */
+exports.updateReportReview = (reportId, { status, rejectionReason = null, technicalOffice = null }) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE Reports
+      SET status = ?,
+          rejection_reason = ?,
+          technical_office = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    db.run(sql, [status, rejectionReason, technicalOffice, reportId], function (err) {
+      if (err) {
+        return reject(err);
+      }
+      if (this.changes === 0) {
+        // nessuna riga aggiornata
+        return resolve(null);
+      }
+      db.get('SELECT * FROM Reports WHERE id = ?', [reportId], (err2, row) => {
+        if (err2) {
+          return reject(err2);
+        }
+        resolve(row);
+      });
+    });
+  });
+};
 
+/**
+ * Get reports filtered by status
+ * @param {string} status
+ * @returns {Promise<Object[]>}
+ */
+exports.getReportsByStatus = (status) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT * FROM Reports WHERE status = ? ORDER BY created_at DESC';
+    db.all(sql, [status], (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(rows || []);
+    });
+  });
+};

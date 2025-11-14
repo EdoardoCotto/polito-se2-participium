@@ -44,5 +44,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3001;
 if (require.main === module && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+  console.log(`📚 Swagger docs available at http://localhost:${PORT}/api-docs`);
 }
 module.exports = app;

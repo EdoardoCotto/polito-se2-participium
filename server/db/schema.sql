@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS Reports (
   image_path1 TEXT NOT NULL,
   image_path2 TEXT,
   image_path3 TEXT,
-  status TEXT NOT NULL DEFAULT 'pending',
+  status TEXT NOT NULL DEFAULT 'pending', -- possible values: 'pending', 'approved', 'rejected'  etc
+  rejection_reason TEXT,
+  technical_office TEXT, -- anche questo campo dovra essere ridotto con solo i possibili uffici tecnici
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DFATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE 
 );
