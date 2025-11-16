@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy server package files (needed for dependencies)
+COPY server/package*.json ./server/
+
+# Install dependencies
+WORKDIR /app/server
+RUN npm ci
+
+# Copy server source code
+WORKDIR /app
+COPY server/ ./server/
+
+WORKDIR /app/server
+
+# DB container just keeps the volume alive
+CMD ["tail", "-f", "/dev/null"]
+

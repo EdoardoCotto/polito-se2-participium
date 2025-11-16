@@ -1,0 +1,41 @@
+services:
+  db:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.db
+    container_name: participium-db
+    volumes:
+      - db-data:/app/server/db
+    restart: unless-stopped
+    command: tail -f /dev/null
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: participium-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - db-data:/app/server/db
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: participium-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db-data:
+

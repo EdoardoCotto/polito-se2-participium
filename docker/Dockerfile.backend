@@ -1,0 +1,30 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy server package files
+COPY server/package*.json ./server/
+
+# Install server dependencies
+WORKDIR /app/server
+RUN npm ci
+
+# Copy server source code
+WORKDIR /app
+COPY server/ ./server/
+
+# Copy db init files to a location that won't be overwritten by volume mount
+# The volume mounts at /app/server/db, so we keep init files elsewhere
+RUN mkdir -p /app/db-init && \
+    cp /app/server/db/init.js /app/db-init/ && \
+    cp /app/server/db/schema.sql /app/db-init/ && \
+    echo "✅ DB init files copied"
+
+EXPOSE 3001
+
+WORKDIR /app/server
+
+# Initialize database and start server (same as monolithic app)
+# Copy init files to db directory (volume mount) before running init.js
+CMD ["sh", "-c", "cp /app/db-init/* /app/server/db/ && cd /app/server && node db/init.js && node index.js"]
+
