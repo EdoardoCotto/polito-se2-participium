@@ -253,6 +253,78 @@ async function createReport({ title, description, category, latitude, longitude,
 }
 
 /**
+ * Get Pending Reports
+ * Retrieves all reports with status "pending" that need to be reviewed
+ * Requires admin or municipal public relations officer authentication
+ * @returns {Promise<Array>} - Array of pending report objects
+ * @throws {Error} - If request fails (unauthorized, forbidden, etc.)
+ */
+const getPendingReports = async () => {
+  const response = await fetch(`${SERVER_URL}/reports/pending`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get pending reports');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Report By ID
+ * Retrieves a single report by its ID
+ * Requires authentication
+ * @param {number} reportId - The ID of the report to retrieve
+ * @returns {Promise<Object>} - Report object with all details
+ * @throws {Error} - If request fails (invalid ID, not found, unauthorized, etc.)
+ */
+const getReportById = async (reportId) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get report');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Review Report
+ * Allows admin or municipal public relations officer to accept or reject a report
+ * - If status is "accepted", technicalOffice must be provided
+ * - If status is "rejected", explanation must be provided
+ * Requires admin or municipal public relations officer authentication
+ * @param {number} reportId - The ID of the report to review
+ * @param {Object} reviewData - Review data
+ * @param {string} reviewData.status - "accepted" or "rejected"
+ * @param {string} [reviewData.explanation] - Required if status is "rejected"
+ * @param {string} [reviewData.technicalOffice] - Required if status is "accepted" (e.g., 'urban_planner', 'public_works_engineer')
+ * @returns {Promise<Object>} - Updated report object
+ * @throws {Error} - If review fails (validation error, unauthorized, forbidden, not found, etc.)
+ */
+const reviewReport = async (reportId, reviewData) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}/review`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(reviewData),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to review report');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
  * @returns {Promise<Array>} - Array of report categories
@@ -284,6 +356,9 @@ const API = {
 
   // Report management
   createReport,
+  getPendingReports,
+  getReportById,
+  reviewReport,
 
   // Constants
   getCategories,
