@@ -22,3 +22,14 @@ exports.isAdmin = (req, res, next) => {
         return next(new UnauthorizedError('User not authenticated'));
     }
 }
+exports.isMunicipal_public_relations_officer = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        if (req.user.type === 'municipal_public_relations_officer') {
+            return next();
+        } else {
+            return next(new UnauthorizedError('User is not admin'));
+        }
+    } else {
+        return next(new UnauthorizedError('User not authenticated'));
+    }
+}

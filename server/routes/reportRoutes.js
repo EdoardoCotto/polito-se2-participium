@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
-const { isLoggedIn, isAdmin } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -229,6 +229,6 @@ router.get('/reports/:id', isLoggedIn, reportController.getReportById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/reports/:id/review', isLoggedIn, isAdmin, reportController.reviewReport);
+router.put('/reports/:id/review', isLoggedIn, isMunicipal_public_relations_officer, reportController.reviewReport);
 
 module.exports = router;
