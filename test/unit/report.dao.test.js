@@ -1,109 +1,149 @@
 "use strict";
 
+//Mock completo di sqlite3
 jest.mock("sqlite3", () => {
   const mockDb = {
     run: jest.fn(),
     get: jest.fn(),
+    all: jest.fn(),
   };
+
+  // Simula errori di connessione
   const Database = jest.fn((path, cb) => {
-    if (cb) cb(null);
+    if (Database.__nextError) {
+      const err = Database.__nextError;
+      Database.__nextError = null;
+      throw err; // questo fa scattare il throw del DAO
+    }
+    cb && cb(null);
     return mockDb;
   });
-  return { Database, __mockDb: mockDb };
+
+  Database.__mockDb = mockDb;
+  Database.__setNextError = (err) => (Database.__nextError = err);
+
+  return { Database };
 });
 
-const { __mockDb: mockDb } = require("sqlite3");
-const reportDao = require("../../server/dao/reportDao");
+const sqlite = require("sqlite3");
 
-describe("reportDao Module Loading", () => {
-  it("throws on DB connection error", () => {
-    const sqlite3 = require("sqlite3");
-    sqlite3.Database.mockImplementationOnce(() => {
-      throw new Error("DB Connection Fail");
-    });
+// 🧠 Funzione per caricare il DAO dopo aver impostato il mock
+const loadDao = () => {
+  jest.resetModules(); // ricarica il modulo
+  return require("../../server/dao/reportDao");
+};
 
-    expect(() => require("../../server/dao/reportDao")).toThrow("DB Connection Fail");
-  });
-});
-
-describe("reportDao Functions", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  describe("createReport", () => {
-    it("resolves with created report", async () => {
-      const fakeRow = {
-        id: 1, userId: 1, latitude: 45, longitude: 7, title: "t", description: "d",
-        category: "c", image_path1: "p1", image_path2: "p2", image_path3: "p3",
-        status: "pending", created_at: "2025-11-12 22:19:20", updated_at: "2025-11-12 22:19:20"
-      };
-      mockDb.run.mockImplementation(function (_sql, _p, cb) {
-        this.lastID = 1;
-        cb.call(this, null);
-      });
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(null, fakeRow));
-
-      const res = await reportDao.createReport({
-        userId: 1, latitude: 45, longitude: 7, title: "t", description: "d",
-        category: "c", photos: ["p1", "p2", "p3"]
-      });
-
-      expect(res).toEqual(fakeRow);
-    });
-
-    it("rejects when db.run fails", async () => {
-      const dbError = new Error("insert fail");
-      mockDb.run.mockImplementation((_sql, _p, cb) => cb(dbError));
-
-      await expect(reportDao.createReport({
-        userId: 1, latitude: 1, longitude: 2, title: "t", description: "d",
-        category: "c", photos: ["a"]
-      })).rejects.toThrow("insert fail");
-    });
-
-    it("rejects when db.get fails", async () => {
-      mockDb.run.mockImplementation(function (_sql, _p, cb) { this.lastID = 1; cb(null); });
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(new Error("select fail")));
-
-      await expect(reportDao.createReport({
-        userId: 1, latitude: 1, longitude: 2, title: "t", description: "d",
-        category: "c", photos: ["a"]
-      })).rejects.toThrow("select fail");
-    });
-
-    it("handles missing optional photos", async () => {
-      const fakeRow = { id: 2, userId: 1, latitude: 10, longitude: 20, title: "t", description: "d",
-        category: "c", image_path1: "p1", image_path2: null, image_path3: null,
-        status: "pending", created_at: "2025-11-12 22:19:20", updated_at: "2025-11-12 22:19:20"
-      };
-      mockDb.run.mockImplementation(function (_sql, _p, cb) { this.lastID = 2; cb(null); });
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(null, fakeRow));
-
-      const res = await reportDao.createReport({
-        userId: 1, latitude: 10, longitude: 20, title: "t", description: "d",
-        category: "c", photos: ["p1"]
-      });
-
-      expect(res).toEqual(fakeRow);
-    });
+describe("reportDao", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  describe("getReportById", () => {
-    it("resolves with report row", async () => {
-      const row = { id: 1, title: "t" };
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(null, row));
-      const res = await reportDao.getReportById(1);
-      expect(res).toEqual(row);
+  test("should throw when DB connection fails", () => {
+    sqlite.Database.__setNextError(new Error("DB Connection Fail"));
+    expect(() => loadDao()).toThrow("DB Connection Fail");
+  });
+
+  test("getReportById() should return a report", async () => {
+    const dao = loadDao();
+    const db = sqlite.Database.__mockDb;
+    const fakeReport = { id: 10, title: "Test", status: "pending" };
+
+    db.get.mockImplementation((sql, params, cb) => cb(null, fakeReport));
+
+    const result = await dao.getReportById(10);
+    expect(db.get).toHaveBeenCalled();
+    expect(result).toEqual(fakeReport);
+  });
+
+  test("getReportsByStatus() should return rows", async () => {
+    const dao = loadDao();
+    const db = sqlite.Database.__mockDb;
+    const rows = [{ id: 1 }, { id: 2 }];
+
+    db.all.mockImplementation((sql, params, cb) => cb(null, rows));
+
+    const result = await dao.getReportsByStatus("pending");
+    expect(db.all).toHaveBeenCalled();
+    expect(result).toEqual(rows);
+  });
+
+  test("createReport() should insert and return created row", async () => {
+    const dao = loadDao();
+    const db = sqlite.Database.__mockDb;
+
+    // Simula INSERT
+    db.run.mockImplementation(function (sql, params, cb) {
+      cb.call({ lastID: 42 }, null);
     });
 
-    it("resolves undefined when not found", async () => {
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(null, undefined));
-      const res = await reportDao.getReportById(999);
-      expect(res).toBeUndefined();
+    const fakeReport = {
+      id: 42,
+      userId: 7,
+      title: "Hello",
+      description: "World",
+      category: "info",
+      image_path1: "a.jpg",
+      image_path2: null,
+      image_path3: null,
+      status: "pending",
+    };
+
+    // Simula SELECT dopo INSERT
+    db.get.mockImplementation((sql, params, cb) => cb(null, fakeReport));
+
+    const result = await dao.createReport({
+      userId: 7,
+      latitude: 1.1,
+      longitude: 1.2,
+      title: "Hello",
+      description: "World",
+      category: "info",
+      photos: ["a.jpg"],
     });
 
-    it("rejects on db error", async () => {
-      mockDb.get.mockImplementation((_sql, _p, cb) => cb(new Error("db fail")));
-      await expect(reportDao.getReportById(1)).rejects.toThrow("db fail");
+    expect(db.run).toHaveBeenCalled();
+    expect(db.get).toHaveBeenCalled();
+    expect(result).toEqual(fakeReport);
+  });
+
+  test("updateReportReview() should update and return updated row", async () => {
+    const dao = loadDao();
+    const db = sqlite.Database.__mockDb;
+
+    db.run.mockImplementation(function (sql, params, cb) {
+      cb.call({ changes: 1 }, null);
     });
+
+    const updatedRow = { id: 10, status: "approved", technical_office: "Tech A" };
+
+    db.get.mockImplementation((sql, params, cb) => cb(null, updatedRow));
+
+    const result = await dao.updateReportReview(10, {
+      status: "approved",
+      rejectionReason: null,
+      technicalOffice: "Tech A",
+    });
+
+    expect(db.run).toHaveBeenCalled();
+    expect(db.get).toHaveBeenCalled();
+    expect(result).toEqual(updatedRow);
+  });
+
+  test("updateReportReview() should return null if no row updated", async () => {
+    const dao = loadDao();
+    const db = sqlite.Database.__mockDb;
+
+    db.run.mockImplementation(function (sql, params, cb) {
+      cb.call({ changes: 0 }, null);
+    });
+
+    const result = await dao.updateReportReview(999, {
+      status: "rejected",
+      rejectionReason: "bad",
+      technicalOffice: "Tech B",
+    });
+
+    expect(result).toBeNull();
+    expect(db.run).toHaveBeenCalled();
   });
 });

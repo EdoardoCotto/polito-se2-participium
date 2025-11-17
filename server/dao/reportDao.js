@@ -6,7 +6,7 @@ const path = require('path');
 // Connessione al database
 const dbPath = path.join(__dirname, '..', 'db', 'participium.db');
 const db = new sqlite.Database(dbPath, (err) => {
-  if (err) throw err;
+  if (err) throw new Error("DB Connection Fail");
 });
 
 /**
