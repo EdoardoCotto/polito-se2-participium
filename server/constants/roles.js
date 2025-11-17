@@ -42,7 +42,19 @@ const ROLE_METADATA = {
   technical_office_staff_member: { label: 'Technical Office Staff (Generic)' },
 };
 
+const TECHNICAL_OFFICER_ROLES =[
+    // technical roles (granular)
+  'urban_planner',                // Urban planning
+  'building_permit_officer',      // Private building permits
+  'building_inspector',           // Building compliance/vigilance
+  'suap_officer',                 // One-stop shop for businesses (SUAP)
+  'public_works_engineer',        // Public works / maintenance & technical services
+  'mobility_traffic_engineer',    // Mobility & traffic
+  'environment_technician'      // Environment / built environment quality
+];
+
 module.exports = {
   ALLOWED_ROLES,
   ROLE_METADATA,
+  TECHNICAL_OFFICER_ROLES
 };
