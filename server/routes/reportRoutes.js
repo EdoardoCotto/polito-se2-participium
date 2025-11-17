@@ -105,7 +105,7 @@ router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createRep
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/reports/pending', isLoggedIn, isAdmin, reportController.getPendingReports);
+router.get('/reports/pending', isLoggedIn, isMunicipal_public_relations_officer, reportController.getPendingReports);
 /**
  * @swagger
  * /reports/{id}:
