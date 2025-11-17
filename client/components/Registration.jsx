@@ -121,22 +121,22 @@ export default function RegistrationPage() {
 
   return (
     <div className="app-root">
-    <Container className="py-5">
+    <Container fluid className="py-2 py-md-5 px-2 px-md-3">
       <Row className="justify-content-center">
-        <Col md={8} lg={6}>
-          <Card className="shadow-lg" style={{ borderRadius: '1rem', border: 'none' }}>
-            <Card.Body className="p-5">
+        <Col xs={12} md={8} lg={6}>
+          <Card className="shadow-lg" style={{ borderRadius: 'clamp(0.5rem, 2vw, 1rem)', border: 'none' }}>
+            <Card.Body className="p-3 p-md-5">
               <h2 className="text-center mb-2" style={{ 
                 fontWeight: 'bold',
                 background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                fontSize: '2.5rem'
+                fontSize: 'clamp(1.5rem, 4vw, 2.5rem)'
               }}>
                 Join Participium
               </h2>
-              <p className="text-center text-muted mb-4">Create your account to start participating</p>
+              <p className="text-center text-muted mb-3 mb-md-4" style={{ fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}>Create your account to start participating</p>
               
               {showSuccess && (
                 <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible className="d-flex align-items-center">
@@ -154,9 +154,9 @@ export default function RegistrationPage() {
 
               <Form onSubmit={handleSubmit}>
                 <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">
+                  <Col xs={12} md={6}>
+                    <Form.Group className="mb-2 mb-md-3">
+                      <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                         <i className="bi bi-person me-2"></i>First Name
                       </Form.Label>
                       <Form.Control
@@ -166,7 +166,7 @@ export default function RegistrationPage() {
                         onChange={handleChange}
                         isInvalid={!!errors.firstName}
                         placeholder="Enter your first name"
-                        style={{ borderRadius: '8px', padding: '0.6rem' }}
+                        style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.firstName}
@@ -174,9 +174,9 @@ export default function RegistrationPage() {
                     </Form.Group>
                   </Col>
 
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">
+                  <Col xs={12} md={6}>
+                    <Form.Group className="mb-2 mb-md-3">
+                      <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                         <i className="bi bi-person me-2"></i>Last Name
                       </Form.Label>
                       <Form.Control
@@ -186,7 +186,7 @@ export default function RegistrationPage() {
                         onChange={handleChange}
                         isInvalid={!!errors.lastName}
                         placeholder="Enter your last name"
-                        style={{ borderRadius: '8px', padding: '0.6rem' }}
+                        style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.lastName}
@@ -195,8 +195,8 @@ export default function RegistrationPage() {
                   </Col>
                 </Row>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
+                <Form.Group className="mb-2 mb-md-3">
+                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     <i className="bi bi-at me-2"></i>Username
                   </Form.Label>
                   <Form.Control
@@ -206,15 +206,15 @@ export default function RegistrationPage() {
                     onChange={handleChange}
                     isInvalid={!!errors.userName}
                     placeholder="Choose a username"
-                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                    style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.userName}
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
+                <Form.Group className="mb-2 mb-md-3">
+                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     <i className="bi bi-envelope me-2"></i>Email
                   </Form.Label>
                   <Form.Control
@@ -224,15 +224,15 @@ export default function RegistrationPage() {
                     onChange={handleChange}
                     isInvalid={!!errors.email}
                     placeholder="Enter your email address"
-                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                    style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.email}
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">
+                <Form.Group className="mb-2 mb-md-3">
+                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     <i className="bi bi-lock me-2"></i>Password
                   </Form.Label>
                   <Form.Control
@@ -242,19 +242,19 @@ export default function RegistrationPage() {
                     onChange={handleChange}
                     isInvalid={!!errors.password}
                     placeholder="Create a password (min. 8 characters)"
-                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                    style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.password}
                   </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
+                  <Form.Text className="text-muted" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
                     <i className="bi bi-info-circle me-1"></i>
                     Password must be at least 8 characters long
                   </Form.Text>
                 </Form.Group>
 
-                <Form.Group className="mb-4">
-                  <Form.Label className="fw-semibold">
+                <Form.Group className="mb-3 mb-md-4">
+                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     <i className="bi bi-shield-lock me-2"></i>Confirm Password
                   </Form.Label>
                   <Form.Control
@@ -264,7 +264,7 @@ export default function RegistrationPage() {
                     onChange={handleChange}
                     isInvalid={!!errors.confirmPassword}
                     placeholder="Re-enter your password"
-                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                    style={{ borderRadius: '8px', padding: 'clamp(0.5rem, 1.5vw, 0.6rem)', fontSize: 'clamp(0.85rem, 2vw, 1rem)' }}
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.confirmPassword}
@@ -280,7 +280,9 @@ export default function RegistrationPage() {
                       backgroundColor: '#5e7bb3', 
                       borderColor: '#5e7bb3',
                       borderRadius: '8px',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)'
                     }}
                   >
                     {isSubmitting ? (
@@ -300,7 +302,11 @@ export default function RegistrationPage() {
                     size="lg"
                     disabled={isSubmitting}
                     onClick={() => navigate('/')}
-                    style={{ borderRadius: '8px' }}
+                    style={{ 
+                      borderRadius: '8px',
+                      fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)'
+                    }}
                   >
                     <i className="bi bi-arrow-left me-2"></i>
                     Back to Login

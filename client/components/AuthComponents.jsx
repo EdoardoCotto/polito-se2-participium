@@ -51,36 +51,58 @@ function LoginModal(props) {
   }
 
     return (
-        <Modal show={props.show} onHide={props.onHide} centered>
-            <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+        <Modal show={props.show} onHide={handleClose} centered size="md">
+            <Modal.Header closeButton style={{ 
+                background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%)',
+                color: 'white',
+                borderBottom: 'none',
+                padding: '1.5rem',
+                borderTopLeftRadius: '0.5rem',
+                borderTopRightRadius: '0.5rem'
+            }}>
                 <Modal.Title style={{ 
-                    fontWeight: 'bold',
-                    background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    fontSize: 'clamp(1rem, 3vw, 1.5rem)'
+                    fontWeight: '700',
+                    fontSize: '1.75rem',
+                    display: 'flex',
+                    alignItems: 'center'
                 }}>
-                    Welcome Back!
+                    <i className="bi bi-shield-lock me-3" style={{ fontSize: '2rem' }}></i>
+                    <div>
+                        <div>Welcome Back!</div>
+                        <small style={{ fontSize: '0.875rem', fontWeight: '400', opacity: 0.9 }}>
+                            Sign in to continue to Participium
+                        </small>
+                    </div>
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body className="p-2 p-md-4">
+            <Modal.Body className="p-4" style={{ backgroundColor: '#fafbfc' }}>
                 {isPending && (
-                    <Alert variant="info" className="d-flex align-items-center">
+                    <Alert variant="info" className="d-flex align-items-center mb-3" style={{ 
+                        borderRadius: '10px',
+                        border: 'none',
+                        backgroundColor: '#d1ecf1',
+                        color: '#0c5460'
+                    }}>
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Authenticating...
+                        <strong>Authenticating...</strong>
                     </Alert>
                 )}
                 {error && (
-                  <Alert variant="danger" dismissible onClose={() => setError(null)}>
-                    <i className="bi bi-exclamation-triangle me-2"></i>
-                    {typeof error === 'string' ? error : error?.message ?? String(error)}
+                  <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-3" style={{
+                    borderRadius: '10px',
+                    border: 'none',
+                    backgroundColor: '#f8d7da',
+                    color: '#721c24'
+                  }}>
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>{typeof error === 'string' ? error : error?.message ?? String(error)}</strong>
                   </Alert>
                 )}
                 <Form onSubmit={onSubmit}>
                     <Form.Group controlId='username' className='mb-3'>
-                        <Form.Label className="fw-semibold">
-                            <i className="bi bi-person me-2"></i>Username
+                        <Form.Label className="fw-semibold" style={{ fontSize: '0.95rem', color: '#495057' }}>
+                            <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                            Username
                         </Form.Label>
                         <Form.Control 
                             type='text' 
@@ -89,12 +111,28 @@ function LoginModal(props) {
                             onChange={(e) => setUsername(e.target.value)} 
                             required 
                             placeholder="Enter your username"
-                            style={{ borderRadius: '8px', padding: '0.6rem' }}
+                            style={{ 
+                                borderRadius: '10px', 
+                                padding: '0.75rem 1rem', 
+                                fontSize: '1rem',
+                                border: '2px solid #e0e6ed',
+                                backgroundColor: '#ffffff',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#5e7bb3';
+                                e.target.style.boxShadow = '0 0 0 0.2rem rgba(94, 123, 179, 0.15)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#e0e6ed';
+                                e.target.style.boxShadow = 'none';
+                            }}
                         />
                     </Form.Group>
                     <Form.Group controlId='password' className='mb-4'>
-                        <Form.Label className="fw-semibold">
-                            <i className="bi bi-lock me-2"></i>Password
+                        <Form.Label className="fw-semibold" style={{ fontSize: '0.95rem', color: '#495057' }}>
+                            <i className="bi bi-lock-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                            Password
                         </Form.Label>
                         <Form.Control 
                             type='password' 
@@ -104,77 +142,141 @@ function LoginModal(props) {
                             required 
                             minLength={6}
                             placeholder="Enter your password"
-                            style={{ borderRadius: '8px', padding: '0.6rem' }}
+                            style={{ 
+                                borderRadius: '10px', 
+                                padding: '0.75rem 1rem', 
+                                fontSize: '1rem',
+                                border: '2px solid #e0e6ed',
+                                backgroundColor: '#ffffff',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#5e7bb3';
+                                e.target.style.boxShadow = '0 0 0 0.2rem rgba(94, 123, 179, 0.15)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#e0e6ed';
+                                e.target.style.boxShadow = 'none';
+                            }}
                         />
                     </Form.Group>
-                    <Modal.Footer className="d-flex justify-content-between align-items-center border-0 pt-0">
-                         {/* Left: Registration CTA */}
-                        <div className="d-flex flex-column align-items-start">
+                    {/* Login Button - Full Width */}
+                    <Button 
+                        type='submit' 
+                        variant="primary"
+                        disabled={isPending}
+                        className="w-100 mb-3"
+                        style={{ 
+                            backgroundColor: '#5e7bb3', 
+                            borderColor: '#5e7bb3',
+                            borderRadius: '10px',
+                            fontWeight: '600',
+                            fontSize: '1rem',
+                            padding: '0.75rem 1.5rem',
+                            boxShadow: '0 4px 12px rgba(94, 123, 179, 0.3)',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isPending) {
+                                e.currentTarget.style.backgroundColor = '#4a6399';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(94, 123, 179, 0.4)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#5e7bb3';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.3)';
+                        }}
+                    >
+                        {isPending ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-box-arrow-in-right me-2"></i>
+                                Sign In
+                            </>
+                        )}
+                    </Button>
+
+                    {/* Divider */}
+                    <div className="d-flex align-items-center mb-3">
+                        <hr style={{ flex: 1, borderTop: '1px solid #dee2e6' }} />
+                        <span className="px-3 text-muted" style={{ fontSize: '0.875rem' }}>or</span>
+                        <hr style={{ flex: 1, borderTop: '1px solid #dee2e6' }} />
+                    </div>
+
+                    {/* Registration Section */}
+                    <div className="text-center">
+                        <p className="mb-2 text-muted" style={{ fontSize: '0.95rem' }}>
+                            Don't have an account?
+                        </p>
                         <Button
                             as={Link}
                             to="/registration"
-                            variant="warning"
-                            className="mb-1"
-                            onClick={() => props.onHide?.()}
-                            style={{ borderRadius: '8px' }}
-                        >
-                            <i className="bi bi-person-plus me-2"></i>
-                            Register
-                        </Button>
-                        <small className="text-muted">Don't have an account?</small>
-                        </div>
-
-                        {/* Right: Cancel and Login buttons */}
-                        <div className="d-flex align-items-center">
-                        <Button 
-                            variant="secondary" 
-                            onClick={props.onHide}
-                            disabled={isPending}
-                            className="me-2"
-                            style={{ borderRadius: '8px' }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            type='submit' 
-                            variant="primary"
-                            disabled={isPending}
+                            variant="outline-primary"
+                            className="w-100"
+                            onClick={handleClose}
                             style={{ 
-                                backgroundColor: '#5e7bb3', 
+                                borderRadius: '10px',
+                                fontSize: '1rem',
+                                padding: '0.75rem 1.5rem',
+                                fontWeight: '600',
                                 borderColor: '#5e7bb3',
-                                borderRadius: '8px',
-                                fontWeight: '600'
+                                borderWidth: '2px',
+                                color: '#5e7bb3',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#5e7bb3';
+                                e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                e.currentTarget.style.color = '#5e7bb3';
                             }}
                         >
-                            {isPending ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    Signing in...
-                                </>
-                            ) : (
-                                <>
-                                    <i className="bi bi-box-arrow-in-right me-2"></i>
-                                    Login
-                                </>
-                            )}
+                            <i className="bi bi-person-plus-fill me-2"></i>
+                            Create New Account
                         </Button>
-                        </div>
-                        
-                    </Modal.Footer>
+                    </div>
                 </Form>
             </Modal.Body>
         </Modal>
     );
 }
 function LogoutButton(props) {
-  return <Button variant='primary' onClick={props.handleLogout} style={{ backgroundColor: '#5e7bb3', borderColor: '#5e7bb3' }}>
-    {/*<Image
-    src="http://localhost:3001/static/icons8-immettere-48.png"
-    alt="Login Icon"
-    height={24}
-    width={24}
-    className="me-2"
-    />*/}
-    Logout</Button>;
+  return (
+    <Button 
+      variant='primary' 
+      onClick={props.handleLogout}
+      className="d-flex align-items-center"
+      style={{ 
+        backgroundColor: '#5e7bb3', 
+        borderColor: '#5e7bb3',
+        borderRadius: '8px',
+        fontWeight: '600',
+        padding: '0.5rem 1.25rem',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 2px 6px rgba(94, 123, 179, 0.2)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = '#4a6399';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+        e.currentTarget.style.boxShadow = '0 4px 10px rgba(94, 123, 179, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '#5e7bb3';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 2px 6px rgba(94, 123, 179, 0.2)';
+      }}
+    >
+      <i className="bi bi-box-arrow-right me-2"></i>
+      Logout
+    </Button>
+  );
 }
 export { LogoutButton, LoginModal };

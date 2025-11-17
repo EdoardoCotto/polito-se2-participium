@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Modal, Form, Row, Col, Alert, Card, Table, Dropdown } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, Alert, Card, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import API from '../API/API.js';
 
@@ -28,6 +28,11 @@ export default function MapPage() {
   // Available roles
   const [availableRoles, setAvailableRoles] = useState([]);
   const [roleMetadata, setRoleMetadata] = useState({});
+
+  // Role change modal
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState('');
 
   // Fetch users and roles on component mount
   useEffect(() => {
@@ -66,14 +71,29 @@ export default function MapPage() {
     return roleMetadata[role]?.label || role;
   };
 
-  const handleRoleChange = async (userId, newRole) => {
+  const handleOpenRoleModal = (user) => {
+    setSelectedUser(user);
+    setSelectedRole(user.type);
+    setShowRoleModal(true);
+  };
+
+  const handleCloseRoleModal = () => {
+    setShowRoleModal(false);
+    setSelectedUser(null);
+    setSelectedRole('');
+  };
+
+  const handleConfirmRoleChange = async () => {
+    if (!selectedUser || !selectedRole) return;
+    
     try {
-      await API.assignUserRole(userId, newRole);
+      await API.assignUserRole(selectedUser.id, selectedRole);
       setUsers(prevUsers =>
         prevUsers.map(user =>
-          user.id === userId ? { ...user, type: newRole } : user
+          user.id === selectedUser.id ? { ...user, type: selectedRole } : user
         )
       );
+      handleCloseRoleModal();
     } catch (err) {
       setUsersError(err?.message || 'Failed to update role');
     }
@@ -140,57 +160,73 @@ export default function MapPage() {
   };
 
   return (
-    <div className="app-root d-flex flex-column min-vh-100">
+    <>
+      <div className="app-root d-flex flex-column min-vh-100">
       <div className="position-relative w-100">
-        {/* top-right button */}
-        <div className="position-absolute top-0 end-0 m-3">
+        {/* top-right button - responsive positioning */}
+        <div className="position-absolute top-0 end-0 m-2 m-md-3" style={{ zIndex: 10 }}>
           <Button
             variant="primary"
-            size="lg"
             onClick={() => setShowModal(true)}
+            className="d-flex align-items-center"
             style={{
               backgroundColor: '#5e7bb3',
               borderColor: '#5e7bb3',
               fontWeight: '600',
               boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.3)',
-              borderRadius: '8px'
+              borderRadius: '8px',
+              fontSize: 'clamp(0.75rem, 2.5vw, 1rem)',
+              padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2.5vw, 1.25rem)',
+              whiteSpace: 'nowrap'
             }}
           >
             <i className="bi bi-person-plus-fill me-2"></i>
-            Add Municipality User
+            <span className="d-none d-md-inline">Add Municipality User</span>
+            <span className="d-inline d-md-none">Add User</span>
           </Button>
         </div>
       </div>
 
       {/* Users Table Card - Centered */}
-      <div className="d-flex justify-content-center align-items-start flex-grow-1 p-4 mt-5">
+      <div className="d-flex justify-content-center align-items-start flex-grow-1 px-2 px-md-4 py-3 py-md-4 mt-5" style={{ overflow: 'visible', paddingBottom: '4rem' }}>
         <Card style={{ 
-          width: '90%', 
+          width: '100%',
           maxWidth: '120rem', 
-          boxShadow: '0 0.5rem 1.5rem rgba(0,0,0,0.2)', 
-          minHeight: '70vh',
+          boxShadow: '0 0.5rem 2rem rgba(94, 123, 179, 0.15)', 
+          minHeight: '50vh',
           overflow: 'visible',
-
+          borderRadius: 'clamp(0.5rem, 2vw, 1rem)',
+          border: 'none',
+          marginBottom: '2rem'
         }}>
           <Card.Header style={{ 
-            backgroundColor: '#5e7bb3',
+            background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%)',
             color: 'white',
-            padding: '1.5rem',
-            borderTopLeftRadius: '1rem',
-            borderTopRightRadius: '1rem'
+            padding: 'clamp(1rem, 2vw, 1.5rem)',
+            borderTopLeftRadius: 'clamp(0.5rem, 1.5vw, 1rem)',
+            borderTopRightRadius: 'clamp(0.5rem, 1.5vw, 1rem)',
+            borderBottom: 'none'
           }}>
-            <h4 className="mb-0 d-flex align-items-center">
-              <i className="bi bi-people-fill me-3"></i>
-              Users Management
-            </h4>
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <h3 className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(1.1rem, 4vw, 1.75rem)', fontWeight: '600' }}>
+                <i className="bi bi-people-fill me-2"></i>
+                <span>Users Management</span>
+              </h3>
+              <div className="text-white-50" style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1rem)' }}>
+                <i className="bi bi-person-badge me-1"></i>
+                {users.length} {users.length === 1 ? 'User' : 'Users'}
+              </div>
+            </div>
           </Card.Header>
           <Card.Body style={{ 
             minHeight: '50vh', 
-            paddingBottom: '1rem',
-            overflow: 'visible' // Leave space for dropdowns
+            padding: '0',
+            paddingBottom: '3rem',
+            overflow: 'visible',
+            backgroundColor: '#ffffff'
           }}>
             {usersError && (
-              <Alert variant="danger" dismissible onClose={() => setUsersError('')}>
+              <Alert variant="danger" dismissible onClose={() => setUsersError('')} className="m-3">
                 <i className="bi bi-exclamation-triangle me-2"></i>
                 {usersError}
               </Alert>
@@ -204,87 +240,153 @@ export default function MapPage() {
                 <p className="mt-3 text-muted">Loading users...</p>
               </div>
             ) : users.length === 0 ? (
-              <Alert variant="info" className="d-flex align-items-center">
+              <Alert variant="info" className="d-flex align-items-center m-3">
                 <i className="bi bi-info-circle me-2"></i>
                 No users found
               </Alert>
             ) : (
-              <div className="table-responsive" style={{ overflow: 'visible' }}>
-                <Table striped hover style={{ marginBottom: 0 }}>
-                  <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+              <div className="table-responsive" style={{ overflowX: 'auto', overflowY: 'visible' }}>
+                <Table hover className="mb-0" style={{ minWidth: '700px', borderCollapse: 'collapse' }}>
+                  <thead style={{ 
+                    backgroundColor: '#f8f9fa',
+                    borderBottom: '2px solid #dee2e6'
+                  }}>
                     <tr>
-                      <th style={{ fontWeight: '600', padding: '1rem', width: '15%' }}>
-                        <i className="bi bi-person me-2"></i>Name
+                      <th style={{ 
+                        fontWeight: '600', 
+                        padding: '1rem', 
+                        minWidth: '120px',
+                        fontSize: '0.95rem',
+                        color: '#495057',
+                        borderBottom: '2px solid #dee2e6',
+                        borderTop: 'none'
+                      }}>
+                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                        Name
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem', width: '15%' }}>
-                        <i className="bi bi-person me-2"></i>Surname
+                      <th style={{ 
+                        fontWeight: '600', 
+                        padding: '1rem', 
+                        minWidth: '120px',
+                        fontSize: '0.95rem',
+                        color: '#495057',
+                        borderBottom: '2px solid #dee2e6',
+                        borderTop: 'none'
+                      }}>
+                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                        Surname
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem', width: '30%' }}>
-                        <i className="bi bi-envelope me-2"></i>Email
+                      <th style={{ 
+                        fontWeight: '600', 
+                        padding: '1rem', 
+                        minWidth: '180px',
+                        fontSize: '0.95rem',
+                        color: '#495057',
+                        borderBottom: '2px solid #dee2e6',
+                        borderTop: 'none'
+                      }}>
+                        <i className="bi bi-envelope-fill me-2" style={{ color: '#5e7bb3' }}></i>
+                        Email
                       </th>
-                      <th style={{ fontWeight: '600', padding: '1rem', width: '40%' }}>
-                        <i className="bi bi-shield-check me-2"></i>Role
+                      <th style={{ 
+                        fontWeight: '600', 
+                        padding: '1rem', 
+                        minWidth: '220px',
+                        fontSize: '0.95rem',
+                        color: '#495057',
+                        borderBottom: '2px solid #dee2e6',
+                        borderTop: 'none'
+                      }}>
+                        <i className="bi bi-shield-check me-2" style={{ color: '#5e7bb3' }}></i>
+                        Role
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.name}</td>
-                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.surname}</td>
-                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>{user.email}</td>
-                        <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
-                          <Dropdown align="end">
-                            <Dropdown.Toggle
-                              variant="outline-primary"
-                              size="sm"
-                              style={{
-                                minWidth: '12rem',
-                                maxWidth: '20rem',
-                                fontSize: '0.9rem',
-                                borderRadius: '6px',
-                                fontWeight: '500',
-                                borderColor: '#5e7bb3',
-                                color: '#5e7bb3',
-                                textAlign: 'left',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}
-                            >
-                              <i className="bi bi-tag me-2"></i>
-                              {getRoleLabel(user.type) || 'Select Role'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu
-                              style={{
-                                minWidth: '15rem',
-                                maxWidth: '25rem',
-                                maxHeight: '400px',
-                                overflowY: 'auto',
-                                borderRadius: '8px',
-                                boxShadow: '0 0.5rem 1rem rgba(0,0,0,0.2)',
-                                border: '1px solid #dee2e6'
-                              }}
-                            >
-                              {availableRoles.map((role) => (
-                                <Dropdown.Item
-                                  key={role}
-                                  active={user.type === role}
-                                  onClick={() => handleRoleChange(user.id, role)}
-                                  style={{ 
-                                    padding: '0.6rem 1rem',
-                                    fontWeight: user.type === role ? '600' : '400',
-                                    fontSize: '0.9rem',
-                                    whiteSpace: 'normal',
-                                    wordWrap: 'break-word'
-                                  }}
-                                >
-                                  {user.type === role && <i className="bi bi-check-circle-fill me-2" style={{ color: '#5e7bb3' }}></i>}
-                                  {getRoleLabel(role)}
-                                </Dropdown.Item>
-                              ))}
-                            </Dropdown.Menu>
-                          </Dropdown>
+                    {users.map((user, index) => (
+                      <tr key={user.id} style={{ 
+                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafbfc',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        <td style={{ 
+                          padding: '1rem', 
+                          verticalAlign: 'middle', 
+                          fontSize: '0.9rem',
+                          fontWeight: '500',
+                          color: '#212529',
+                          borderBottom: '1px solid #e9ecef'
+                        }}>
+                          <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>
+                          {user.name}
+                        </td>
+                        <td style={{ 
+                          padding: '1rem', 
+                          verticalAlign: 'middle', 
+                          fontSize: '0.9rem',
+                          fontWeight: '500',
+                          color: '#212529',
+                          borderBottom: '1px solid #e9ecef'
+                        }}>
+                          {user.surname}
+                        </td>
+                        <td style={{ 
+                          padding: '1rem', 
+                          verticalAlign: 'middle', 
+                          fontSize: '0.9rem', 
+                          wordBreak: 'break-word',
+                          color: '#495057',
+                          borderBottom: '1px solid #e9ecef'
+                        }}>
+                          <i className="bi bi-envelope me-2" style={{ color: '#6c757d' }}></i>
+                          {user.email}
+                        </td>
+                        <td style={{ 
+                          padding: '1rem', 
+                          verticalAlign: 'middle',
+                          borderBottom: '1px solid #e9ecef'
+                        }}>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => handleOpenRoleModal(user)}
+                            className="d-flex align-items-center justify-content-between"
+                            style={{
+                              width: '100%',
+                              minWidth: '180px',
+                              maxWidth: '280px',
+                              fontSize: '0.875rem',
+                              borderRadius: '20px',
+                              fontWeight: '500',
+                              borderColor: '#5e7bb3',
+                              borderWidth: '1.5px',
+                              color: '#5e7bb3',
+                              backgroundColor: '#f8f9ff',
+                              padding: '0.5rem 1rem',
+                              transition: 'all 0.2s ease',
+                              textAlign: 'left'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#5e7bb3';
+                              e.currentTarget.style.color = '#ffffff';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f8f9ff';
+                              e.currentTarget.style.color = '#5e7bb3';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            <span style={{ 
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              flex: 1
+                            }}>
+                              <i className="bi bi-shield-check me-2"></i>
+                              {getRoleLabel(user.type) || 'Assign Role'}
+                            </span>
+                            <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -466,6 +568,122 @@ export default function MapPage() {
           </Modal.Footer>
         </Form>
       </Modal>
-    </div>
+
+      {/* Role Change Modal */}
+      <Modal show={showRoleModal} onHide={handleCloseRoleModal} centered size="md">
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%)',
+          color: 'white',
+          borderBottom: 'none'
+        }}>
+          <Modal.Title style={{ fontWeight: '600' }}>
+            <i className="bi bi-shield-lock me-2"></i>
+            Change User Role
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {selectedUser && (
+            <>
+              <div className="mb-4 p-3" style={{ 
+                backgroundColor: '#f8f9fa', 
+                borderRadius: '10px',
+                borderLeft: '4px solid #5e7bb3'
+              }}>
+                <h6 className="mb-2" style={{ color: '#495057', fontWeight: '600' }}>
+                  <i className="bi bi-person-circle me-2"></i>
+                  {selectedUser.name} {selectedUser.surname}
+                </h6>
+                <small className="text-muted">
+                  <i className="bi bi-envelope me-1"></i>
+                  {selectedUser.email}
+                </small>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold" style={{ color: '#495057' }}>
+                  <i className="bi bi-tag-fill me-2"></i>
+                  Select New Role
+                </label>
+                <div className="d-flex flex-column gap-2">
+                  {availableRoles.map((role) => (
+                    <div
+                      key={role}
+                      onClick={() => setSelectedRole(role)}
+                      className="p-3"
+                      style={{
+                        backgroundColor: selectedRole === role ? '#5e7bb3' : '#ffffff',
+                        color: selectedRole === role ? '#ffffff' : '#212529',
+                        border: selectedRole === role ? '2px solid #5e7bb3' : '2px solid #e0e6ed',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        fontWeight: selectedRole === role ? '600' : '400',
+                        boxShadow: selectedRole === role ? '0 4px 12px rgba(94, 123, 179, 0.2)' : 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedRole !== role) {
+                          e.currentTarget.style.backgroundColor = '#f8f9ff';
+                          e.currentTarget.style.borderColor = '#5e7bb3';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedRole !== role) {
+                          e.currentTarget.style.backgroundColor = '#ffffff';
+                          e.currentTarget.style.borderColor = '#e0e6ed';
+                        }
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center">
+                          <i className={`bi bi-${selectedRole === role ? 'check-circle-fill' : 'circle'} me-3`} 
+                             style={{ fontSize: '1.2rem' }}></i>
+                          <div>
+                            <div style={{ fontSize: '0.95rem' }}>{getRoleLabel(role)}</div>
+                          </div>
+                        </div>
+                        {selectedRole === role && (
+                          <i className="bi bi-check2" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}></i>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 px-4 pb-4">
+          <Button 
+            variant="outline-secondary" 
+            onClick={handleCloseRoleModal}
+            style={{ 
+              borderRadius: '8px',
+              padding: '0.5rem 1.5rem',
+              fontWeight: '500'
+            }}
+          >
+            <i className="bi bi-x-circle me-2"></i>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleConfirmRoleChange}
+            disabled={!selectedRole || selectedRole === selectedUser?.type}
+            style={{ 
+              backgroundColor: '#5e7bb3',
+              borderColor: '#5e7bb3',
+              borderRadius: '8px',
+              padding: '0.5rem 1.5rem',
+              fontWeight: '600',
+              boxShadow: '0 2px 8px rgba(94, 123, 179, 0.3)'
+            }}
+          >
+            <i className="bi bi-check-circle-fill me-2"></i>
+            Confirm Change
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </div>
+    </>
   );
 }

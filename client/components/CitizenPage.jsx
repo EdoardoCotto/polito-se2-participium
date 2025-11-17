@@ -106,18 +106,19 @@ export default function CitizenPage({ user }) {
 
   return (
     <div className="app-root d-flex flex-column min-vh-100">
-      <Container className="flex-grow-1 py-4">
-        <Row className="g-4">
+      <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
+        <Row className="g-2 g-md-4">
           {/* Map */}
-          <Col lg={8}>
-            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0' }}>
-              <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: '1rem' }}>
-                <Card.Title className="mb-0 d-flex align-items-center">
+          <Col lg={8} className="order-1 order-lg-1">
+            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '400px' }}>
+              <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                   <i className="bi bi-pin-map me-2"></i>
-                  Select a location on the map
+                  <span className="d-none d-sm-inline">Select a location on the map</span>
+                  <span className="d-inline d-sm-none">Select Location</span>
                 </Card.Title>
               </Card.Header>
-              <Card.Body className="p-0" style={{ height: 'calc(100% - 4rem)' }}>
+              <Card.Body className="p-0" style={{ height: 'calc(100% - 3rem)', minHeight: '350px' }}>
                 <div style={{ height: '100%', width: '100%' }}>
                   <TurinMap onLocationSelected={setSelectedLocation} selectedLocation={selectedLocation}  
                   />
@@ -127,49 +128,49 @@ export default function CitizenPage({ user }) {
           </Col>
 
           {/* Report panel */}
-          <Col lg={4}>
+          <Col lg={4} className="order-2 order-lg-2">
             <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0' }}>
-              <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: '1rem' }}>
-                <Card.Title className="mb-0 d-flex align-items-center">
+              <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                   <i className="bi bi-file-earmark-plus me-2"></i>
                   Create Report
                 </Card.Title>
               </Card.Header>
-              <Card.Body className="p-4">
+              <Card.Body className="p-2 p-md-4">
                 {submitError && (
-                  <Alert variant="danger" dismissible onClose={() => setSubmitError('')}>
+                  <Alert variant="danger" dismissible onClose={() => setSubmitError('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
                     <i className="bi bi-exclamation-triangle me-2"></i>
                     {submitError}
                   </Alert>
                 )}
                 {submitOk && (
-                  <Alert variant="success" dismissible onClose={() => setSubmitOk('')}>
+                  <Alert variant="success" dismissible onClose={() => setSubmitOk('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
                     <i className="bi bi-check-circle me-2"></i>
                     {submitOk}
                   </Alert>
                 )}
 
                 <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
+                  <Form.Group className="mb-2 mb-md-3">
+                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-pencil me-2"></i>Title
                     </Form.Label>
                     <Form.Control
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g., Pothole on Via Roma"
-                      style={{ borderRadius: '8px' }}
+                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
                     />
                   </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
+                  <Form.Group className="mb-2 mb-md-3">
+                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-tags me-2"></i>Category 
                     </Form.Label>
                     <Form.Select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      style={{ borderRadius: '8px' }}
+                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
                     >
                       <option value="">Select a category...</option>
                       {categories.map((cat) => (
@@ -178,23 +179,23 @@ export default function CitizenPage({ user }) {
                     </Form.Select>
                   </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
+                  <Form.Group className="mb-2 mb-md-3">
+                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-text-left me-2"></i>Description 
                     </Form.Label>
                     <Form.Control
                       as="textarea"
-                      rows={4}
+                      rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Provide additional details to help the municipality address this issue..."
-                      style={{ borderRadius: '8px' }}
+                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
                     />
                   </Form.Group>
 
                   {/* Photos Section */}
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
+                  <Form.Group className="mb-2 mb-md-3">
+                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-camera me-2"></i>Photos  (min 1, max 3)
                     </Form.Label>
                     {/* Lista foto caricate */}
@@ -261,13 +262,13 @@ export default function CitizenPage({ user }) {
                     )}
                   </Form.Group>
 
-                  <Form.Group className="mb-4">
-                    <Form.Label className="fw-semibold">
+                  <Form.Group className="mb-3 mb-md-4">
+                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-geo-alt me-2"></i>Location
                     </Form.Label>
                     <div 
-                      className={`p-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`}
-                      style={{ borderRadius: '8px' }}
+                      className={`p-2 p-md-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`}
+                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
                     >
                       {selectedLocation ? (
                         <div className="text-success">
@@ -280,7 +281,8 @@ export default function CitizenPage({ user }) {
                       ) : (
                         <div className="text-muted">
                           <i className="bi bi-pin-map me-2"></i>
-                          Click on the map to select a location
+                          <span className="d-none d-sm-inline">Click on the map to select a location</span>
+                          <span className="d-inline d-sm-none">Select on map</span>
                         </div>
                       )}
                     </div>
@@ -289,15 +291,17 @@ export default function CitizenPage({ user }) {
 
                 <div className="d-grid">
                   <Button 
-                    variant="primary"
+                    variant="success"
                     size="lg"
                     disabled={submitting}
                     onClick={handleCreateReport}
                     style={{ 
-                      backgroundColor: '#5e7bb3', 
-                      borderColor: '#5e7bb3',
+                      backgroundColor: '#28a745', 
+                      borderColor: '#28a745',
                       borderRadius: '8px',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)'
                     }}
                   >
                     {submitting ? (
