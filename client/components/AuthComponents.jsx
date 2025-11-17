@@ -52,18 +52,19 @@ function LoginModal(props) {
 
     return (
         <Modal show={props.show} onHide={props.onHide} centered>
-            <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0' }}>
+            <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
                 <Modal.Title style={{ 
                     fontWeight: 'bold',
                     background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    backgroundClip: 'text',
+                    fontSize: 'clamp(1rem, 3vw, 1.5rem)'
                 }}>
                     Welcome Back!
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body className="p-4">
+            <Modal.Body className="p-2 p-md-4">
                 {isPending && (
                     <Alert variant="info" className="d-flex align-items-center">
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
