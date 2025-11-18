@@ -23,7 +23,8 @@
       "<rootDir>/server/repository/**/*.js",
       "<rootDir>/server/utils/**/*.js",
       "<rootDir>/server/routes/**/*.js",
-      "<rootDir>/server/middlewares/**/*.js"
+      "<rootDir>/server/middlewares/**/*.js",
+      "<rootDir>/server/dao/**/*.js"
     ],
     "coverageReporters": [
       "text",
