@@ -16,7 +16,7 @@ if (typeof window !== 'undefined') {
 
 
 // Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected}) {
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly}) {
    const isPointInsideBoundary = (lat, lng) => {
     if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
     
@@ -45,9 +45,12 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   };
   const map = useMapEvents({
     click(e) {
+      // Don't allow clicks if in read-only mode
+      if (readOnly) return;
+
       const { lat, lng } = e.latlng;
       
-      // Controlla se il punto è dentro i confini
+      // Check if point is inside boundary
       if (!isPointInsideBoundary(lat, lng)) {
         onOutOfBounds();
         return;
@@ -74,6 +77,8 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   }, [map, markers]);
 
   const handleRemoveMarker = (markerId) => {
+    // Don't allow removal if in read-only mode
+    if (readOnly) return;
     setMarkers(markers.filter(marker => marker.id !== markerId));
     
   };
@@ -86,20 +91,21 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
        <Marker
           key={marker.id}
           position={marker.position}
-          draggable={true}
+          draggable={!readOnly} // Disable dragging in read-only mode
           eventHandlers={{
             dblclick: () => handleRemoveMarker(marker.id),
             dragend: (e) => {
+              if (readOnly) return; // Don't allow drag in read-only mode
               const { lat, lng } = e.target.getLatLng();
 
-              // aggiorna localmente
+              //update marker position
               setMarkers([{
                 id: marker.id,
                 position: [lat, lng],
                 timestamp: new Date().toLocaleString()
               }]);
 
-              // aggiorna il parent (CitizenPage)
+              // update parent (CitizenPage)
               if (onLocationSelected) {
                 onLocationSelected({ lat, lng });
               }
@@ -128,7 +134,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   );
 }
 
-export default function TurinMap({ onLocationSelected,selectedLocation }) {
+export default function TurinMap({ onLocationSelected,selectedLocation, readOnly=false }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -141,6 +147,14 @@ export default function TurinMap({ onLocationSelected,selectedLocation }) {
   useEffect(() => {
     if (selectedLocation === null) {
       setMarkers([]);
+    }else if (selectedLocation?.lat && selectedLocation?.lng) {
+      // Create marker from selectedLocation
+      setMarkers([{
+        id: selectedLocation.reportId || Date.now(),
+        position: [selectedLocation.lat, selectedLocation.lng],
+        timestamp: new Date().toLocaleString(),
+        title: selectedLocation.title || 'Selected Location'
+      }]);
     }
   }, [selectedLocation]);
   
@@ -168,6 +182,7 @@ export default function TurinMap({ onLocationSelected,selectedLocation }) {
   }, []);
   
   const handleOutOfBounds = () => {
+    if (readOnly) return; // Don't show alert in read-only mode
     setShowOutOfBoundsAlert(true);
     setTimeout(() => {
       setShowOutOfBoundsAlert(false);
@@ -195,7 +210,7 @@ export default function TurinMap({ onLocationSelected,selectedLocation }) {
   return (
     <div style={{ height: '100%', width: '100%' }}>
       {/* Out of bounds alert */}
-      {showOutOfBoundsAlert && (
+      {!readOnly && showOutOfBoundsAlert && (
         <Alert 
           variant="warning" 
           style={{
@@ -255,7 +270,8 @@ export default function TurinMap({ onLocationSelected,selectedLocation }) {
         )}
         <LocationMarker markers={markers} setMarkers={setMarkers} geoJsonData={geoJsonData}
           onOutOfBounds={handleOutOfBounds}
-          onLocationSelected={onLocationSelected} />
+          onLocationSelected={onLocationSelected}
+          readOnly={readOnly} />
       </MapContainer>
     </div>
   );

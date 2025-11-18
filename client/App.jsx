@@ -11,7 +11,9 @@ import Registration from "./components/Registration.jsx";
 import AdminPage from "./components/AdminPage.jsx";
 import MunicipalityPage from "./components/MunicipalityPage.jsx";
 import CitizenPage from "./components/CitizenPage.jsx";
+import PublicRelationsOfficer from "./components/PublicRelationsOfficer.jsx";
 import API from "./API/API.js";
+
 function App() {
     const navigate = useNavigate();
     const [loggedIn, setLoggedIn] = useState(false);
@@ -83,8 +85,9 @@ function App() {
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
-       <Route path="/municipality" element={ <MunicipalityPage user={user} /> } />
-       <Route path="/citizen" element={ <CitizenPage user={user} /> } />
+       <Route path="/public-relations-officer" element={ <PublicRelationsOfficer user={user} handleLogin={handleLogin} handleLogout={handleLogout}/> } />
+       <Route path="/municipality" element={ <MunicipalityPage user={user}handleLogin={handleLogin} handleLogout={handleLogout} /> } />
+       <Route path="/citizen" element={ <CitizenPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
        {
        <Route path="*" element={ <NotFound /> } />
        }

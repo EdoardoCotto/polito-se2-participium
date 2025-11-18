@@ -39,7 +39,10 @@ function LoginModal(props) {
         navigate('/admin');
       } else if (user?.type === 'citizen') {
         navigate('/citizen');
-      } else {
+      } 
+      else if (user?.type === 'municipal_public_relations_officer') {
+        navigate('/public-relations-officer');
+      }else {
         // All other municipality roles go to municipality page
         navigate('/municipality');
       }
