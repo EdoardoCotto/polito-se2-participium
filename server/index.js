@@ -5,6 +5,7 @@ const passport = require('./utils/passport');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 const { swaggerUi, swaggerSpec, swaggerUiOptions } = require('./swagger');
 const path = require('path');
+const {isMunicipal_public_relations_officer, isAdmin} = require("./middlewares/authMiddleware");
 
 const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -30,7 +31,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Serve static files
-app.use('/static', express.static(path.join(__dirname, 'static')));
+app.use('/static', isMunicipal_public_relations_officer, express.static(path.join(__dirname, 'static')));
 
 // Swagger API docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
