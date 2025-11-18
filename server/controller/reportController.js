@@ -3,6 +3,8 @@
 
 const reportRepository = require('../repository/reportRepository');
 const AppError = require('../errors/AppError');
+const path = require('path'); 
+
 
 /**
  * Create a new report with location (latitude and longitude)
@@ -100,7 +102,25 @@ exports.getReportById = async (req, res) => {
 exports.getPendingReports = async (req, res) => {
   try {
     const reports = await reportRepository.getPendingReports();
-    return res.status(200).json(reports);
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // es. http://localhost:3001
+
+    const enriched = reports.map((r) => {
+      const photoUrls = (r.photos || []).map((p) => {
+        // p può essere un path assoluto o relativo: estraiamo solo il nome del file
+        const fileName = path.basename(p); 
+        // Costruiamo l'URL pubblico servito da Express:
+        return `${baseUrl}/static/uploads/${fileName}`;
+      });
+
+      return {
+        ...r,
+        photoUrls, // nuovo campo con gli URL completi delle immagini
+      };
+    });
+
+    return res.status(200).json(enriched);
   } catch (err) {
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });
@@ -109,6 +129,7 @@ exports.getPendingReports = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 /**
  * Review (accept or reject) a report.
  * Body: 

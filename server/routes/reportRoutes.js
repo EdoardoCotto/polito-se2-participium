@@ -76,6 +76,7 @@ const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer } = require('.
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createReport);
+
 /**
  * @swagger
  * /reports/pending:
@@ -106,6 +107,7 @@ router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createRep
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/reports/pending', isLoggedIn, isMunicipal_public_relations_officer, reportController.getPendingReports);
+
 /**
  * @swagger
  * /reports/{id}:
