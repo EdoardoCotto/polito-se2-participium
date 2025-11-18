@@ -106,7 +106,33 @@ exports.updateReportReview = (reportId, { status, rejectionReason = null, techni
  */
 exports.getReportsByStatus = (status) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM Reports WHERE status = ? ORDER BY created_at DESC';
+    const sql = `
+      SELECT 
+        R.id          AS reportId,
+        R.userId      AS reportUserId,
+        R.latitude,
+        R.longitude,
+        R.title,
+        R.description,
+        R.category,
+        R.status,
+        R.rejection_reason,
+        R.technical_office,
+        R.created_at,
+        R.updated_at,
+        R.image_path1,
+        R.image_path2,
+        R.image_path3,
+        U.id          AS userId,
+        U.username    AS userUsername,
+        U.name        AS userName,
+        U.surname     AS userSurname,
+        U.email       AS userEmail
+      FROM Reports R
+      JOIN Users U ON R.userId = U.id
+      WHERE R.status = ?
+      ORDER BY R.created_at DESC
+    `;
     db.all(sql, [status], (err, rows) => {
       if (err) {
         return reject(err);
@@ -115,3 +141,4 @@ exports.getReportsByStatus = (status) => {
     });
   });
 };
+

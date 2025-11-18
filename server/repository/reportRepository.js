@@ -17,8 +17,8 @@ const mapReportRow = (row) => {
   ].filter(Boolean);
 
   return {
-    id: row.id,
-    userId: row.userId,
+    id: row.reportId,           // ⬅ report
+    userId: row.userId,         // ⬅ utente (dalla join)
     latitude: row.latitude,
     longitude: row.longitude,
     title: row.title,
@@ -30,6 +30,13 @@ const mapReportRow = (row) => {
     created_at: row.created_at,
     updated_at: row.updated_at,
     photos: photosFromDb,
+    user: {
+      id: row.userId,
+      username: row.userUsername,
+      name: row.userName,
+      surname: row.userSurname,
+      email: row.userEmail,
+    },
   };
 };
 
