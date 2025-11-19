@@ -30,11 +30,35 @@ CREATE TABLE IF NOT EXISTS Reports (
   image_path1 TEXT NOT NULL,
   image_path2 TEXT,
   image_path3 TEXT,
-  status TEXT NOT NULL DEFAULT 'pending', -- possible values: 'pending', 'approved', 'rejected'  etc
+  status TEXT NOT NULL DEFAULT 'pending',
   rejection_reason TEXT,
-  technical_office TEXT, -- anche questo campo dovra essere ridotto con solo i possibili uffici tecnici
+  technical_office TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
-  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE 
+  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE, 
+  CHECK(status IN ('pending', 'approved', 'rejected')),
+  CHECK(category IN (
+    'Water Supply – Drinking Water',
+    'Architectural Barriers',
+    'Sewer System',
+    'Public Lighting',
+    'Waste',
+    'Road Signs and Traffic Lights',
+    'Roads and Urban Furnishings',
+    'Public Green Areas and Playgrounds',
+    'Other'
+  )),
+  CHECK(technical_office IN (
+    'municipal_public_relations_officer',
+    'municipal_administrator',
+    'urban_planner',
+    'building_permit_officer',
+    'building_inspector',
+    'suap_officer',
+    'public_works_engineer',
+    'mobility_traffic_engineer',
+    'environment_technician',
+    'technical_office_staff_member'
+  ))
 );
