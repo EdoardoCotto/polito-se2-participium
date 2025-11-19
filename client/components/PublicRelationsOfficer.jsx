@@ -1,9 +1,8 @@
-import { Container, Card, Row, Col, Badge, Button, Modal, Form, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, Row, Col, Badge, Button, Modal, Form, Alert, Spinner, Carousel } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import TurinMap from './TurinMap';
 import MapErrorBoundary from './MapErrorBoundary';
 import API from '../API/API';
-import { First } from 'react-bootstrap/esm/PageItem';
 
 export default function PublicRelationsOfficer({ user }) {
   const [pendingReports, setPendingReports] = useState([]);
@@ -19,6 +18,11 @@ export default function PublicRelationsOfficer({ user }) {
   const [submitting, setSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState('');
+
+  // Photos modal state - Added for photo viewer
+  const [showPhotosModal, setShowPhotosModal] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [photoModalTitle, setPhotoModalTitle] = useState('');
 
    // Map state - stores the location to highlight on map
   const [highlightedLocation, setHighlightedLocation] = useState(null);
@@ -62,7 +66,6 @@ export default function PublicRelationsOfficer({ user }) {
       setLoading(true);
       setError('');
       const reports = await API.getPendingReports();
-      console.log('Fetched pending reports:', reports);
       console.log('FirstReport', reports[0]);
       setPendingReports(reports);
     } catch (err) {
@@ -89,8 +92,33 @@ export default function PublicRelationsOfficer({ user }) {
         title: report.title,
         reportId: report.id
       });
-      console.log('Report selected:', report.id); // Debug log
+    
     }
+  };
+
+  // Open photos modal - Added to view report photos
+  const handleOpenPhotos = (report, e) => {
+    e.stopPropagation(); // Prevent card click
+    
+    // Use photoUrls array directly from backend (already has full URLs)
+    const photos = report.photoUrls || [];
+    
+    console.log('Photos to display:', photos); // Debug log
+    
+    if (photos.length === 0) {
+      console.warn('No photos found for this report'); // Debug log
+    }
+    
+    setSelectedPhotos(photos);
+    setPhotoModalTitle(report.title);
+    setShowPhotosModal(true);
+  };
+
+  // Close photos modal
+  const handleClosePhotosModal = () => {
+    setShowPhotosModal(false);
+    setSelectedPhotos([]);
+    setPhotoModalTitle('');
   };
 
   // Open review modal
@@ -140,7 +168,6 @@ export default function PublicRelationsOfficer({ user }) {
         ...(reviewAction === 'accepted' && { technicalOffice }),
         ...(reviewAction === 'rejected' && { explanation: explanation.trim() }),
       };
-
       await API.reviewReport(selectedReport.id, reviewData);
       
       setReviewSuccess(`Report successfully ${reviewAction}!`);
@@ -171,6 +198,15 @@ export default function PublicRelationsOfficer({ user }) {
     });
   };
 
+   // Count photos for a report - Use photoUrls
+  const countPhotos = (report) => {
+    return report.photoUrls ? report.photoUrls.length : 0;
+  };
+  
+  // Check if report has photos - Use photoUrls
+  const hasPhotos = (report) => {
+    return report.photoUrls && report.photoUrls.length > 0;
+  };
 
   return (
     <div className="app-root d-flex flex-column min-vh-100">
@@ -356,22 +392,57 @@ export default function PublicRelationsOfficer({ user }) {
                           <div className="mb-3" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
                             <i className="bi bi-person text-primary me-1"></i>
                             <small className="text-muted">
-                              {report.userId || 'Unknown User'}
+                              {report.user.username || 'Unknown User'}
                             </small>
                             <br />
                             <i className="bi bi-calendar text-primary me-1"></i>
                             <small className="text-muted">
-                              {formatDate(report.createdAt)}
+                              {formatDate(report.created_at)}
                             </small>
                           </div>
 
-                          {/* Photos Count */}
-                          {report.photos && report.photos.length > 0 && (
+                           {/* Photos Badge - Clickable to open photos modal */}
+                          {hasPhotos(report) && (
                             <div className="mb-3">
-                              <Badge bg="info" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                              <Badge 
+                                bg="info" 
+                                style={{ 
+                                  fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                                onClick={(e) => handleOpenPhotos(report, e)}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#0891b2';
+                                  e.currentTarget.style.transform = 'scale(1.05)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
                                 <i className="bi bi-image me-1"></i>
-                                {report.photos.length} photo{report.photos.length !== 1 ? 's' : ''}
+                                {countPhotos(report)} photo{countPhotos(report) !== 1 ? 's' : ''}
+                                <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '0.7em' }}></i>
                               </Badge>
+                            </div>
+                          )}
+                          {/* Click hint - Only show when not selected */}
+                          {highlightedLocation?.reportId !== report.id && (
+                            <div className="mb-2">
+                              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
+                                <i className="bi bi-hand-index me-1"></i>
+                                Click to show on map
+                              </small>
+                            </div>
+                          )}
+                          {/* Deselect hint - Only show when selected */}
+                          {highlightedLocation?.reportId === report.id && (
+                            <div className="mb-2">
+                              <small className="text-primary" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
+                                <i className="bi bi-check-circle me-1"></i>
+                                Selected - Click again to deselect
+                              </small>
                             </div>
                           )}
                             {/* Action Buttons */}
@@ -421,6 +492,98 @@ export default function PublicRelationsOfficer({ user }) {
           </Col>
         </Row>
       </Container>
+
+       {/* Photos Modal - Added for viewing report photos */}
+      <Modal show={showPhotosModal} onHide={handleClosePhotosModal} centered size="lg">
+        <Modal.Header closeButton style={{ backgroundColor: '#f8f9fa' }}>
+          <Modal.Title style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
+            <i className="bi bi-images me-2"></i>
+            {photoModalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {selectedPhotos.length > 0 ? (
+            selectedPhotos.length === 1 ? (
+              // Single photo - Just show the image
+              <div style={{ 
+                width: '100%', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                backgroundColor: '#000',
+                minHeight: '25rem'
+              }}>
+                <img 
+                  src={selectedPhotos[0]} 
+                  alt="Report photo"
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '80vh',
+                    objectFit: 'contain'
+                  }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                  }}
+                /></div>
+            ) : (
+              // Multiple photos - Show carousel
+              <Carousel 
+                interval={null} 
+                style={{ backgroundColor: '#000' }}
+                indicators={true}
+                controls={true}
+              >
+                {selectedPhotos.map((photo, index) => (
+                  <Carousel.Item key={index}>
+                    <div style={{ 
+                      width: '100%', 
+                      height: '31.25rem',
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center',
+                      backgroundColor: '#000'
+                    }}>
+                      <img
+                        src={photo}
+                        alt={`Report photo ${index + 1}`}
+                        style={{ 
+                          maxWidth: '100%', 
+                          maxHeight: '100%',
+                          objectFit: 'contain'
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                        }}
+                         />
+                    </div>
+                    <Carousel.Caption style={{ 
+                      backgroundColor: 'rgba(0,0,0,0.7)', 
+                      borderRadius: '0.5rem',
+                      padding: '0.5rem 1rem'
+                    }}>
+                      <p style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', margin: 0 }}>
+                        Photo {index + 1} of {selectedPhotos.length}
+                      </p>
+                    </Carousel.Caption>
+                  </Carousel.Item>
+                ))}
+              </Carousel>
+            )
+          ) : (
+            <div className="text-center py-5">
+              <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
+              <p className="mt-3 text-muted">No photos available</p>
+            </div>
+          )}
+          </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClosePhotosModal} style={{ borderRadius: '0.5rem' }}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Review Modal */}
       <Modal show={showModal} onHide={handleCloseModal} centered size="lg">

@@ -93,7 +93,6 @@ export default function RegistrationPage() {
         await API.register(userData);
         
         setShowSuccess(true);
-        console.log('Registration successful:', userData);
         
         // Reset form and redirect after successful submission
         setTimeout(() => {

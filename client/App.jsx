@@ -50,7 +50,7 @@ function App() {
   checkAuth();
 }, [navigate]);
 
-    console.log('App rendering 1, loggedIn:', loggedIn, 'user:', user);
+  
 
   const handleLogin = async (credentials) => {
     try {
@@ -64,7 +64,6 @@ function App() {
       throw err;
     }
   };
-  console.log('App rendering 2, loggedIn:', loggedIn, 'user:', user);
 
   const handleLogout = async () => {
     await API.logout();
