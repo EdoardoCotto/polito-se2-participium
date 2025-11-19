@@ -1,5 +1,5 @@
 // components/CitizenPage.jsx
-import { Container, Card, Row, Col, Button, Form, Alert, Modal } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown } from 'react-bootstrap';
 import { useState, useEffect} from 'react';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
@@ -19,6 +19,12 @@ export default function CitizenPage({ user }) {
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [categoriesError, setCategoriesError] = useState('');
+
+   // View mode state - 'create' or 'view'
+  const [viewMode, setViewMode] = useState('create');
+  const [allReports, setAllReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [reportsError, setReportsError] = useState('');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -104,23 +110,81 @@ export default function CitizenPage({ user }) {
     }
   };
 
+  // Handle view mode change
+  const handleViewModeChange = async (mode) => {
+    setViewMode(mode);
+    
+    if (mode === 'view') {
+      // Fetch all reports to display on map
+      try {
+        setLoadingReports(true);
+        setReportsError('');
+        const reports = await API.getPendingReports();
+        setAllReports(reports);
+        // Don't clear selected location immediately to avoid map re-render
+        setTimeout(() => setSelectedLocation(null), 100);
+      } catch (err) {
+        setReportsError(err.message || 'Failed to load reports');
+      } finally {
+        setLoadingReports(false);
+      }
+    } else if (mode === 'create') {
+      // Clear reports when switching to create mode
+      setAllReports([]);
+      setTimeout(() => setSelectedLocation(null), 100);
+    }
+  };
+
+  // Handle report marker click in view mode - Just open popup, don't set location
+  const handleReportMarkerClick = (report) => {
+    // In view mode, we don't need to set selected location
+    // The popup will be shown automatically by Leaflet
+    console.log('Report clicked:', report.title);
+  };
+
+  // Get view mode display text
+  const getViewModeText = () => {
+    switch (viewMode) {
+      case 'create':
+        return 'Create Report';
+      case 'view':
+        return 'View Reports on Map';
+      default:
+        return 'Create Report';
+    }
+  };
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
       <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
         <Row className="g-2 g-md-4">
           {/* Map */}
           <Col lg={8} className="order-1 order-lg-1">
-            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '400px' }}>
+            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '700px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                 <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                   <i className="bi bi-pin-map me-2"></i>
-                  <span className="d-none d-sm-inline">Select a location on the map</span>
-                  <span className="d-inline d-sm-none">Select Location</span>
+                   <span className="d-none d-sm-inline">
+                    {viewMode === 'create' ? 'Select a location on the map' : 'Reports Map View'}
+                  </span>
+                  <span className="d-inline d-sm-none">
+                    {viewMode === 'create' ? 'Select Location' : 'Map View'}
+                  </span>
+                  {viewMode === 'view' && allReports.length > 0 && (
+                    <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                      Viewing of the reports
+                    </span>
+                  )}
                 </Card.Title>
               </Card.Header>
               <Card.Body className="p-0" style={{ height: 'calc(100% - 3rem)', minHeight: '350px' }}>
                 <div style={{ height: '100%', width: '100%' }}>
-                  <TurinMap onLocationSelected={setSelectedLocation} selectedLocation={selectedLocation}  
+                  <TurinMap 
+                    onLocationSelected={viewMode === 'create' ? setSelectedLocation : undefined}
+                    selectedLocation={selectedLocation}
+                    readOnly={viewMode === 'view'} // Map is read-only in view mode
+                    allReports={viewMode === 'view' ? allReports : []} // Pass reports in view mode
+                    onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
                   />
                 </div>
               </Card.Body>
@@ -129,26 +193,110 @@ export default function CitizenPage({ user }) {
 
           {/* Report panel */}
           <Col lg={4} className="order-2 order-lg-2">
-            <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0' }}>
+            <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0' , minHeight: '700px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
-                  <i className="bi bi-file-earmark-plus me-2"></i>
-                  Create Report
-                </Card.Title>
+            
+                  {/* Dropdown menu for view mode selection - Full width */}
+                <Dropdown className="w-100">
+                  <Dropdown.Toggle 
+                    variant="light" 
+                    id="view-mode-dropdown"
+                    className="w-100 d-flex align-items-center justify-content-between"
+                    style={{ 
+                      borderRadius: '0.5rem',
+                      fontSize: 'clamp(0.85rem, 2.5vw, 1rem)',
+                      fontWeight: '500',
+                      padding: 'clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      color: 'white'
+                    }}
+                  >
+                    <span className="d-flex align-items-center">
+                      <i className={`bi ${viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye'} me-2`}></i>
+                      {getViewModeText()}
+                    </span>
+                  </Dropdown.Toggle>
+                   <Dropdown.Menu className="w-100" style={{ borderRadius: '0.5rem' }}>
+                    <Dropdown.Item 
+                      active={viewMode === 'create'}
+                      onClick={() => handleViewModeChange('create')}
+                      className="d-flex align-items-center"
+                      style={{ 
+                        fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                        padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)'
+                      }}
+                    >
+                      <i className="bi bi-file-earmark-plus me-2"></i>
+                      Create Report
+                    </Dropdown.Item>
+                    <Dropdown.Item 
+                      active={viewMode === 'view'}
+                      onClick={() => handleViewModeChange('view')}
+                      className="d-flex align-items-center"
+                      style={{ 
+                        fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                        padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)'
+                      }}
+                    >
+                      <i className="bi bi-eye me-2"></i>
+                      View Reports on Map
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
               </Card.Header>
               <Card.Body className="p-2 p-md-4">
-                {submitError && (
-                  <Alert variant="danger" dismissible onClose={() => setSubmitError('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+
+                {/* Show loading state when fetching reports */}
+                {viewMode === 'view' && loadingReports && (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading reports...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Loading reports...</p>
+                  </div>
+                )}
+
+                {/* Show error if reports failed to load */}
+                {viewMode === 'view' && reportsError && (
+                  <Alert variant="danger" dismissible onClose={() => setReportsError('')}>
                     <i className="bi bi-exclamation-triangle me-2"></i>
-                    {submitError}
+                    {reportsError}
                   </Alert>
                 )}
-                {submitOk && (
-                  <Alert variant="success" dismissible onClose={() => setSubmitOk('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
-                    <i className="bi bi-check-circle me-2"></i>
-                    {submitOk}
-                  </Alert>
+
+                {/* Show message when in view mode and reports loaded */}
+                {viewMode === 'view' && !loadingReports && !reportsError && (
+                  <div className="text-center py-5">
+                    <i className="bi bi-map" style={{ fontSize: '3rem', color: '#5e7bb3' }}></i>
+                    <h5 className="mt-3 mb-2">Reports Map View</h5>
+                    <p className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      {allReports.length > 0 
+                        ? `Viewing ${allReports.length} report${allReports.length !== 1 ? 's' : ''} on the map`
+                        : 'No reports to display'
+                      }
+                    </p>
+                    <p className="text-muted small">
+                      Click on markers to see report details
+                    </p>
+                  </div>
                 )}
+
+                {/* Show create report form only in create mode */}
+                {viewMode === 'create' && (
+                  <>
+                    {submitError && (
+                      <Alert variant="danger" dismissible onClose={() => setSubmitError('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        {submitError}
+                      </Alert>
+                    )}
+                    {submitOk && (
+                      <Alert variant="success" dismissible onClose={() => setSubmitOk('')} className="mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                        <i className="bi bi-check-circle me-2"></i>
+                        {submitOk}
+                      </Alert>
+                    )}
 
                 <Form>
                   <Form.Group className="mb-2 mb-md-3">
@@ -317,6 +465,8 @@ export default function CitizenPage({ user }) {
                     )}
                   </Button>
                 </div>
+                </>
+                )}
               </Card.Body>
             </Card>
           </Col>

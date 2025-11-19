@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Button, Alert } from 'react-bootstrap';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
+import 'leaflet/dist/leaflet.css';
+import './styles/cluster.css';
 
 // Fix for default marker icons in react-leaflet
 if (typeof window !== 'undefined') {
@@ -14,9 +17,8 @@ if (typeof window !== 'undefined') {
   });
 }
 
-
 // Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly}) {
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick }) {
    const isPointInsideBoundary = (lat, lng) => {
     if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
     
@@ -43,6 +45,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
     
     return false;
   };
+
   const map = useMapEvents({
     click(e) {
       // Don't allow clicks if in read-only mode
@@ -66,6 +69,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
       }
       },
   });
+
   // Cleanup markers that are no longer in state
   useEffect(() => {
     // Remove all layers that are not TileLayer or GeoJSON
@@ -83,11 +87,10 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
     
   };
 
-  
-
   return (
     <>
-      {markers.map((marker) => (
+    {/* User-created markers (for creating new reports) - NOT clustered - Only in create mode */}
+      {!readOnly && markers.map((marker) => (
        <Marker
           key={marker.id}
           position={marker.position}
@@ -122,19 +125,87 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
               Lng: {marker.position[1].toFixed(5)}
               <br />
               <small>{marker.timestamp}</small>
-              <br />
-               <small style={{ color: '#6c757d', fontStyle: 'italic' }}>
-                Double-click on the marker to remove it
-              </small>
+              {!readOnly && (
+                <>
+                  <br />
+                  <small style={{ color: '#6c757d', fontStyle: 'italic' }}>
+                    Double-click on the marker to remove it
+                  </small>
+                </>
+              )}
             </div>
           </Popup>
         </Marker>
       ))}
+
+      {/* Report markers (from API) - Clustered */}
+       {allReports && allReports.length > 0 && (
+        <MarkerClusterGroup
+          chunkedLoading
+          showCoverageOnHover={false}
+          maxClusterRadius={50}
+          spiderfyOnMaxZoom={true}
+          disableClusteringAtZoom={18}
+          iconCreateFunction={(cluster) => {
+            const count = cluster.getChildCount();
+            let className = 'marker-cluster-small';
+
+            if (count >= 10) {
+              className = 'marker-cluster-large';
+            } else if (count >= 5) {
+              className = 'marker-cluster-medium';
+            }
+
+            return L.divIcon({
+              html: `<div><span>${count}</span></div>`,
+              className: `marker-cluster ${className}`,
+              iconSize: L.point(40, 40)
+            });
+          }}
+        >
+          {allReports.map((report) => {
+            if (!report.latitude || !report.longitude) return null;
+        
+        return (
+          <Marker
+            key={`report-${report.id}`}
+            position={[report.latitude, report.longitude]}
+            eventHandlers={{
+              click: () => {
+                if (onReportMarkerClick) {
+                  onReportMarkerClick(report);
+                }
+              }
+            }}
+          >
+          <Popup>
+              <div style={{ minWidth: '150px' }}>
+                <h6 style={{ marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1rem' }}>
+                  {report.title}
+                </h6>
+                {report.user && (
+                  <div style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#6c757d',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <i className="bi bi-person-circle me-2"></i>
+                    <span>{report.user.username || report.user.name}</span>
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+           );
+      })}
+      </MarkerClusterGroup>
+      )}
     </>
   );
 }
 
-export default function TurinMap({ onLocationSelected,selectedLocation, readOnly=false }) {
+export default function TurinMap({ onLocationSelected,selectedLocation, readOnly=false,allReports = [], onReportMarkerClick  }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -143,6 +214,13 @@ export default function TurinMap({ onLocationSelected,selectedLocation, readOnly
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [geoJsonError, setGeoJsonError] = useState(false);
   const [showOutOfBoundsAlert, setShowOutOfBoundsAlert] = useState(false);
+
+  // Add debug log to see received reports
+  useEffect(() => {
+    console.log('TurinMap - Received reports:', allReports?.length);
+    console.log('TurinMap - Reports data:', allReports);
+  }, [allReports]);
+
 
   useEffect(() => {
     if (selectedLocation === null) {
@@ -231,6 +309,7 @@ export default function TurinMap({ onLocationSelected,selectedLocation, readOnly
           <span className="d-inline d-sm-none">Must be within city boundaries</span>
         </Alert>
       )}
+
       <MapContainer 
         key={mapKey}
         center={turinPosition} 
@@ -268,10 +347,16 @@ export default function TurinMap({ onLocationSelected,selectedLocation, readOnly
             <small>Could not load city boundaries</small>
           </div>
         )}
-        <LocationMarker markers={markers} setMarkers={setMarkers} geoJsonData={geoJsonData}
+        <LocationMarker 
+          markers={markers} 
+          setMarkers={setMarkers} 
+          geoJsonData={geoJsonData}
           onOutOfBounds={handleOutOfBounds}
           onLocationSelected={onLocationSelected}
-          readOnly={readOnly} />
+          readOnly={readOnly} 
+          allReports={allReports}
+          onReportMarkerClick={onReportMarkerClick}
+        />
       </MapContainer>
     </div>
   );
