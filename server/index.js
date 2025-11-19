@@ -31,7 +31,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Serve static files
-app.use('/static', isMunicipal_public_relations_officer, express.static(path.join(__dirname, 'static')));
+app.use('/static', express.static(path.join(__dirname, 'static')));
 
 // Swagger API docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
