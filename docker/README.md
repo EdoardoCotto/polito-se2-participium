@@ -152,3 +152,48 @@ Once running:
 - Backend REST API on `http://localhost:3001`
 - Swagger docs on `http://localhost:3001/api-docs`
 
+### Using docker compose with published images
+
+Instead of crafting the `docker run` commands manually, end users can create a small `docker-compose.yml` that references the public images. Example:
+
+```yaml
+services:
+  db:
+    image: neginmotaharifar/polito-se2-participium:db-demo-2-release-1
+    container_name: participium-db
+    volumes:
+      - db-data:/app/server/db
+
+  backend:
+    image: neginmotaharifar/polito-se2-participium:backend-demo-2-release-1
+    container_name: participium-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      - db-data:/app/server/db
+    depends_on:
+      - db
+
+  frontend:
+    image: neginmotaharifar/polito-se2-participium:frontend-demo-2-release-1
+    container_name: participium-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+```
+
+Save the file locally, replace the tag (`demo-2-release-1`) with the published version you want to run, then execute:
+
+```bash
+docker compose up -d
+```
+
+This gives the same result as pulling/running manually, while staying aligned with the release images on Docker Hub.
+
