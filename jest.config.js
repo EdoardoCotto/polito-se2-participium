@@ -7,6 +7,7 @@ module.exports = {
   restoreMocks: true,
   transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
   collectCoverage: true,
+  coverageReporters: ["text", "text-summary"],
   coverageDirectory: '<rootDir>/coverage', 
   collectCoverageFrom: [
     'server/**/*.js',

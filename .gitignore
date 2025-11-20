@@ -42,3 +42,8 @@ Thumbs.db
 *.temp
 *.swp
 *.swo
+
+# Database locale
+server/db/test.db
+tmp/test.db
+
