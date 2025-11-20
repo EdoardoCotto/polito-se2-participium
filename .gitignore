@@ -1,1 +1,44 @@
+# Node modules
 node_modules/
+client/node_modules/
+server/node_modules/
+test/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Jest coverage
+coverage/
+coverage/**/*.html
+coverage/**/*.json
+coverage/**/*.lcov
+.jest/
+*.json
+
+# Build / dist
+client/dist/
+client/build/
+server/dist/
+server/build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# VSCode
+.vscode/
+.vscode-test/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp / swap files
+*.tmp
+*.temp
+*.swp
+*.swo
