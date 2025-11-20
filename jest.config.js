@@ -7,12 +7,12 @@ module.exports = {
   restoreMocks: true,
   transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
   collectCoverage: true,
+  coverageDirectory: '<rootDir>/coverage', 
   collectCoverageFrom: [
     'server/**/*.js',
     '!server/db/**',
     '!server/index.js',
     '!server/swagger.js'
   ],
-  coverageDirectory: 'coverage',
-  resetModules: true
+  resetModules: true,
 };
