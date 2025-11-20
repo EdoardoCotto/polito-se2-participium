@@ -2,43 +2,8 @@
   "name": "test",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand --coverage"
-  },
-  "jest": {
-    "rootDir": "..",
-    "roots": [
-      "<rootDir>/test"
-    ],
-    "testEnvironment": "node",
-    "moduleDirectories": [
-      "node_modules",
-      "<rootDir>/server/node_modules"
-    ],
-    "coverageProvider": "v8",
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "<rootDir>/server/controller/**/*.js",
-      "<rootDir>/server/repository/**/*.js",
-      "<rootDir>/server/utils/**/*.js",
-      "<rootDir>/server/routes/**/*.js",
-      "<rootDir>/server/middlewares/**/*.js",
-      "<rootDir>/server/dao/**/*.js"
-    ],
-    "coverageReporters": [
-      "text",
-      "text-summary"
-    ],
-    "coverageDirectory": "/tmp/jest-coverage"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "jest": "^30.2.0",
-    "supertest": "^7.1.4"
+    "test": "jest --runInBand --config ../jest.config.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0"

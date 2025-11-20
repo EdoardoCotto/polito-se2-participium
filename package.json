@@ -2,11 +2,11 @@
   "name": "polito-se2-participium",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["client", "server", "test"],
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "test": "jest --config ./jest.config.js --runInBand"
-
+    "test": "jest --runInBand"
   },
   "devDependencies": {
     "jest": "^29.7.0",

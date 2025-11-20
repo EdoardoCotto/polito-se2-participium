@@ -1,4 +1,5 @@
 {
-  "jest.jestCommandLine": "npm test --",
-  "jest.runMode": "watch"
+  "jest.jestCommandLine": "npm run test --",
+  "jest.rootPath": "${workspaceFolder}",
+  "jest.runMode": "watch" 
 }

@@ -1,24 +1,18 @@
 module.exports = {
   testEnvironment: 'node',
-  roots: ['<rootDir>/test'], // SOLO test, non server!
+  roots: ['test'],
   testMatch: ['**/?(*.)+(test).js'],
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  
-  // Moduli da non trasformare
-  transformIgnorePatterns: [
-    'node_modules/(?!(supertest)/)'
-  ],
-  
-  // Coverage
+  transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
+  collectCoverage: true,
   collectCoverageFrom: [
     'server/**/*.js',
     '!server/db/**',
     '!server/index.js',
     '!server/swagger.js'
   ],
-  
-  // Importante: reset tra i test
-  resetModules: true,
+  coverageDirectory: 'coverage',
+  resetModules: true
 };
