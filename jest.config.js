@@ -13,7 +13,7 @@ module.exports = {
     'server/**/*.js',
     '!server/db/**',
     '!server/index.js',
-    '!server/swagger.js'
+    '!server/swagger.js',
   ],
   resetModules: true,
 };
