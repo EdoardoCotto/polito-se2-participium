@@ -206,26 +206,32 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
   }
 };
 
+const getReportsByStatusInternal = async (status, options = {}) => {
+  if (typeof status !== 'string') {
+    throw new BadRequestError('Status is required');
+  }
+
+  const normalized = status.toLowerCase().trim();
+  const allowed = [
+    REPORT_STATUSES.PENDING,
+    REPORT_STATUSES.ACCEPTED,
+    REPORT_STATUSES.REJECTED,
+  ];
+
+  if (!allowed.includes(normalized)) {
+    throw new BadRequestError('Invalid status filter');
+  }
+
+  const rows = await reportDao.getReportsByStatus(normalized, options);
+  return rows.map(mapReportRow);
+};
+
 /**
  * Get reports by status (helper generale)
  */
-exports.getReportsByStatus = async (status) => {
+exports.getReportsByStatus = async (status, options = {}) => {
   try {
-    if (typeof status !== 'string') {
-      throw new BadRequestError('Status is required');
-    }
-    const normalized = status.toLowerCase().trim();
-    const allowed = [
-      REPORT_STATUSES.PENDING,
-      REPORT_STATUSES.ACCEPTED,
-      REPORT_STATUSES.REJECTED,
-    ];
-    if (!allowed.includes(normalized)) {
-      throw new BadRequestError('Invalid status filter');
-    }
-
-    const rows = await reportDao.getReportsByStatus(normalized);
-    return rows.map(mapReportRow);
+    return await getReportsByStatusInternal(status, options);
   } catch (err) {
     throw err;
   }
@@ -235,5 +241,13 @@ exports.getReportsByStatus = async (status) => {
  * Get pending reports (per il municipal public relations officer)
  */
 exports.getPendingReports = async () => {
-  return exports.getReportsByStatus(REPORT_STATUSES.PENDING);
+  return getReportsByStatusInternal(REPORT_STATUSES.PENDING);
+};
+
+/**
+ * Get approved (accepted) reports for the public map
+ * @param {{ boundingBox?: { north: number, south: number, east: number, west: number } }} options
+ */
+exports.getApprovedReports = async (options = {}) => {
+  return getReportsByStatusInternal(REPORT_STATUSES.ACCEPTED, options);
 };

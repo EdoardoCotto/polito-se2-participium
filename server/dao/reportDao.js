@@ -104,9 +104,11 @@ exports.updateReportReview = (reportId, { status, rejectionReason = null, techni
  * @param {string} status
  * @returns {Promise<Object[]>}
  */
-exports.getReportsByStatus = (status) => {
+exports.getReportsByStatus = (status, options = {}) => {
   return new Promise((resolve, reject) => {
-    const sql = `
+    const { boundingBox } = options || {};
+
+    let sql = `
       SELECT 
         R.id          AS reportId,
         R.userId      AS reportUserId,
@@ -131,9 +133,26 @@ exports.getReportsByStatus = (status) => {
       FROM Reports R
       JOIN Users U ON R.userId = U.id
       WHERE R.status = ?
-      ORDER BY R.created_at DESC
     `;
-    db.all(sql, [status], (err, rows) => {
+
+    const params = [status];
+
+    if (boundingBox) {
+      sql += `
+        AND R.latitude BETWEEN ? AND ?
+        AND R.longitude BETWEEN ? AND ?
+      `;
+      params.push(
+        boundingBox.south,
+        boundingBox.north,
+        boundingBox.west,
+        boundingBox.east,
+      );
+    }
+
+    sql += ' ORDER BY R.created_at DESC';
+
+    db.all(sql, params, (err, rows) => {
       if (err) {
         return reject(err);
       }

@@ -110,6 +110,61 @@ router.get('/reports/pending', isLoggedIn, isMunicipal_public_relations_officer,
 
 /**
  * @swagger
+ * /reports/approved:
+ *   get:
+ *     summary: Get approved reports for the public map
+ *     description: >
+ *       Returns all reports with status "accepted". Optional bounding box parameters
+ *       (`north`, `south`, `east`, `west`) can be provided to limit the results to
+ *       the visible map area.
+ *     tags: [Reports]
+ *     parameters:
+ *       - in: query
+ *         name: north
+ *         schema:
+ *           type: number
+ *         description: Northern latitude of the bounding box
+ *       - in: query
+ *         name: south
+ *         schema:
+ *           type: number
+ *         description: Southern latitude of the bounding box
+ *       - in: query
+ *         name: east
+ *         schema:
+ *           type: number
+ *         description: Eastern longitude of the bounding box
+ *       - in: query
+ *         name: west
+ *         schema:
+ *           type: number
+ *         description: Western longitude of the bounding box
+ *     responses:
+ *       200:
+ *         description: List of approved reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Invalid query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/reports/approved', reportController.getApprovedReports);
+
+/**
+ * @swagger
  * /reports/{id}:
  *   get:
  *     summary: Get a single report by ID
