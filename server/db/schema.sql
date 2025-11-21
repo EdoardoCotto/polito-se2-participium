@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS Reports (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE, 
-  CHECK(status IN ('pending', 'accepted', 'rejected')),
+  CHECK(status IN ('pending', 'assigned', 'rejected')),
   CHECK(category IN (
-    'Water Supply – Drinking Water',
+    'Water Supply - Drinking Water',
     'Architectural Barriers',
     'Sewer System',
     'Public Lighting',
