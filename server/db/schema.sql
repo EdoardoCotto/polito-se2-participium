@@ -1,10 +1,6 @@
 -- SQLite Schema for Participium
 -- Database for citizen participation management system
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Reports;
-
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +33,7 @@ CREATE TABLE IF NOT EXISTS Reports (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE, 
-  CHECK(status IN ('pending', 'approved', 'rejected')),
+  CHECK(status IN ('pending', 'accepted', 'rejected')),
   CHECK(category IN (
     'Water Supply – Drinking Water',
     'Architectural Barriers',

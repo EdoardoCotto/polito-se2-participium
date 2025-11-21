@@ -43,7 +43,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# Database locale
+# Local Database
+server/db/participium.db
 server/db/test.db
 tmp/test.db
+
+#Images Of Reports
+server/static/uploads
 
