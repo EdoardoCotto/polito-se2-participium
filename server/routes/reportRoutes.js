@@ -12,16 +12,13 @@ const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer } = require('.
  *   post:
  *     summary: Add one new report (with photos upload)
  *     tags: [Reports]
- *     // Se NON vuoi la security globale, metti qui:
- *     // security:
- *     //   - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [latitude, longitude, title, description, category, photos, anonymus]
+ *             required: [latitude, longitude, title, description, category, photos, anonymous]
  *             properties:
  *               latitude:
  *                 type: number
@@ -55,10 +52,6 @@ const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer } = require('.
  *                 items:
  *                   type: string
  *                   format: binary
- *              anonymus:
- *                  type: boolean
- *                  example: false
- *                  description: Must be true for anonymous reports
  *     responses:
  *       201:
  *         description: Report created
@@ -95,7 +88,7 @@ router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createRep
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [latitude, longitude, title, description, category, photos, anonymus]
+ *             required: [latitude, longitude, title, description, category, photos]
  *             properties:
  *               latitude:
  *                 type: number
@@ -146,8 +139,14 @@ router.post('/reports', isLoggedIn, uploadMiddleware, reportController.createRep
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/reports/anonymus', isLoggedIn, uploadMiddleware, reportController.createReport);
+router.post('/reports/anonymous',isLoggedIn, uploadMiddleware, reportController.createReport);
 
 /**
  * @swagger

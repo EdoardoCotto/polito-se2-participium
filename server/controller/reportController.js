@@ -20,10 +20,10 @@ exports.createReport = async (req, res) => {
       description,
       category,
       photos,
-      anonymus
+      anonymous
     } = req.body || {};
 
-    if (!req.user || !req.user.id) {
+    if (!anonymous && (!req.user || !req.user.id)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
@@ -47,7 +47,7 @@ exports.createReport = async (req, res) => {
       return res.status(400).json({ error: 'At least one photo is required' });
     }
     const reportData = {
-      userId: anonymus ? null : req.user.id,
+      userId: anonymous ? null : req.user.id,
       latitude: lat,
       longitude: lon,
       title,
@@ -55,7 +55,7 @@ exports.createReport = async (req, res) => {
       category,
       photos: photoUrls,
     }
-    const created = await reportRepository.createReport(reportData, anonymus);
+    const created = await reportRepository.createReport(reportData, anonymous);
     return res.status(201).json(created);
   } catch (err) {
     if (err instanceof AppError) {
