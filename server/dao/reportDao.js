@@ -14,7 +14,7 @@ const db = new sqlite.Database(dbPath, (err) => {
  * @param {{ userId: number, latitude: number, longitude: number, title: string, description: string, category: string, photos: string[] }} reportData
  * @returns {Promise<Object>}
  */
-exports.createReport = ({ userId, latitude, longitude, title, description, category, photos }) => {
+exports.createReport = ({ userId = null, latitude, longitude, title, description, category, photos }) => {
   return new Promise((resolve, reject) => {
     const [photo1, photo2, photo3] = [
       photos[0],

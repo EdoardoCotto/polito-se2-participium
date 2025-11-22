@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS Reports (
   technical_office TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  userId INTEGER NOT NULL,
+  userId INTEGER,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE, 
   CHECK(status IN ('pending', 'assigned', 'rejected')),
   CHECK(category IN (
