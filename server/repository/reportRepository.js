@@ -45,7 +45,7 @@ const mapReportRow = (row) => {
  * @param {{ userId: number, latitude: number, longitude: number, title: string, description: string, category: string, photos: string[] }} reportData
  * @returns {Promise<Object>}
  */
-exports.createReport = async (reportData) => {
+exports.createReport = async (reportData, anonymous) => {
   try {
     const {
       userId,
@@ -57,7 +57,16 @@ exports.createReport = async (reportData) => {
       photos,
     } = reportData || {};
 
-    if (!userId || latitude === undefined || longitude === undefined) {
+    console.log(reportData) //DEBUG
+    console.log(anonymous) //DEBUG
+
+    if (anonymous && userId != null){
+      throw new BadRequestError('The Report is not anonymus')
+    }
+    if (!anonymous && userId == null){
+      throw new BadRequestError('User ID, latitude, and longitude are required');
+    }
+    if (latitude === undefined || longitude === undefined) {
       throw new BadRequestError('User ID, latitude, and longitude are required');
     }
 

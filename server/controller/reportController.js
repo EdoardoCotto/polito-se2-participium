@@ -4,6 +4,7 @@
 const reportRepository = require('../repository/reportRepository');
 const AppError = require('../errors/AppError');
 const path = require('path'); 
+const { report } = require('process');
 
 
 /**
@@ -19,9 +20,10 @@ exports.createReport = async (req, res) => {
       description,
       category,
       photos,
+      anonymous
     } = req.body || {};
 
-    if (!req.user || !req.user.id) {
+    if (!anonymous && (!req.user || !req.user.id)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
@@ -44,18 +46,16 @@ exports.createReport = async (req, res) => {
     if (photoUrls.length === 0) {
       return res.status(400).json({ error: 'At least one photo is required' });
     }
-
     const reportData = {
-      userId: req.user.id,
+      userId: anonymous ? null : req.user.id,
       latitude: lat,
       longitude: lon,
       title,
       description,
       category,
       photos: photoUrls,
-    };
-
-    const created = await reportRepository.createReport(reportData);
+    }
+    const created = await reportRepository.createReport(reportData, anonymous);
     return res.status(201).json(created);
   } catch (err) {
     if (err instanceof AppError) {
