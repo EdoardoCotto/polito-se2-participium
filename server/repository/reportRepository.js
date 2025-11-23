@@ -166,9 +166,12 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
       throw new BadRequestError('Status is required');
     }
 
-    const normalizedStatus = status.toLowerCase().trim();
+    let normalizedStatus = status.toLowerCase().trim();
+    if (REPORT_STATUSES.ACCEPTED.includes(normalizedStatus)) {
+      normalizedStatus = REPORT_STATUSES.ASSIGNED;
+    }
 
-    if (![REPORT_STATUSES.ACCEPTED, REPORT_STATUSES.REJECTED].includes(normalizedStatus)) {
+    if (![REPORT_STATUSES.ASSIGNED, REPORT_STATUSES.REJECTED].includes(normalizedStatus)) {
       throw new BadRequestError('Status must be "accepted" or "rejected"');
     }
 
@@ -190,7 +193,7 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
       }
       rejectionReason = explanation.trim();
       technicalOfficeValue = null; // rejected -> niente ufficio tecnico
-    } else if (normalizedStatus === REPORT_STATUSES.ACCEPTED) {
+    } else if (normalizedStatus === REPORT_STATUSES.ASSIGNED) {
       // check technicalOffice validity
       if (typeof technicalOffice !== 'string' || !TECHNICAL_OFFICER_ROLES.includes(technicalOffice)) {
         throw new BadRequestError('A valid technical office is required when accepting a report');
@@ -225,6 +228,7 @@ const getReportsByStatusInternal = async (status, options = {}) => {
     REPORT_STATUSES.PENDING,
     REPORT_STATUSES.ACCEPTED,
     REPORT_STATUSES.REJECTED,
+    REPORT_STATUSES.ASSIGNED,
   ];
 
   if (!allowed.includes(normalized)) {
@@ -258,5 +262,5 @@ exports.getPendingReports = async () => {
  * @param {{ boundingBox?: { north: number, south: number, east: number, west: number } }} options
  */
 exports.getApprovedReports = async (options = {}) => {
-  return getReportsByStatusInternal(REPORT_STATUSES.ACCEPTED, options);
+  return getReportsByStatusInternal(REPORT_STATUSES.ASSIGNED, options);
 };
