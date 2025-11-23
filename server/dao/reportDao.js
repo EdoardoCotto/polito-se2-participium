@@ -71,24 +71,28 @@ exports.getReportById = (reportId) => {
  * @param {{ status: string, rejectionReason?: string|null, technicalOffice?: string|null }} data
  * @returns {Promise<Object|null>}
  */
-exports.updateReportReview = (reportId, { status, rejectionReason = null, technicalOffice = null }) => {
+exports.updateReportReview = (reportId, { status, rejectionReason = null, technicalOffice = null, officerId = null }) => {
   return new Promise((resolve, reject) => {
+    // Nota: Aggiungiamo officerId alla query
     const sql = `
       UPDATE Reports
       SET status = ?,
           rejection_reason = ?,
           technical_office = ?,
+          officerId = ?, 
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
-    db.run(sql, [status, rejectionReason, technicalOffice, reportId], function (err) {
+    
+    // Attenzione all'ordine dei parametri
+    db.run(sql, [status, rejectionReason, technicalOffice, officerId, reportId], function (err) {
       if (err) {
         return reject(err);
       }
       if (this.changes === 0) {
-        // nessuna riga aggiornata
         return resolve(null);
       }
+      // Restituiamo il report aggiornato
       db.get('SELECT * FROM Reports WHERE id = ?', [reportId], (err2, row) => {
         if (err2) {
           return reject(err2);
@@ -204,4 +208,25 @@ exports.getReportsByTechnicalOffice = (technicalOffice) => {
     });
   });
 };
-
+// Trova l'ID dell'impiegato con meno report assegnati per un dato ruolo
+exports.getLeastLoadedOfficer = (technicalOfficeRole) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT u.id, COUNT(r.id) as workload
+      FROM Users u
+      LEFT JOIN Reports r ON u.id = r.officerId AND r.status = 'assigned'
+      WHERE u.type = ?
+      GROUP BY u.id
+      ORDER BY workload ASC, u.id ASC
+      LIMIT 1
+    `;
+    
+    db.get(sql, [technicalOfficeRole], (err, row) => {
+      if (err) {
+        return reject(err);
+      }
+      // Se non ci sono lavoratori per quel ruolo, row sarà undefined
+      resolve(row ? row.id : null);
+    });
+  });
+};
