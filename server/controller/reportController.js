@@ -53,7 +53,7 @@ const parseBoundingBox = (query = {}) => {
   }
 
   return parsed;
-};
+}; 
 
 
 /**
@@ -69,10 +69,9 @@ exports.createReport = async (req, res) => {
       description,
       category,
       photos,
-      anonymous
     } = req.body || {};
 
-    if (!anonymous && (!req.user || !req.user.id)) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
@@ -95,16 +94,18 @@ exports.createReport = async (req, res) => {
     if (photoUrls.length === 0) {
       return res.status(400).json({ error: 'At least one photo is required' });
     }
+
     const reportData = {
-      userId: anonymous ? null : req.user.id,
+      userId: req.user.id,
       latitude: lat,
       longitude: lon,
       title,
       description,
       category,
       photos: photoUrls,
-    }
-    const created = await reportRepository.createReport(reportData, anonymous);
+    };
+
+    const created = await reportRepository.createReport(reportData);
     return res.status(201).json(created);
   } catch (err) {
     if (err instanceof AppError) {
@@ -152,10 +153,22 @@ exports.getPendingReports = async (req, res) => {
   try {
     const reports = await reportRepository.getPendingReports();
 
-    const enriched = reports.map((report) => ({
-      ...report,
-      photoUrls: buildPhotoUrls(report.photos, req),
-    }));
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // es. http://localhost:3001
+
+    const enriched = reports.map((r) => {
+      const photoUrls = (r.photos || []).map((p) => {
+        // p può essere un path assoluto o relativo: estraiamo solo il nome del file
+        const fileName = path.basename(p); 
+        // Costruiamo l'URL pubblico servito da Express:
+        return `${baseUrl}/static/uploads/${fileName}`;
+      });
+
+      return {
+        ...r,
+        photoUrls, // nuovo campo con gli URL completi delle immagini
+      };
+    });
 
     return res.status(200).json(enriched);
   } catch (err) {
@@ -185,6 +198,31 @@ exports.getApprovedReports = async (req, res) => {
       return res.status(err.statusCode).json({ error: err.message });
     }
     console.error('Error in getApprovedReports controller:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+/**
+ * Get reports assigned to the logged-in technical office staff member
+ */
+exports.getAssignedReports = async (req, res) => {
+  try {
+    if (!req.user || !req.user.type) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const reports = await reportRepository.getAssignedReports(req.user.type);
+    const enriched = reports.map((report) => ({
+      ...report,
+      photoUrls: buildPhotoUrls(report.photos, req),
+    }));
+
+    return res.status(200).json(enriched);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error('Error in getAssignedReports controller:', err);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
