@@ -260,3 +260,21 @@ exports.getPendingReports = async () => {
 exports.getApprovedReports = async (options = {}) => {
   return getReportsByStatusInternal(REPORT_STATUSES.ACCEPTED, options);
 };
+
+/**
+ * Get reports assigned to a technical office staff member
+ * @param {string} technicalOffice
+ * @returns {Promise<Object[]>}
+ */
+exports.getAssignedReports = async (technicalOffice) => {
+  try {
+    if (typeof technicalOffice !== 'string' || !technicalOffice.trim()) {
+      throw new BadRequestError('Technical office is required');
+    }
+
+    const rows = await reportDao.getReportsByTechnicalOffice(technicalOffice);
+    return rows.map(mapReportRow);
+  } catch (err) {
+    throw err;
+  }
+};
