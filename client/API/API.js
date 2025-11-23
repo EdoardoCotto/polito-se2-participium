@@ -223,13 +223,16 @@ const getMunicipalityUsers = async () => {
 
 /**
  * Create Report
+ * Creates a new report with photos (authenticated user)
  * @param {object} p
  * @param {string} p.title
  * @param {string} p.description
  * @param {string} p.category
  * @param {number|string} p.latitude
  * @param {number|string} p.longitude
- * @param {File[]} p.files  // uno o più File dal file input
+ * @param {File[]} p.files  // uno o più File dal file input (1-3 files)
+ * @returns {Promise<Object>} - Created report object
+ * @throws {Error} - If creation fails (validation error, unauthorized, etc.)
  */
 async function createReport({ title, description, category, latitude, longitude, files = [] }) {
   const formData = new FormData();
@@ -238,6 +241,7 @@ async function createReport({ title, description, category, latitude, longitude,
   formData.append('category', category);
   formData.append('latitude', String(latitude));
   formData.append('longitude', String(longitude));
+  formData.append('anonymous', 'false');
   files.forEach((f) => formData.append('photos', f)); // 👈 stessa chiave ripetuta
 
   const response = await fetch(`${SERVER_URL}/reports`, {
@@ -248,6 +252,41 @@ async function createReport({ title, description, category, latitude, longitude,
 
   if (!response.ok) {
     await handleErrorResponse(response, 'Impossibile creare il report');
+  }
+  return await response.json();
+}
+
+/**
+ * Create Anonymous Report
+ * Creates a new anonymous report without userId (authenticated user required)
+ * @param {object} p
+ * @param {string} p.title
+ * @param {string} p.description
+ * @param {string} p.category
+ * @param {number|string} p.latitude
+ * @param {number|string} p.longitude
+ * @param {File[]} p.files  // uno o più File dal file input (1-3 files)
+ * @returns {Promise<Object>} - Created anonymous report object
+ * @throws {Error} - If creation fails (validation error, unauthorized, etc.)
+ */
+async function createAnonymousReport({ title, description, category, latitude, longitude, files = [] }) {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('category', category);
+  formData.append('latitude', String(latitude));
+  formData.append('longitude', String(longitude));
+  formData.append('anonymous', 'true');
+  files.forEach((f) => formData.append('photos', f)); // 👈 stessa chiave ripetuta
+
+  const response = await fetch(`${SERVER_URL}/reports/anonymous`, {
+    method: 'POST',
+    credentials: 'include',   // invia i cookie di sessione
+    body: formData            // NON impostare Content-Type manualmente
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Impossibile creare il report anonimo');
   }
   return await response.json();
 }
@@ -325,9 +364,48 @@ const reviewReport = async (reportId, reviewData) => {
 };
 
 /**
+ * Get Approved Reports
+ * Retrieves all reports with status "accepted" for the public map view
+ * Optional bounding box parameters can be provided to limit results to visible map area
+ * Public endpoint (no authentication required)
+ * @param {Object} [options] - Optional parameters
+ * @param {number} [options.north] - Northern latitude of the bounding box
+ * @param {number} [options.south] - Southern latitude of the bounding box
+ * @param {number} [options.east] - Eastern longitude of the bounding box
+ * @param {number} [options.west] - Western longitude of the bounding box
+ * @returns {Promise<Array>} - Array of approved report objects with photoUrls
+ * @throws {Error} - If request fails (invalid query parameters, etc.)
+ */
+const getApprovedReports = async (options = {}) => {
+  const { north, south, east, west } = options;
+  const queryParams = new URLSearchParams();
+  
+  if (north !== undefined) queryParams.append('north', String(north));
+  if (south !== undefined) queryParams.append('south', String(south));
+  if (east !== undefined) queryParams.append('east', String(east));
+  if (west !== undefined) queryParams.append('west', String(west));
+  
+  const queryString = queryParams.toString();
+  const url = `${SERVER_URL}/reports/approved${queryString ? `?${queryString}` : ''}`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get approved reports');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
+ * Public endpoint (no authentication required)
  * @returns {Promise<Array>} - Array of report categories
+ * @throws {Error} - If request fails
  */
 async function getCategories() {
   const response = await fetch(`${SERVER_URL}/categories`, {
@@ -356,7 +434,9 @@ const API = {
 
   // Report management
   createReport,
+  createAnonymousReport,
   getPendingReports,
+  getApprovedReports,
   getReportById,
   reviewReport,
 
