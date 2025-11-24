@@ -1,35 +1,41 @@
-// test/unit/userDao.test.js
 "use strict";
 
-// Forza l'uso del mock di sqlite3
-jest.mock('sqlite3');
+// Mock esplicito di sqlite3 con Database e metodi get/run/all tracciabili
+jest.mock('sqlite3', () => {
+  const mockGet = jest.fn();
+  const mockRun = jest.fn();
+  const mockAll = jest.fn();
+  function Database(dbPath, cb) {
+    if (cb) cb(null); // nessun errore di connessione
+    this.get = mockGet;
+    this.run = mockRun;
+    this.all = mockAll;
+  }
+  Database.mockGet = mockGet;
+  Database.mockRun = mockRun;
+  Database.mockAll = mockAll;
+  return { Database };
+});
 
-// Mock di bcrypt
+// Mock di bcrypt (async e callback usage)
 const mockCompare = jest.fn();
 const mockGenSalt = jest.fn();
 const mockHash = jest.fn();
-
 jest.mock('bcrypt', () => ({
   compare: mockCompare,
   genSalt: mockGenSalt,
   hash: mockHash
 }));
 
-describe('userDao Functions', () => {
-  let dao;
-  let sqlite3;
-  let mockGet, mockRun, mockAll;
+const dao = require('../../server/dao/userDao');
+const sqlite3Instance = require('sqlite3');
+const mockGet = sqlite3Instance.Database.mockGet;
+const mockRun = sqlite3Instance.Database.mockRun;
+const mockAll = sqlite3Instance.Database.mockAll;
 
-  beforeAll(() => {
-    // Importa sqlite3 mockato
-    sqlite3 = require('sqlite3');
-    mockGet = sqlite3.Database.mockGet;
-    mockRun = sqlite3.Database.mockRun;
-    mockAll = sqlite3.Database.mockAll;
-  });
+describe('userDao Functions', () => {
 
   beforeEach(() => {
-    // Reset dei mock
     jest.clearAllMocks();
     mockGet.mockReset();
     mockRun.mockReset();
@@ -37,15 +43,9 @@ describe('userDao Functions', () => {
     mockCompare.mockReset();
     mockGenSalt.mockReset();
     mockHash.mockReset();
-    
-    // Setup default bcrypt
+    // valori di default
     mockGenSalt.mockResolvedValue('mock_salt');
     mockHash.mockResolvedValue('mock_hash');
-    
-    // Ricarica il DAO
-    jest.resetModules();
-    jest.mock('sqlite3');
-    dao = require('../../server/dao/userDao');
   });
 
   describe('getUser', () => {
@@ -256,8 +256,7 @@ describe('userDao Functions', () => {
       };
 
       mockRun.mockImplementation(function(sql, params, callback) {
-        this.lastID = 42;
-        callback(null);
+        callback.call({ lastID: 42 }, null);
       });
 
       const result = await dao.createUser(newUser);
@@ -285,8 +284,7 @@ describe('userDao Functions', () => {
       };
 
       mockRun.mockImplementation(function(sql, params, callback) {
-        this.lastID = 43;
-        callback(null);
+        callback.call({ lastID: 43 }, null);
       });
 
       const result = await dao.createUser(newUser);
@@ -342,8 +340,7 @@ describe('userDao Functions', () => {
   describe('updateUserTypeById', () => {
     test('should update user type successfully', async () => {
       mockRun.mockImplementation(function(sql, params, callback) {
-        this.changes = 1;
-        callback(null);
+        callback.call({ changes: 1 }, null);
       });
 
       const result = await dao.updateUserTypeById(1, 'municipal_public_relations_officer');
@@ -357,8 +354,7 @@ describe('userDao Functions', () => {
 
     test('should return null when no row updated', async () => {
       mockRun.mockImplementation(function(sql, params, callback) {
-        this.changes = 0;
-        callback(null);
+        callback.call({ changes: 0 }, null);
       });
 
       const result = await dao.updateUserTypeById(999, 'municipal_public_relations_officer');
