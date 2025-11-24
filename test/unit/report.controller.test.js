@@ -212,6 +212,32 @@ describe('reportController.createReport', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
+
+  it('400 se errore "File too large" dal repository', async () => {
+    const req = {
+      user: { id: 7 },
+      body: { title: 'T', description: 'D', category: 'Roads', latitude: '45', longitude: '7' },
+      files: [{ filename: 'x.jpg' }],
+    };
+    const res = mkRes();
+    repo.createReport.mockRejectedValue(new Error('File too large - limit exceeded'));
+    await controller.createReport(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: expect.stringMatching(/File too large/i) });
+  });
+
+  it('400 se errore "Too many files" dal repository', async () => {
+    const req = {
+      user: { id: 8 },
+      body: { title: 'T', description: 'D', category: 'Roads', latitude: '45', longitude: '7' },
+      files: [{ filename: 'x.jpg' }],
+    };
+    const res = mkRes();
+    repo.createReport.mockRejectedValue(new Error('Too many files uploaded'));
+    await controller.createReport(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: expect.stringMatching(/Too many files/i) });
+  });
 });
 
 
@@ -381,6 +407,15 @@ describe('reportController.getApprovedReports', () => {
     await controller.getApprovedReports(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
   });
+
+  it('200 con photos non array (branch buildPhotoUrls early return)', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getApprovedReports.mockResolvedValue([{ id: 99, photos: 'not-an-array' }]);
+    await controller.getApprovedReports(req, res);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual([]);
+  });
 });
 
 // ──────────────────────────────────────────────
@@ -419,6 +454,15 @@ describe('reportController.getAssignedReports', () => {
     repo.getAssignedReports.mockRejectedValue(new Error('x'));
     await controller.getAssignedReports(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  it('200 con photos non array (buildPhotoUrls early return)', async () => {
+    const req = { user: { id: 3, type: 'urban_planner' }, protocol: 'http', get: () => 'h' };
+    const res = mkRes();
+    repo.getAssignedReports.mockResolvedValue([{ id: 55, photos: null }]);
+    await controller.getAssignedReports(req, res);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual([]);
   });
 });
 

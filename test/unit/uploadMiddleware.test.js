@@ -2,11 +2,7 @@
 
 const path = require("path");
 
-// mock di fs
-jest.mock("fs", () => ({
-  existsSync: jest.fn(() => false),
-  mkdirSync: jest.fn(),
-}));
+// utilizzeremo degli spy sul modulo reale fs
 
 // mock di multer (definito dentro jest.mock!)
 jest.mock("multer", () => {
@@ -28,20 +24,29 @@ jest.mock("multer", () => {
 const fs = require("fs");
 const mockMulter = require("multer");
 
-// ricarica il modulo dopo aver impostato i mock
-const uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
+// carica il middleware in un modulo isolato per garantire l'uso dei mock
+let uploadMiddleware;
+jest.isolateModules(() => {
+  uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
+});
 
 describe("uploadMiddleware", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  // Nessun beforeEach: evitiamo di azzerare i conteggi delle chiamate iniziali fs.existsSync/mkdirSync
 
   it("should create upload directory if it does not exist", () => {
-    expect(fs.existsSync).toHaveBeenCalled();
-    expect(fs.mkdirSync).toHaveBeenCalledWith(
-      path.join(__dirname, "../../server/static/uploads"),
-      { recursive: true }
-    );
+    // prepara gli spy
+    const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValue(false);
+    const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
+    // esegui il modulo in ambiente isolato così da forzare nuova valutazione
+    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+    jest.isolateModules(() => {
+      require(modulePath);
+    });
+    const expectedDir = path.join(path.dirname(modulePath), "..", "static", "uploads");
+    expect(existsSpy).toHaveBeenCalledWith(expectedDir);
+    expect(mkdirSpy).toHaveBeenCalledWith(expectedDir, { recursive: true });
+    existsSpy.mockRestore();
+    mkdirSpy.mockRestore();
   });
 
   it("should configure multer with proper limits and array field", () => {
@@ -93,7 +98,8 @@ describe("uploadMiddleware", () => {
       const cb = jest.fn();
 
       storageConfig.filename(null, file, cb);
-      const [[, , generatedName]] = cb.mock.calls;
+      const generatedName = cb.mock.calls[0][1];
+      expect(typeof generatedName).toBe("string");
       expect(generatedName).toMatch(/^photo-\d+-\d+\.jpg$/);
     });
   });
