@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Button, Alert } from 'react-bootstrap';
 import L from 'leaflet';
@@ -39,7 +39,7 @@ const highlightIcon = new L.Icon({
 });
 
 // Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick, highlightedReportId }) {
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick, highlightedReportId, selectedLocation }) {
    const isPointInsideBoundary = (lat, lng) => {
     if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
     
@@ -115,28 +115,23 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
        <Marker
           key={marker.id}
           position={marker.position}
-          draggable={!readOnly} // Disable dragging in read-only mode
+          draggable={!readOnly}
           eventHandlers={{
             dblclick: () => handleRemoveMarker(marker.id),
             dragend: (e) => {
-              if (readOnly) return; // Don't allow drag in read-only mode
+              if (readOnly) return;
               const { lat, lng } = e.target.getLatLng();
-
-              //update marker position
               setMarkers([{
                 id: marker.id,
                 position: [lat, lng],
                 timestamp: new Date().toLocaleString()
               }]);
-
-              // update parent (CitizenPage)
               if (onLocationSelected) {
                 onLocationSelected({ lat, lng });
               }
             }
           }}
         >
-
           <Popup>
             <div>
               <strong>New Marker</strong>
@@ -158,6 +153,25 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
           </Popup>
         </Marker>
       ))}
+
+      {/* Marker di selezione singolo - SOLO in modalità view quando c'è selectedLocation */}
+      {readOnly && selectedLocation?.lat && selectedLocation?.lng && (
+        <Marker
+          position={[selectedLocation.lat, selectedLocation.lng]}
+          icon={highlightIcon}
+          zIndexOffset={1000}
+        >
+          <Popup>
+            <div>
+              <strong>{selectedLocation.title || 'Selected Location'}</strong>
+              <br />
+              Lat: {selectedLocation.lat.toFixed(5)}
+              <br />
+              Lng: {selectedLocation.lng.toFixed(5)}
+            </div>
+          </Popup>
+        </Marker>
+      )}
 
       {/* Report markers (from API) - Clustered */}
        {allReports && allReports.length > 0 && (
@@ -188,11 +202,14 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
             if (!report.latitude || !report.longitude) return null;
             const isHighlighted = report.id === highlightedReportId;
         
+            // Nascondi il marker del cluster se è evidenziato (viene mostrato come marker ingrandito singolo)
+            if (isHighlighted) return null;
+            
         return (
           <Marker
             key={`report-${report.id}`}
             position={[report.latitude, report.longitude]}
-            icon={isHighlighted ? highlightIcon : defaultIcon}
+            icon={defaultIcon}
             eventHandlers={{
               click: () => {
                 if (onReportMarkerClick) {
@@ -228,7 +245,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   );
 }
 
-export default function TurinMap({ onLocationSelected, selectedLocation, readOnly = false, allReports = [], onReportMarkerClick, highlightedReportId }) {
+export default function TurinMap({ onLocationSelected, selectedLocation, readOnly = false, allReports = [], onReportMarkerClick, highlightedReportId, shouldZoomToSelection = false }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -245,20 +262,35 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
   }, [allReports]);
 
 
-  useEffect(() => {
-    if (selectedLocation === null) {
-      setMarkers([]);
-    }else if (selectedLocation?.lat && selectedLocation?.lng) {
-      // Create marker from selectedLocation
-      setMarkers([{
-        id: selectedLocation.reportId || Date.now(),
-        position: [selectedLocation.lat, selectedLocation.lng],
-        timestamp: new Date().toLocaleString(),
-        title: selectedLocation.title || 'Selected Location'
-      }]);
-    }
-  }, [selectedLocation]);
-  
+  // Component to handle map centering and zooming to selected location
+  function MapCenterZoom({ selectedLocation, shouldZoom }) {
+    const map = useMap();
+
+    useEffect(() => {
+      if (selectedLocation?.lat && selectedLocation?.lng && shouldZoom) {
+        const currentZoom = map.getZoom();
+        const clusterThreshold = 18; // Zoom level dove i cluster si separano
+        const targetZoom = 15; // Zoom moderato
+        
+        // Zoom solo se siamo sotto il livello dove i cluster si separano
+        if (currentZoom < clusterThreshold) {
+          map.setView([selectedLocation.lat, selectedLocation.lng], targetZoom, {
+            animate: true,
+            duration: 1
+          });
+        } else {
+          // Se già abbastanza zoomato, centra solo senza cambiare zoom
+          map.setView([selectedLocation.lat, selectedLocation.lng], currentZoom, {
+            animate: true,
+            duration: 0.5
+          });
+        }
+      }
+    }, [selectedLocation, shouldZoom, map]);
+
+    return null;
+  }
+
   useEffect(() => {
     setMapKey(1);
     
@@ -346,6 +378,9 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
+        {/* Componente per centrare e zoomare sulla posizione selezionata */}
+        <MapCenterZoom selectedLocation={selectedLocation} shouldZoom={shouldZoomToSelection} />
+        
        {geoJsonData && (
           <GeoJSON 
             data={geoJsonData} 
@@ -378,6 +413,7 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
           allReports={allReports}
           onReportMarkerClick={onReportMarkerClick}
           highlightedReportId={highlightedReportId}
+          selectedLocation={selectedLocation}
         />
       </MapContainer>
     </div>

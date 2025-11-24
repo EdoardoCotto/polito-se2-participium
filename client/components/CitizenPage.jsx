@@ -83,7 +83,7 @@ export default function CitizenPage({ user }) {
     }
     try {
       setSubmitting(true);
-      // Usa createAnonymousReport se isAnonymous è true, altrimenti createReport
+      // Use createAnonymousReport if isAnonymous is true, otherwise createReport
       const apiMethod = isAnonymous 
         ? (await import('../API/API.js')).default.createAnonymousReport
         : (await import('../API/API.js')).default.createReport;
@@ -125,7 +125,7 @@ export default function CitizenPage({ user }) {
       try {
         setLoadingReports(true);
         setReportsError('');
-        const reports = await API.getApprovedReports();
+        const reports = await API.getCitizenReports();
         setAllReports(reports);
         // Don't clear selected location immediately to avoid map re-render
         setTimeout(() => setSelectedLocation(null), 100);
@@ -153,9 +153,20 @@ export default function CitizenPage({ user }) {
     if (highlightedReportId === reportId) {
       // If already highlighted, remove highlight
       setHighlightedReportId(null);
+      setSelectedLocation(null);
     } else {
       // Otherwise highlight this report
       setHighlightedReportId(reportId);
+      // Find the report and set its location
+      const report = allReports.find(r => r.id === reportId);
+      if (report?.latitude && report?.longitude) {
+        setSelectedLocation({
+          lat: report.latitude,
+          lng: report.longitude,
+          reportId: report.id,
+          title: report.title
+        });
+      }
     }
   };
 
@@ -228,6 +239,7 @@ export default function CitizenPage({ user }) {
                     allReports={viewMode === 'view' ? allReports : []}
                     onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
                     highlightedReportId={highlightedReportId}
+                    shouldZoomToSelection={viewMode === 'view' && highlightedReportId !== null}
                   />
                 </div>
               </Card.Body>

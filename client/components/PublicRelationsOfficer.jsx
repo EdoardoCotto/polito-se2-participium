@@ -93,6 +93,7 @@ export default function PublicRelationsOfficer({ user }) {
         reportId: report.id
       });
     
+      console.log('Report selected:', report.title, report.latitude, report.longitude); // Debug log
     }
   };
 
@@ -392,7 +393,7 @@ export default function PublicRelationsOfficer({ user }) {
                           <div className="mb-3" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
                             <i className="bi bi-person text-primary me-1"></i>
                             <small className="text-muted">
-                              {report.user.username || 'Unknown User'}
+                              {report.user?.username || 'Anonymous'}
                             </small>
                             <br />
                             <i className="bi bi-calendar text-primary me-1"></i>
@@ -621,7 +622,7 @@ export default function PublicRelationsOfficer({ user }) {
                     <Badge bg="secondary" className="me-2">{selectedReport.category}</Badge>
                     <small className="text-muted">
                       <i className="bi bi-person me-1"></i>
-                      {selectedReport.userName || 'Unknown User'}
+                      {selectedReport.user?.username || 'Anonymous'}
                     </small>
                   </div>
                 </Card.Body>
