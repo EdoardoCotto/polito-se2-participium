@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
-const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -233,6 +233,45 @@ router.get('/reports/pending', isLoggedIn, isMunicipal_public_relations_officer,
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/reports/approved', reportController.getApprovedReports);
+
+/**
+ * @swagger
+ * /reports/assigned:
+ *   get:
+ *     summary: Get reports assigned to the logged-in technical office staff member
+ *     description: >
+ *       Returns all reports assigned to the technical office of the authenticated user.
+ *       Only technical office staff members can access this endpoint.
+ *     tags: [Reports]
+ *     responses:
+ *       200:
+ *         description: List of assigned reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden (user is not a technical office staff member)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/reports/assigned', isLoggedIn, isTechnicalOfficeStaff, reportController.getAssignedReports);
 
 /**
  * @swagger
