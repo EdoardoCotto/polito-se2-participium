@@ -1,10 +1,19 @@
 const request = require('supertest');
-const app = require('../../server/index');
-const userDao = require('../../server/dao/userDao');
+const { initializeDatabase } = require('../../server/db/init');
+
+let app;
+let userDao;
+let agent;
+
+beforeAll(async () => {
+  // Initialize schema BEFORE loading app & dao (avoids race/no-table errors)
+  await initializeDatabase();
+  app = require('../../server/index');
+  userDao = require('../../server/dao/userDao');
+  agent = request.agent(app);
+});
 
 describe('Session API End-to-End Tests', () => {
-  
-  const agent = request.agent(app);
 
   test('POST /api/sessions fails with invalid credentials', async () => {
     const res = await agent.post('/api/sessions').send({ username: 'wrong', password: 'wrong' });
