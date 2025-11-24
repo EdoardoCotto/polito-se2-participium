@@ -97,7 +97,7 @@ exports.createReport = async (req, res) => {
     }
 
     const reportData = {
-      userId: anonymous ? null : req.user.id,
+      userId: req.user.id,
       latitude: lat,
       longitude: lon,
       title,
