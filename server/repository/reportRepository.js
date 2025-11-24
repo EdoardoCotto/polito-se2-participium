@@ -238,6 +238,8 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
   }
 };
 
+   
+
 const getReportsByStatusInternal = async (status, options = {}) => {
   if (typeof status !== 'string') {
     throw new BadRequestError('Status is required');
@@ -285,6 +287,10 @@ exports.getApprovedReports = async (options = {}) => {
   return getReportsByStatusInternal(REPORT_STATUSES.ASSIGNED, options);
 };
 
+exports.getCitizenReports = async (options = {}) => {
+  const rows = await reportDao.getCitizenReports(options);
+  return rows.map(mapReportRow);
+};
 /**
  * Get reports assigned to a technical office staff member
  * @param {string} technicalOffice

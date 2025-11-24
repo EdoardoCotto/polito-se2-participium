@@ -1,0 +1,27 @@
+-- database: ./participium.db
+
+SELECT 
+    R.id          AS reportId,
+    R.userId      AS reportUserId,
+    R.latitude,
+    R.longitude,
+    R.title,
+    R.description,
+    R.category,
+    R.status,
+    R.rejection_reason,
+    R.technical_office,
+    R.created_at,
+    R.updated_at,
+    R.image_path1,
+    R.image_path2,
+    R.image_path3,
+    U.id          AS userId,
+    U.username    AS userUsername,
+    U.name        AS userName,
+    U.surname     AS userSurname,
+    U.email       AS userEmail
+FROM Reports R
+LEFT JOIN Users U ON R.userId = U.id  -- Qui sta il cambiamento
+  AND R.status != 'rejected'
+ORDER BY R.created_at DESC

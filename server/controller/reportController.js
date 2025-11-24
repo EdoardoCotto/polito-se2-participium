@@ -203,6 +203,37 @@ exports.getApprovedReports = async (req, res) => {
   }
 };
 
+
+exports.getCitizenReports = async (req, res) => {
+  try {
+    const options = {};
+    
+    
+    if (req.query.north && req.query.south && req.query.east && req.query.west) {
+      options.boundingBox = {
+        north: req.query.north,
+        south: req.query.south,
+        east: req.query.east,
+        west: req.query.west
+      };
+    }
+   
+    const reports = await reportRepository.getCitizenReports(options);
+    const enriched = reports.map((report) => ({
+      ...report,
+      photoUrls: buildPhotoUrls(report.photos, req),
+    }));
+
+    return res.status(200).json(enriched);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error('Error in getApprovedReports controller:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 /**
  * Get reports assigned to the logged-in technical office staff member
  */

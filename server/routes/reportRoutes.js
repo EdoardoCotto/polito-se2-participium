@@ -233,7 +233,59 @@ router.get('/reports/pending', isLoggedIn, isMunicipal_public_relations_officer,
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/reports/approved', reportController.getApprovedReports);
-
+/**
+ * @swagger
+ * /reports/citizen:
+ *   get:
+ *     summary: Get reports visible to citizens
+ *     description: Returns a list of reports (excluding pending and rejected) for citizens.
+ *     tags: [Reports]
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: north
+ *         schema:
+ *           type: number
+ *         description: Northern latitude
+ *       - in: query
+ *         name: south
+ *         schema:
+ *           type: number
+ *         description: Southern latitude
+ *       - in: query
+ *         name: east
+ *         schema:
+ *           type: number
+ *         description: Eastern longitude
+ *       - in: query
+ *         name: west
+ *         schema:
+ *           type: number
+ *         description: Western longitude
+ *     responses:
+ *       200:
+ *         description: List of reports found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/reports/citizen', isLoggedIn, reportController.getCitizenReports);
 /**
  * @swagger
  * /reports/assigned:
