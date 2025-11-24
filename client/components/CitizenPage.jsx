@@ -1,5 +1,5 @@
 // components/CitizenPage.jsx
-import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge } from 'react-bootstrap';
 import { useState, useEffect} from 'react';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
@@ -10,6 +10,7 @@ export default function CitizenPage({ user }) {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState([]);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +26,7 @@ export default function CitizenPage({ user }) {
   const [allReports, setAllReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [reportsError, setReportsError] = useState('');
+  const [highlightedReportId, setHighlightedReportId] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -81,11 +83,14 @@ export default function CitizenPage({ user }) {
     }
     try {
       setSubmitting(true);
-      const { createReport } = (await import('../API/API.js')).default;
+      // Usa createAnonymousReport se isAnonymous è true, altrimenti createReport
+      const apiMethod = isAnonymous 
+        ? (await import('../API/API.js')).default.createAnonymousReport
+        : (await import('../API/API.js')).default.createReport;
 
       const files = photos.map(p => p.file);
 
-      await createReport({
+      await apiMethod({
         title: title.trim(),
         category: category.trim(),
         description: description.trim(),
@@ -97,12 +102,13 @@ export default function CitizenPage({ user }) {
       // Cleanup URLs
       photos.forEach(p => URL.revokeObjectURL(p.preview));
 
-      setSubmitOk('Report created successfully!');
+      setSubmitOk(isAnonymous ? 'Anonymous report created successfully!' : 'Report created successfully!');
       setTitle('');
       setCategory('');
       setDescription('');
       setPhotos([]);
       setSelectedLocation(null);
+      setIsAnonymous(false);
     } catch (err) {
       setSubmitError(err.message || 'An error occurred while creating the report.');
     } finally {
@@ -119,7 +125,7 @@ export default function CitizenPage({ user }) {
       try {
         setLoadingReports(true);
         setReportsError('');
-        const reports = await API.getPendingReports();
+        const reports = await API.getApprovedReports();
         setAllReports(reports);
         // Don't clear selected location immediately to avoid map re-render
         setTimeout(() => setSelectedLocation(null), 100);
@@ -142,6 +148,42 @@ export default function CitizenPage({ user }) {
     console.log('Report clicked:', report.title);
   };
 
+  // Handle report click in the list - toggle highlight
+  const handleReportListClick = (reportId) => {
+    if (highlightedReportId === reportId) {
+      // If already highlighted, remove highlight
+      setHighlightedReportId(null);
+    } else {
+      // Otherwise highlight this report
+      setHighlightedReportId(reportId);
+    }
+  };
+
+  // Get category icon
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'Road': 'bi-sign-stop',
+      'Lighting': 'bi-lightbulb',
+      'Waste': 'bi-trash',
+      'Vandalism': 'bi-exclamation-triangle',
+      'Parks': 'bi-tree',
+      'Other': 'bi-three-dots'
+    };
+    return icons[category] || 'bi-flag';
+  };
+
+  // Get status color
+  const getStatusColor = (status) => {
+    const colors = {
+      'pending': 'warning',
+      'approved': 'success',
+      'in_progress': 'info',
+      'resolved': 'primary',
+      'rejected': 'danger'
+    };
+    return colors[status] || 'secondary';
+  };
+
   // Get view mode display text
   const getViewModeText = () => {
     switch (viewMode) {
@@ -160,7 +202,7 @@ export default function CitizenPage({ user }) {
         <Row className="g-2 g-md-4">
           {/* Map */}
           <Col lg={8} className="order-1 order-lg-1">
-            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '700px' }}>
+            <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '750px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                 <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                   <i className="bi bi-pin-map me-2"></i>
@@ -172,7 +214,7 @@ export default function CitizenPage({ user }) {
                   </span>
                   {viewMode === 'view' && allReports.length > 0 && (
                     <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      Viewing of the reports
+                      {allReports.length} report{allReports.length !== 1 ? 's' : ''}
                     </span>
                   )}
                 </Card.Title>
@@ -182,9 +224,10 @@ export default function CitizenPage({ user }) {
                   <TurinMap 
                     onLocationSelected={viewMode === 'create' ? setSelectedLocation : undefined}
                     selectedLocation={selectedLocation}
-                    readOnly={viewMode === 'view'} // Map is read-only in view mode
-                    allReports={viewMode === 'view' ? allReports : []} // Pass reports in view mode
+                    readOnly={viewMode === 'view'}
+                    allReports={viewMode === 'view' ? allReports : []}
                     onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
+                    highlightedReportId={highlightedReportId}
                   />
                 </div>
               </Card.Body>
@@ -193,10 +236,8 @@ export default function CitizenPage({ user }) {
 
           {/* Report panel */}
           <Col lg={4} className="order-2 order-lg-2">
-            <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0' , minHeight: '700px' }}>
+            <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0' , minHeight: '750px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-            
-                  {/* Dropdown menu for view mode selection - Full width */}
                 <Dropdown className="w-100">
                   <Dropdown.Toggle 
                     variant="light" 
@@ -245,7 +286,7 @@ export default function CitizenPage({ user }) {
                   </Dropdown.Menu>
                 </Dropdown>
               </Card.Header>
-              <Card.Body className="p-2 p-md-4">
+              <Card.Body className="p-2 p-md-4" style={{ maxHeight: 'calc(750px - 4rem)', overflowY: 'auto' }}>
 
                 {/* Show loading state when fetching reports */}
                 {viewMode === 'view' && loadingReports && (
@@ -265,19 +306,83 @@ export default function CitizenPage({ user }) {
                   </Alert>
                 )}
 
-                {/* Show message when in view mode and reports loaded */}
-                {viewMode === 'view' && !loadingReports && !reportsError && (
+                {/* Show reports list when in view mode and reports loaded */}
+                {viewMode === 'view' && !loadingReports && !reportsError && allReports.length > 0 && (
+                  <div>
+                    <h6 className="mb-3 text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      <i className="bi bi-list-ul me-2"></i>
+                      Click on a report to highlight it on the map
+                    </h6>
+                    <ListGroup>
+                      {allReports.map((report) => (
+                        <ListGroup.Item
+                          key={report.id}
+                          action
+                          active={highlightedReportId === report.id}
+                          onClick={() => handleReportListClick(report.id)}
+                          className="mb-2"
+                          style={{ 
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            border: highlightedReportId === report.id ? '2px solid #5e7bb3' : '1px solid #dee2e6',
+                            backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white'
+                          }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div className="flex-grow-1">
+                              <div className="d-flex align-items-center mb-1">
+                                <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
+                                <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                                  {report.title}
+                                </strong>
+                              </div>
+                              {/* Username */}
+                              {report.user && (
+                                <div className="mb-2" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
+                                  <i className="bi bi-person-circle me-1 text-secondary"></i>
+                                  <span className="text-secondary">
+                                    {report.user.username || report.user.name || 'Anonymous'}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="mb-1">
+                                <Badge bg={getStatusColor(report.status)} className="me-2">
+                                  {report.status}
+                                </Badge>
+                                <Badge bg="secondary">
+                                  {report.category}
+                                </Badge>
+                              </div>
+                              {report.description && (
+                                <p className="mb-1 text-muted small" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
+                                  {report.description.length > 80 
+                                    ? `${report.description.substring(0, 80)}...` 
+                                    : report.description
+                                  }
+                                </p>
+                              )}
+                              <small className="text-muted">
+                                <i className="bi bi-calendar me-1"></i>
+                                {new Date(report.created_at).toLocaleDateString()}
+                              </small>
+                            </div>
+                            {highlightedReportId === report.id && (
+                              <i className="bi bi-check-circle-fill text-primary ms-2" style={{ fontSize: '1.2rem' }}></i>
+                            )}
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  </div>
+                )}
+
+                {/* Show message when in view mode with no reports */}
+                {viewMode === 'view' && !loadingReports && !reportsError && allReports.length === 0 && (
                   <div className="text-center py-5">
-                    <i className="bi bi-map" style={{ fontSize: '3rem', color: '#5e7bb3' }}></i>
-                    <h5 className="mt-3 mb-2">Reports Map View</h5>
+                    <i className="bi bi-inbox" style={{ fontSize: '3rem', color: '#ccc' }}></i>
+                    <h5 className="mt-3 mb-2">No Reports Available</h5>
                     <p className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      {allReports.length > 0 
-                        ? `Viewing ${allReports.length} report${allReports.length !== 1 ? 's' : ''} on the map`
-                        : 'No reports to display'
-                      }
-                    </p>
-                    <p className="text-muted small">
-                      Click on markers to see report details
+                      There are no approved reports to display at the moment.
                     </p>
                   </div>
                 )}
@@ -298,174 +403,205 @@ export default function CitizenPage({ user }) {
                       </Alert>
                     )}
 
-                <Form>
-                  <Form.Group className="mb-2 mb-md-3">
-                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-pencil me-2"></i>Title
-                    </Form.Label>
-                    <Form.Control
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g., Pothole on Via Roma"
-                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-2 mb-md-3">
-                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-tags me-2"></i>Category 
-                    </Form.Label>
-                    <Form.Select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
-                    >
-                      <option value="">Select a category...</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-
-                  <Form.Group className="mb-2 mb-md-3">
-                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-text-left me-2"></i>Description 
-                    </Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Provide additional details to help the municipality address this issue..."
-                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
-                    />
-                  </Form.Group>
-
-                  {/* Photos Section */}
-                  <Form.Group className="mb-2 mb-md-3">
-                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-camera me-2"></i>Photos  (min 1, max 3)
-                    </Form.Label>
-                    {/* Lista foto caricate */}
-                    {photos.length > 0 && (
-                      <div className="mb-2">
-                        {photos.map((photo, index) => (
-                          <div 
-                            key={index} 
-                            className="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
-                            style={{ border: '1px solid #dee2e6' }}
-                          >
-                            <div 
-                              className="d-flex align-items-center flex-grow-1"
-                              style={{ cursor: 'pointer' }}
-                              onClick={() => handlePhotoClick(photo)}
-                            >
-                              <i className="bi bi-file-earmark-image me-2 text-primary"></i>
-                              <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
-                                {photo.name}
-                              </span>
-                              <i className="bi bi-eye ms-2 text-muted small"></i>
-                            </div>
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="text-danger p-0"
-                              onClick={() => handleRemovePhoto(index)}
-                            >
-                              <i className="bi bi-trash"></i>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div>
-                    {/* Bottone per aggiungere foto */}
-                    {photos.length < 3 && (
-                      <>
+                    <Form>
+                      <Form.Group className="mb-2 mb-md-3">
+                        <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                          <i className="bi bi-pencil me-2"></i>Title
+                        </Form.Label>
                         <Form.Control
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          style={{ display: 'none' }}
-                          id="photo-upload"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="e.g., Pothole on Via Roma"
+                          style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
                         />
-                        <label htmlFor="photo-upload">
-                          <Button
-                            as="span"
-                            variant="outline-primary"
-                            className="w-100"
-                            style={{ borderRadius: '8px', cursor: 'pointer' }}
-                          >
-                            <i className="bi bi-plus-circle me-2"></i>
-                            Add Photo
-                          </Button>
-                        </label>
-                      </>
-                    )}
-                    </div>
-                    {photos.length === 3 && (
-                      <Alert variant="info" className="mt-2 mb-0 py-2">
-                        <small>Maximum 3 photos reached</small>
-                      </Alert>
-                    )}
-                  </Form.Group>
+                      </Form.Group>
 
-                  <Form.Group className="mb-3 mb-md-4">
-                    <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-geo-alt me-2"></i>Location
-                    </Form.Label>
-                    <div 
-                      className={`p-2 p-md-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`}
-                      style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
-                    >
-                      {selectedLocation ? (
-                        <div className="text-success">
-                          <i className="bi bi-check-circle-fill me-2"></i>
-                          <strong>Selected:</strong>
-                          <div className="mt-1 small">
-                            Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
+                      <Form.Group className="mb-2 mb-md-3">
+                        <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                          <i className="bi bi-tags me-2"></i>Category 
+                        </Form.Label>
+                        <Form.Select
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+                        >
+                          <option value="">Select a category...</option>
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+
+                      <Form.Group className="mb-2 mb-md-3">
+                        <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                          <i className="bi bi-text-left me-2"></i>Description 
+                        </Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="Provide additional details to help the municipality address this issue..."
+                          style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+                        />
+                      </Form.Group>
+
+                      {/* Photos Section */}
+                      <Form.Group className="mb-2 mb-md-3">
+                        <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                          <i className="bi bi-camera me-2"></i>Photos  (min 1, max 3)
+                        </Form.Label>
+                        {/* Lista foto caricate */}
+                        {photos.length > 0 && (
+                          <div className="mb-2">
+                            {photos.map((photo, index) => (
+                              <div 
+                                key={index} 
+                                className="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
+                                style={{ border: '1px solid #dee2e6' }}
+                              >
+                                <div 
+                                  className="d-flex align-items-center flex-grow-1"
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => handlePhotoClick(photo)}
+                                >
+                                  <i className="bi bi-file-earmark-image me-2 text-primary"></i>
+                                  <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
+                                    {photo.name}
+                                  </span>
+                                  <i className="bi bi-eye ms-2 text-muted small"></i>
+                                </div>
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="text-danger p-0"
+                                  onClick={() => handleRemovePhoto(index)}
+                                >
+                                  <i className="bi bi-trash"></i>
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div>
+                        {/* Bottone per aggiungere foto */}
+                        {photos.length < 3 && (
+                          <>
+                            <Form.Control
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              style={{ display: 'none' }}
+                              id="photo-upload"
+                            />
+                            <label htmlFor="photo-upload">
+                              <Button
+                                as="span"
+                                variant="outline-primary"
+                                className="w-100"
+                                style={{ borderRadius: '8px', cursor: 'pointer' }}
+                              >
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Add Photo
+                              </Button>
+                            </label>
+                          </>
+                        )}
+                        </div>
+                        {photos.length === 3 && (
+                          <Alert variant="info" className="mt-2 mb-0 py-2">
+                            <small>Maximum 3 photos reached</small>
+                          </Alert>
+                        )}
+                      </Form.Group>
+
+                      <Form.Group className="mb-3 mb-md-4">
+                        <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                          <i className="bi bi-geo-alt me-2"></i>Location
+                        </Form.Label>
+                        <div 
+                          className={`p-2 p-md-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`}
+                          style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+                        >
+                          {selectedLocation ? (
+                            <div className="text-success">
+                              <i className="bi bi-check-circle-fill me-2"></i>
+                              <strong>Selected:</strong>
+                              <div className="mt-1 small">
+                                Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-muted">
+                              <i className="bi bi-pin-map me-2"></i>
+                              <span className="d-none d-sm-inline">Click on the map to select a location</span>
+                              <span className="d-inline d-sm-none">Select on map</span>
+                            </div>
+                          )}
+                        </div>
+                      </Form.Group>
+                    </Form>
+
+                    {/* Anonymous Mode Toggle - Spostato in fondo */}
+                    <div className="mb-3 p-3 rounded" style={{ 
+                      backgroundColor: isAnonymous ? '#fff3cd' : '#e8f0ff',
+                      border: `1px solid ${isAnonymous ? '#ffc107' : '#5e7bb3'}`,
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center">
+                          <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-person-badge'} me-2`} 
+                             style={{ fontSize: '1.5rem', color: isAnonymous ? '#856404' : '#5e7bb3' }}></i>
+                          <div>
+                            <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                              {isAnonymous ? 'Anonymous Report' : 'Public Report'}
+                            </strong>
+                            <div style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }} className="text-muted">
+                              {isAnonymous 
+                                ? 'Your identity will not be shown' 
+                                : 'Your username will be visible'}
+                            </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-muted">
-                          <i className="bi bi-pin-map me-2"></i>
-                          <span className="d-none d-sm-inline">Click on the map to select a location</span>
-                          <span className="d-inline d-sm-none">Select on map</span>
-                        </div>
-                      )}
+                        <Form.Check 
+                          type="switch"
+                          id="anonymous-switch"
+                          checked={isAnonymous}
+                          onChange={(e) => setIsAnonymous(e.target.checked)}
+                          style={{ transform: 'scale(1.3)' }}
+                        />
+                      </div>
                     </div>
-                  </Form.Group>
-                </Form>
 
-                <div className="d-grid">
-                  <Button 
-                    variant="success"
-                    size="lg"
-                    disabled={submitting}
-                    onClick={handleCreateReport}
-                    style={{ 
-                      backgroundColor: '#28a745', 
-                      borderColor: '#28a745',
-                      borderRadius: '8px',
-                      fontWeight: '600',
-                      fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
-                      padding: 'clamp(0.5rem, 2vw, 0.75rem)'
-                    }}
-                  >
-                    {submitting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-send me-2"></i>
-                        Submit Report
-                      </>
-                    )}
-                  </Button>
-                </div>
-                </>
+                    <div className="d-grid">
+                      <Button 
+                        variant="success"
+                        size="lg"
+                        disabled={submitting}
+                        onClick={handleCreateReport}
+                        style={{ 
+                          backgroundColor: '#28a745', 
+                          borderColor: '#28a745',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                          padding: 'clamp(0.5rem, 2vw, 0.75rem)'
+                        }}
+                      >
+                        {submitting ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-send'} me-2`}></i>
+                            Submit {isAnonymous ? 'Anonymous' : ''} Report
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
                 )}
               </Card.Body>
             </Card>
