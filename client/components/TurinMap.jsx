@@ -17,8 +17,29 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Icon  
+const defaultIcon = new L.Icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const highlightIcon = new L.Icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [35, 57], // bigger 40%
+  iconAnchor: [17, 57], 
+  popupAnchor: [1, -34],
+  shadowSize: [57, 57] 
+});
+
 // Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick }) {
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick, highlightedReportId }) {
    const isPointInsideBoundary = (lat, lng) => {
     if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
     
@@ -165,11 +186,13 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
         >
           {allReports.map((report) => {
             if (!report.latitude || !report.longitude) return null;
+            const isHighlighted = report.id === highlightedReportId;
         
         return (
           <Marker
             key={`report-${report.id}`}
             position={[report.latitude, report.longitude]}
+            icon={isHighlighted ? highlightIcon : defaultIcon}
             eventHandlers={{
               click: () => {
                 if (onReportMarkerClick) {
@@ -205,7 +228,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   );
 }
 
-export default function TurinMap({ onLocationSelected,selectedLocation, readOnly=false,allReports = [], onReportMarkerClick  }) {
+export default function TurinMap({ onLocationSelected, selectedLocation, readOnly = false, allReports = [], onReportMarkerClick, highlightedReportId }) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -323,15 +346,13 @@ export default function TurinMap({ onLocationSelected,selectedLocation, readOnly
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
-       {/* Render GeoJSON boundary if loaded */}
-        {geoJsonData && (
+       {geoJsonData && (
           <GeoJSON 
             data={geoJsonData} 
             style={geoJsonStyle}
           />
         )}
         
-        {/* Show error message if GeoJSON failed to load */}
         {geoJsonError && (
           <div style={{
             position: 'absolute',
@@ -356,6 +377,7 @@ export default function TurinMap({ onLocationSelected,selectedLocation, readOnly
           readOnly={readOnly} 
           allReports={allReports}
           onReportMarkerClick={onReportMarkerClick}
+          highlightedReportId={highlightedReportId}
         />
       </MapContainer>
     </div>
