@@ -401,6 +401,26 @@ const getApprovedReports = async (options = {}) => {
 };
 
 /**
+ * Get Assigned Reports
+ * Retrieves all reports assigned to the logged-in technical office staff member
+ * Requires technical office staff authentication
+ * @returns {Promise<Array>} - Array of assigned report objects with photoUrls
+ * @throws {Error} - If request fails (unauthorized, forbidden, etc.)
+ */
+const getAssignedReports = async () => {
+  const response = await fetch(`${SERVER_URL}/reports/assigned`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get assigned reports');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
  * Public endpoint (no authentication required)
@@ -437,6 +457,7 @@ const API = {
   createAnonymousReport,
   getPendingReports,
   getApprovedReports,
+  getAssignedReports,
   getReportById,
   reviewReport,
 
