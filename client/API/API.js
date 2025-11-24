@@ -401,6 +401,43 @@ const getApprovedReports = async (options = {}) => {
 };
 
 /**
+ * Get Citizen Reports
+ * Retrieves all reports visible to citizens (excluding pending and rejected)
+ * Requires authentication
+ * Optional bounding box parameters can be provided to limit results to visible map area
+ * @param {Object} [options] - Optional parameters
+ * @param {number} [options.north] - Northern latitude of the bounding box
+ * @param {number} [options.south] - Southern latitude of the bounding box
+ * @param {number} [options.east] - Eastern longitude of the bounding box
+ * @param {number} [options.west] - Western longitude of the bounding box
+ * @returns {Promise<Array>} - Array of report objects with photoUrls (excluding pending and rejected)
+ * @throws {Error} - If request fails (unauthorized, invalid query parameters, etc.)
+ */
+const getCitizenReports = async (options = {}) => {
+  const { north, south, east, west } = options;
+  const queryParams = new URLSearchParams();
+  
+  if (north !== undefined) queryParams.append('north', String(north));
+  if (south !== undefined) queryParams.append('south', String(south));
+  if (east !== undefined) queryParams.append('east', String(east));
+  if (west !== undefined) queryParams.append('west', String(west));
+  
+  const queryString = queryParams.toString();
+  const url = `${SERVER_URL}/reports/citizen${queryString ? `?${queryString}` : ''}`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get citizen reports');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Assigned Reports
  * Retrieves all reports assigned to the logged-in technical office staff member
  * Requires technical office staff authentication
@@ -457,6 +494,7 @@ const API = {
   createAnonymousReport,
   getPendingReports,
   getApprovedReports,
+  getCitizenReports,
   getAssignedReports,
   getReportById,
   reviewReport,
