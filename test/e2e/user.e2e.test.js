@@ -1,11 +1,21 @@
 const request = require('supertest');
-const app = require('../../server/index');
-const userDao = require('../../server/dao/userDao');
+const { initializeDatabase } = require('../../server/db/init');
+
+let app;
+let userDao;
+let agent;
+
+beforeAll(async () => {
+  // Assicura che lo schema sia creato prima di importare app/dao
+  await initializeDatabase();
+  app = require('../../server/index');
+  userDao = require('../../server/dao/userDao');
+  agent = request.agent(app);
+});
 
 describe('User API End-to-End Tests', () => {
-  const agent = request.agent(app);
 
-  test('POST /api/users registers a new citizen (or 409 if exists)', async () => {
+  test('POST /api/users registers a new citizen (201) or conflicts (409) or validation error (400)', async () => {
     const unique = `cit_${Date.now()}`;
     const newUser = {
       username: unique,
@@ -15,13 +25,15 @@ describe('User API End-to-End Tests', () => {
       password: 'Password123!'
     };
     const res = await agent.post('/api/users').send(newUser);
+    // Evitiamo 500: se appare, fallisce esplicitamente
     expect([201, 409, 400]).toContain(res.statusCode);
+    expect(res.statusCode).not.toBe(500);
     if (res.statusCode === 201) {
       expect(res.body).toHaveProperty('username', unique);
     }
   });
 
-  test('Admin flow: login as runtime-created admin, create user with role, assign role, fetch municipality users', async () => {
+  test('Admin flow: login runtime-created admin, create technical user, assign new role, list municipality users', async () => {
     // Crea un admin reale con password bcrypt via DAO e poi effettua il login
     const adminU = `admin_${Date.now()}`;
     await userDao.createUser({
