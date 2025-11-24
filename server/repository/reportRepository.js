@@ -175,36 +175,52 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
       throw new BadRequestError('Status must be "accepted" or "rejected"');
     }
 
+    // Controllo esistenza report e stato
     const existing = await reportDao.getReportById(reportId);
     if (!existing) {
       throw new NotFoundError('Report not found');
     }
-
     if (existing.status !== REPORT_STATUSES.PENDING) {
       throw new BadRequestError('Only pending reports can be reviewed');
     }
 
     let rejectionReason = null;
     let technicalOfficeValue = null;
+    let assignedOfficerId = null; // Nuova variabile
 
     if (normalizedStatus === REPORT_STATUSES.REJECTED) {
+      // LOGICA RIFIUTO
       if (typeof explanation !== 'string' || !explanation.trim()) {
         throw new BadRequestError('Explanation is required when rejecting a report');
       }
       rejectionReason = explanation.trim();
-      technicalOfficeValue = null; // rejected -> niente ufficio tecnico
+      technicalOfficeValue = null;
+      
     } else if (normalizedStatus === REPORT_STATUSES.ASSIGNED) {
-      // check technicalOffice validity
+      // LOGICA APPROVAZIONE
       if (typeof technicalOffice !== 'string' || !TECHNICAL_OFFICER_ROLES.includes(technicalOffice)) {
         throw new BadRequestError('A valid technical office is required when accepting a report');
       }
       technicalOfficeValue = technicalOffice;
+
+      // -----------------------------------------------------
+      // new logic to assign the least loaded officer
+      // -----------------------------------------------------
+      assignedOfficerId = await reportDao.getLeastLoadedOfficer(technicalOfficeValue);
+
+      if (!assignedOfficerId) {
+        // Se non troviamo nessun lavoratore con quel ruolo nel DB (es. nessun "urban_planner" esiste)
+        //possiamo anche scegliere se in futuro mettere il report in suspended
+        throw new BadRequestError(`No workers found for role: ${technicalOfficeValue}. Cannot assign report.`);
+      }
     }
 
+    // Eseguiamo l'update passando anche l'officerId trovato
     const updated = await reportDao.updateReportReview(reportId, {
       status: normalizedStatus,
       rejectionReason,
       technicalOffice: technicalOfficeValue,
+      officerId: assignedOfficerId
     });
 
     if (!updated) {
@@ -263,4 +279,22 @@ exports.getPendingReports = async () => {
  */
 exports.getApprovedReports = async (options = {}) => {
   return getReportsByStatusInternal(REPORT_STATUSES.ASSIGNED, options);
+};
+
+/**
+ * Get reports assigned to a technical office staff member
+ * @param {string} technicalOffice
+ * @returns {Promise<Object[]>}
+ */
+exports.getAssignedReports = async (technicalOffice) => {
+  try {
+    if (typeof technicalOffice !== 'string' || !technicalOffice.trim()) {
+      throw new BadRequestError('Technical office is required');
+    }
+
+    const rows = await reportDao.getReportsByTechnicalOffice(technicalOffice);
+    return rows.map(mapReportRow);
+  } catch (err) {
+    throw err;
+  }
 };

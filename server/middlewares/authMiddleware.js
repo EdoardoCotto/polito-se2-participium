@@ -33,3 +33,16 @@ exports.isMunicipal_public_relations_officer = (req, res, next) => {
         return next(new UnauthorizedError('User not authenticated'));
     }
 }
+
+exports.isTechnicalOfficeStaff = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
+        if (TECHNICAL_OFFICER_ROLES.includes(req.user.type)) {
+            return next();
+        } else {
+            return next(new UnauthorizedError('User is not a technical office staff member'));
+        }
+    } else {
+        return next(new UnauthorizedError('User not authenticated'));
+    }
+}
