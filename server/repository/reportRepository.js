@@ -1,6 +1,8 @@
 const reportDao = require('../dao/reportDao');
+const userDao = require('../dao/userDao');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 const { REPORT_CATEGORIES } = require('../constants/reportCategories');
 // const { CATEGORY_TO_OFFICE } = require('../constants/categoryToOfficeMap');
 const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
@@ -48,7 +50,7 @@ const mapReportRow = (row) => {
 exports.createReport = async (reportData, anonymous) => {
   try {
     const {
-      userId,
+      userId, 
       latitude,
       longitude,
       title,
@@ -60,9 +62,6 @@ exports.createReport = async (reportData, anonymous) => {
     console.log(reportData) //DEBUG
     console.log(anonymous) //DEBUG
 
-    if (anonymous && userId != null){
-      throw new BadRequestError('The Report is not anonymus')
-    }
     if (!anonymous && userId == null){
       throw new BadRequestError('User ID, latitude, and longitude are required');
     }
@@ -107,8 +106,13 @@ exports.createReport = async (reportData, anonymous) => {
       return photo.trim();
     });
 
+    const user = await userDao.getUserById(userId);
+    if (user.type != 'citizen') {
+      throw new UnauthorizedError('Only citizens can create reports');
+    }
+
     const result = await reportDao.createReport({
-      userId,
+      userId: anonymous ? null : userId,
       latitude,
       longitude,
       title: title.trim(),

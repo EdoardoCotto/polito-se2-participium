@@ -69,6 +69,7 @@ exports.createReport = async (req, res) => {
       description,
       category,
       photos,
+      anonymous
     } = req.body || {};
 
     if (!req.user || !req.user.id) {
@@ -105,7 +106,7 @@ exports.createReport = async (req, res) => {
       photos: photoUrls,
     };
 
-    const created = await reportRepository.createReport(reportData);
+    const created = await reportRepository.createReport(reportData, anonymous);
     return res.status(201).json(created);
   } catch (err) {
     if (err instanceof AppError) {
