@@ -116,3 +116,19 @@ exports.getMunicipalityUsers = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
+exports.addPersonalPhotoPath = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { personalPhotoPath } = req.body;
+    const result = await userRepository.addPersonalPhotoPath(userId, personalPhotoPath);
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
