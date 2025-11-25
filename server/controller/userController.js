@@ -132,3 +132,30 @@ exports.addPersonalPhotoPath = async (req, res) => {
   }
 };
 
+exports.updateMailNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { mailNotifications } = req.body;
+    const result = await userRepository.updateMailNotifications(userId, mailNotifications);
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.addTelegramNickname = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { telegramNickname } = req.body;
+    const result = await userRepository.addTelegramNickname(userId, telegramNickname);
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
