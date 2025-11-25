@@ -140,4 +140,48 @@ router.get('/users/roles', isLoggedIn, isAdmin, userController.getAllowedRoles);
  */
 router.get('/users/municipality', isLoggedIn, isAdmin, userController.getMunicipalityUsers);
 
+/**
+ * @swagger
+ * /users/{id}/update:
+ *   put:
+ *     summary: Update user profile information
+ *     tags: [Users]
+ *     security: [ { cookieAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               telegram_nickname:
+ *                 type: string
+ *                 example: "@myTelegramHandle"
+ *                 description: Telegram nickname
+ *               personal_photo_path:
+ *                 type: string
+ *                 example: "/uploads/photos/user123.jpg"
+ *                 description: Path to user's personal photo
+ *               mail_notifications:
+ *                 type: boolean
+ *                 example: true
+ *                 description: Enable/disable email notifications
+ *     responses:
+ *       200:
+ *         description: User profile successfully updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: User not found
+ */
+router.put('/users/:id/update', userController.addTelegramNickname, userController.addPersonalPhotoPath, userController.updateMailNotifications);
+
 module.exports = router;
