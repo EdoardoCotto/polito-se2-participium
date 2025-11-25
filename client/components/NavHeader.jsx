@@ -101,51 +101,32 @@ function NavHeader(props) {
 
   return (
     <>
-      <Navbar bg="light" expand="lg" className="shadow-sm w-100 ps-2 ps-md-4 pe-2 pe-md-4">
+      <Navbar expand="lg" className="navbar-modern w-100 ps-2 ps-md-4 pe-2 pe-md-4">
         <Navbar.Brand as={Link} to="/" className="ps-1 ps-md-4 d-flex align-items-center text-decoration-none">
           {/* Participium Brand */}
           <Image
             src="http://localhost:3001/static/mapIcon.png"
             alt="Map Icon"
-            height={40}
-            width={40}
+            className="navbar-brand-logo me-2"
             rounded
-            className="me-2"
           />
-          <span className="fw-bold" style={{ 
-            background: 'linear-gradient(45deg, #0d6efd, #0dcaf0)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontSize: 'clamp(0.9rem, 2.5vw, 1rem)'
-          }}>Participium</span>
+          <span className="navbar-brand-text">Participium</span>
           
           {/* Vertical Divider - Hidden on mobile */}
-          <div 
-            className="mx-2 mx-md-3 d-none d-md-block" 
-            style={{ 
-              width: '2px', 
-              height: '40px', 
-              backgroundColor: '#dee2e6' 
-            }}
-          ></div>
+          <div className="navbar-brand-divider mx-2 mx-md-3 d-none d-md-block"></div>
           
           {/* Regione Piemonte Logo - Hidden on mobile */}
           <Image
             src="http://localhost:3001/static/piemonte-logo.png"
             alt="Regione Piemonte"
-            height={50}
-            className="me-3 d-none d-md-block"
-            style={{ objectFit: 'contain' }}
+            className="navbar-brand-logo-partner me-3 d-none d-md-block"
           />
           
           {/* Città di Torino Logo - Hidden on mobile */}
           <Image
             src="http://localhost:3001/static/torino-clean.png"
             alt="Città di Torino"
-            height={50}
-            className="d-none d-md-block"
-            style={{ objectFit: 'contain' }}
+            className="navbar-brand-logo-partner d-none d-md-block"
           />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
@@ -157,32 +138,13 @@ function NavHeader(props) {
                 <Button
                   variant="outline-primary"
                   onClick={handleOpenProfile}
-                  className="d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
-                  style={{ 
-                    borderRadius: '8px',
-                    fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
-                    padding: 'clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
-                    borderColor: '#5e7bb3',
-                    color: '#5e7bb3',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#5e7bb3';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#5e7bb3';
-                  }}
+                  className="profile-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
                 >
                   <Image
                     src={profileImagePreview || "http://localhost:3001/static/user.png"}
                     alt="User Icon"
-                    height={24}
-                    width={24}
+                    className="profile-avatar me-2"
                     roundedCircle
-                    className="me-2"
-                    style={{ objectFit: 'cover' }}
                   />
                   <span className="d-none d-md-inline">{props.user.username}</span>
                   <i className="bi bi-chevron-down ms-2" style={{ fontSize: '0.8em' }}></i>
@@ -191,15 +153,13 @@ function NavHeader(props) {
 
               {/* Username display (for non-citizens) */}
               {!isCitizen && (
-                <div className="d-flex align-items-center me-3 my-2 my-lg-0">
+                <div className="username-display me-3 my-2 my-lg-0">
                   <Image
                     src="http://localhost:3001/static/user.png"
                     alt="User Icon"
-                    height={24}
-                    width={24}
-                    className="me-2"
+                    roundedCircle
                   />
-                  <span className="fw-medium text-secondary">{props.user.username}</span>
+                  <span>{props.user.username}</span>
                 </div>
               )}
 
@@ -210,10 +170,9 @@ function NavHeader(props) {
               <Button
                 variant="primary"
                 onClick={props.onShowLogin}
-                className="d-flex align-items-center my-2 my-lg-0"
-                style={{ backgroundColor: '#5e7bb3', borderColor: '#5e7bb3' }}
+                className="login-button d-flex align-items-center my-2 my-lg-0"
               >
-                <i className="bi bi-box-arrow-in-right fs-5 me-2"></i>
+                <i className="bi bi-box-arrow-in-right me-2"></i>
                 Login
               </Button>
             )
@@ -222,14 +181,14 @@ function NavHeader(props) {
       </Navbar>
 
       {/* Profile Settings Modal */}
-      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="md">
-        <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
-          <Modal.Title style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
-            <i className="bi bi-person-circle me-2"></i>
+      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="md" className="profile-modal">
+        <Modal.Header closeButton className="profile-modal-header">
+          <Modal.Title className="profile-modal-title">
+            <i className="bi bi-person-circle"></i>
             Profile Settings
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4">
+        <Modal.Body className="profile-modal-body">
           {saveError && (
             <Alert variant="danger" dismissible onClose={() => setSaveError('')}>
               <i className="bi bi-exclamation-triangle me-2"></i>
@@ -246,23 +205,20 @@ function NavHeader(props) {
           <Form>
             {/* Profile Image Section */}
             <Form.Group className="mb-4 text-center">
-              <Form.Label className="fw-semibold d-block mb-3" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
+              <Form.Label className="fw-semibold d-block mb-3 profile-image-label">
                 <i className="bi bi-image me-2"></i>Profile Picture
               </Form.Label>
               <div className="d-flex flex-column align-items-center">
-                <Image
-                  src={profileImagePreview || "http://localhost:3001/static/user.png"}
-                  alt="Profile"
-                  width={120}
-                  height={120}
-                  roundedCircle
-                  className="mb-3"
-                  style={{ 
-                    objectFit: 'cover',
-                    border: '3px solid #5e7bb3',
-                    boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.1)'
-                  }}
-                />
+                <div className="profile-image-container mb-3">
+                  <Image
+                    src={profileImagePreview || "http://localhost:3001/static/user.png"}
+                    alt="Profile"
+                    width={120}
+                    height={120}
+                    roundedCircle
+                    className="profile-image-preview"
+                  />
+                </div>
                 <div className="d-flex gap-2">
                   <Form.Control
                     type="file"
@@ -276,7 +232,7 @@ function NavHeader(props) {
                       as="span"
                       variant="outline-primary"
                       size="sm"
-                      style={{ borderRadius: '8px', cursor: 'pointer' }}
+                      className="profile-upload-button"
                     >
                       <i className="bi bi-upload me-2"></i>
                       Upload
@@ -287,7 +243,7 @@ function NavHeader(props) {
                       variant="outline-danger"
                       size="sm"
                       onClick={handleRemoveProfileImage}
-                      style={{ borderRadius: '8px' }}
+                      className="profile-upload-button"
                     >
                       <i className="bi bi-trash me-2"></i>
                       Remove
@@ -300,7 +256,7 @@ function NavHeader(props) {
 
             {/* Telegram Username */}
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+              <Form.Label className="fw-semibold profile-form-label">
                 <i className="bi bi-telegram me-2 text-primary"></i>Telegram Username
               </Form.Label>
               <Form.Control
@@ -308,11 +264,7 @@ function NavHeader(props) {
                 placeholder="@username"
                 value={telegramUser}
                 onChange={(e) => setTelegramUser(e.target.value)}
-                style={{ 
-                  borderRadius: '8px',
-                  fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                  padding: 'clamp(0.5rem, 1.5vw, 0.75rem)'
-                }}
+                className="profile-form-input"
               />
               <Form.Text className="text-muted">
                 <i className="bi bi-info-circle me-1"></i>
@@ -321,8 +273,8 @@ function NavHeader(props) {
             </Form.Group>
 
             {/* User Info Display */}
-            <div className="mt-4 p-3 bg-light rounded" style={{ border: '1px solid #dee2e6' }}>
-              <h6 className="mb-3" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+            <div className="mt-4 p-3 bg-light rounded profile-account-info">
+              <h6 className="mb-3 profile-account-title">
                 <i className="bi bi-person-vcard me-2"></i>Account Information
               </h6>
               <div className="mb-2">
@@ -342,27 +294,18 @@ function NavHeader(props) {
             {/* Email Notifications Toggle - MOVED TO BOTTOM */}
             <Form.Group className="mt-4 mb-0">
               <div 
-                className="p-3 rounded" 
-                style={{ 
-                  backgroundColor: emailNotifications ? '#e8f0ff' : '#f8f9fa',
-                  border: `1px solid ${emailNotifications ? '#5e7bb3' : '#dee2e6'}`,
-                  transition: 'all 0.3s ease'
-                }}
+                className={`p-3 rounded profile-notification-toggle ${emailNotifications ? 'profile-notification-active' : 'profile-notification-inactive'}`}
               >
                 <div className="d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center">
                     <i 
-                      className={`bi ${emailNotifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3`}
-                      style={{ 
-                        fontSize: '1.5rem', 
-                        color: emailNotifications ? '#5e7bb3' : '#6c757d' 
-                      }}
+                      className={`bi ${emailNotifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3 profile-notification-icon`}
                     ></i>
                     <div>
-                      <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      <strong className="profile-notification-title">
                         Email Notifications
                       </strong>
-                      <div style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }} className="text-muted">
+                      <div className="text-muted profile-notification-subtitle">
                         {emailNotifications 
                           ? 'You will receive email updates' 
                           : 'Email notifications are disabled'}
@@ -374,18 +317,18 @@ function NavHeader(props) {
                     id="email-notifications-switch"
                     checked={emailNotifications}
                     onChange={(e) => setEmailNotifications(e.target.checked)}
-                    style={{ transform: 'scale(1.3)' }}
+                    className="profile-notification-switch"
                   />
                 </div>
               </div>
             </Form.Group>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="profile-modal-footer">
           <Button 
             variant="secondary" 
             onClick={() => setShowProfileModal(false)}
-            style={{ borderRadius: '8px' }}
+            className="profile-modal-cancel-btn"
           >
             Cancel
           </Button>
@@ -393,11 +336,7 @@ function NavHeader(props) {
             variant="primary" 
             onClick={handleSaveProfile}
             disabled={saving}
-            style={{ 
-              backgroundColor: '#5e7bb3', 
-              borderColor: '#5e7bb3',
-              borderRadius: '8px'
-            }}
+            className="profile-modal-save-btn"
           >
             {saving ? (
               <>

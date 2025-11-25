@@ -220,6 +220,46 @@ const getMunicipalityUsers = async () => {
   return await response.json();
 };
 
+/**
+ * Update User Profile
+ * Updates the authenticated user's profile information
+ * Requires authentication (user can only update their own profile)
+ * @param {number} userId - ID of the user to update (must match authenticated user)
+ * @param {Object} profileData - Profile data to update
+ * @param {string} [profileData.telegram_nickname] - Telegram nickname (e.g., "@myTelegramHandle")
+ * @param {boolean} [profileData.mail_notifications] - Enable/disable email notifications
+ * @param {File} [profileData.personal_photo] - User's personal photo file
+ * @returns {Promise<Object>} - Updated user object
+ * @throws {Error} - If update fails (validation error, unauthorized, forbidden, not found, etc.)
+ */
+const updateUserProfile = async (userId, profileData) => {
+  const formData = new FormData();
+  
+  if (profileData.telegram_nickname !== undefined) {
+    formData.append('telegram_nickname', profileData.telegram_nickname);
+  }
+  
+  if (profileData.mail_notifications !== undefined) {
+    formData.append('mail_notifications', String(profileData.mail_notifications));
+  }
+  
+  if (profileData.personal_photo) {
+    formData.append('personal_photo_path', profileData.personal_photo);
+  }
+
+  const response = await fetch(`${SERVER_URL}/users/${userId}/update`, {
+    method: 'PUT',
+    credentials: 'include',
+    body: formData, // FormData automatically sets Content-Type with boundary
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to update user profile');
+  }
+
+  return await response.json();
+};
+
 
 /**
  * Create Report
@@ -488,6 +528,7 @@ const API = {
   assignUserRole,
   getAllowedRoles,
   getMunicipalityUsers,
+  updateUserProfile,
 
   // Report management
   createReport,
