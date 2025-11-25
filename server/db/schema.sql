@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS Users (
   surname TEXT NOT NULL,
   personal_photo_path TEXT,
   telegram_nickname TEXT,
-  mail_notifications INTEGER DEFAULT 1,
+  mail_notifications INTEGER NOT NULL DEFAULT 1,
   type TEXT NOT NULL,
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
