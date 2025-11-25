@@ -184,3 +184,20 @@ exports.findMunicipalityUsers = () => {
   });
 };
 
+exports.updateUserProfile = (userId, updateData) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE Users SET telegram_nickname = ?, personal_photo_path = ?, mail_notifications = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    db.run(sql, [updateData.telegram_nickname, updateData.personal_photo_path, updateData.mail_notifications, userId], function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({ 
+        id: userId, 
+        telegram_nickname: updateData.telegram_nickname, 
+        personal_photo_path: updateData.personal_photo_path, 
+        mail_notifications: updateData.mail_notifications 
+      });
+    });
+  });
+}

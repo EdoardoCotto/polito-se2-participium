@@ -116,3 +116,31 @@ exports.getMunicipalityUsers = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    if (req.user.id !== userId){
+      return res.status(403).json({ error: 'You can only update your own profile' });
+    }
+    const updateData = {};
+    if (req.file) {
+      updateData.personal_photo_path = `/static/avatars/${req.file.filename}`;
+    }
+    if (req.body.mail_notifications !== undefined) {
+      updateData.mail_notifications = req.body.mail_notifications === 'true' || req.body.mail_notifications === true ? 1 : 0;
+    }
+    if (req.body.telegram_nickname !== undefined && req.body.telegram_nickname.trim() !== '') {
+      updateData.telegram_nickname = req.body.telegram_nickname;
+    }
+    const result = await userRepository.updateUserProfile(userId, updateData);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error in updateUserProfile:', err);
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}

@@ -50,4 +50,5 @@ tmp/test.db
 
 #Images Of Reports
 server/static/uploads
+server/static/avatars
 
