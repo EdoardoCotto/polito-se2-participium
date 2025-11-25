@@ -118,44 +118,29 @@ exports.getMunicipalityUsers = async (req, res) => {
 };
 
 
-exports.addPersonalPhotoPath = async (req, res) => {
+exports.updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { personalPhotoPath } = req.body;
-    const result = await userRepository.addPersonalPhotoPath(userId, personalPhotoPath);
+    const userId = Number(req.params.id);
+    if (req.user.id !== userId){
+      return res.status(403).json({ error: 'You can only update your own profile' });
+    }
+    const updateData = {};
+    if (req.file) {
+      updateData.personal_photo_path = `/static/avatars/${req.file.filename}`;
+    }
+    if (req.body.mail_notifications !== undefined) {
+      updateData.mail_notifications = req.body.mail_notifications === 'true' || req.body.mail_notifications === true ? 1 : 0;
+    }
+    if (req.body.telegram_nickname !== undefined && req.body.telegram_nickname.trim() !== '') {
+      updateData.telegram_nickname = req.body.telegram_nickname;
+    }
+    const result = await userRepository.updateUserProfile(userId, updateData);
     return res.status(200).json(result);
   } catch (err) {
+    console.error('Error in updateUserProfile:', err);
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });
     }
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
-
-exports.updateMailNotifications = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { mailNotifications } = req.body;
-    const result = await userRepository.updateMailNotifications(userId, mailNotifications);
-    return res.status(200).json(result);
-  } catch (err) {
-    if (err instanceof AppError) {
-      return res.status(err.statusCode).json({ error: err.message });
-    }
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-exports.addTelegramNickname = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { telegramNickname } = req.body;
-    const result = await userRepository.addTelegramNickname(userId, telegramNickname);
-    return res.status(200).json(result);
-  } catch (err) {
-    if (err instanceof AppError) {
-      return res.status(err.statusCode).json({ error: err.message });
-    }
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
+}

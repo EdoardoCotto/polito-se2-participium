@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
 const { isLoggedIn, isAdmin } = require('../middlewares/authMiddleware');
+const { updateProfile } = require('../middlewares/uploadMiddleware')
 
 /**
  * @swagger
@@ -164,8 +165,8 @@ router.get('/users/municipality', isLoggedIn, isAdmin, userController.getMunicip
  *                 type: string
  *                 example: "@myTelegramHandle"
  *                 description: Telegram nickname
- *               personal_photo_path:
- *                 type: string
+ *               personal_photo:
+ *                 type: File
  *                 example: "/uploads/photos/user123.jpg"
  *                 description: Path to user's personal photo
  *               mail_notifications:
@@ -179,9 +180,11 @@ router.get('/users/municipality', isLoggedIn, isAdmin, userController.getMunicip
  *         description: Validation error
  *       401:
  *         description: Not authenticated
+ *       403:
+ *          description: Forbidden
  *       404:
  *         description: User not found
  */
-router.put('/users/:id/update', userController.addTelegramNickname, userController.addPersonalPhotoPath, userController.updateMailNotifications);
+router.put('/users/:id/update', isLoggedIn, updateProfile, userController.updateUserProfile);
 
 module.exports = router;

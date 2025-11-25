@@ -4,6 +4,7 @@ const ConflictError = require('../errors/ConflictError')
 const BadRequestError = require('../errors/BadRequestError')
 const UnauthorizedError = require('../errors/UnauthorizedError')
 const { ALLOWED_ROLES } = require('../constants/roles')
+const AppError = require('../errors/AppError')
 
 
 exports.getUserById = async (userId) => {
@@ -137,47 +138,24 @@ exports.getMunicipalityUsers = async (adminId) => {
     return users;
 };
 
-exports.addTelegramNickname = async (userId, telegramNickname) => {
-    try {
-        const user = await userDao.getUserById(userId);
-        if (!user) {
-            throw new NotFoundError('User not found');
-        }
-        const result = await userDao.addTelegramNickname(userId, telegramNickname);
-        return result;
-    } catch (err) {
-        throw err;
+exports.updateUserProfile = async (userId, updateData) => {
+    if (!Number.isInteger(userId)){
+        throw new BadRequestError('Invalid user id')
     }
-};
+    
+    const user = await exports.getUserById(userId);
+    if (!user){
+        throw new NotFoundError('User not found');
+    }
 
-exports.updateMailNotifications = async (userId, mailNotifications) => {
-    try {
-        const user = await userDao.getUserById(userId);
-        if (!user) {
-            throw new NotFoundError('User not found');
-        }
-        const result = await userDao.setMailNotifications(userId, mailNotifications);
-        return result;
-    }
-    catch (err) {
-        throw err;
-    }
-};
-
-exports.addPersonalPhotoPath = async (userId, personalPhotoPath) => {
-    try {
-        const user = await userDao.getUserById(userId);
-        if (!user) {
-            throw new NotFoundError('User not found');
-        }
-        const [validExtendions] = ['.png', '.jpg', '.jpeg'];
-        const fileExtension = personalPhotoPath.toLowerCase().slice(personalPhotoPath.lastIndexOf('.'));
-        if (!validExtendions.includes(fileExtension)) {
+    if (updateData.personal_photo_path) {
+        const validExtensions = ['.jpg', '.png', '.jpeg'];
+        const fileExtension = updateData.personal_photo_path.toLowerCase().slice(updateData.personal_photo_path.lastIndexOf('.'));
+        if (!validExtensions.includes(fileExtension)) {
             throw new BadRequestError('Invalid file extension');
         }
-        const result = await userDao.addPersonalPhotoPath(userId, personalPhotoPath);
-        return result;
-    } catch (err) {
-        throw err;
     }
-};
+    
+    const result = await userDao.updateUserProfile(userId, updateData);
+    return result;
+}

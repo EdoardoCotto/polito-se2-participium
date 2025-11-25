@@ -184,42 +184,20 @@ exports.findMunicipalityUsers = () => {
   });
 };
 
-exports.addTelegramNickname = (userId, telegramNickname) => {
+exports.updateUserProfile = (userId, updateData) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE Users SET telegram_nickname = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    db.run(sql, [telegramNickname, userId], function (err) {
+    const sql = 'UPDATE Users SET telegram_nickname = ?, personal_photo_path = ?, mail_notifications = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    db.run(sql, [updateData.telegram_nickname, updateData.personal_photo_path, updateData.mail_notifications, userId], function (err) {
       if (err) {
         reject(err);
         return;
       }
-      resolve({ id: userId, telegram_nickname: telegramNickname });
-    });
-  });
-}
-
-exports.addPersonalPhotoPath = (userId, personalPhotoPath) => {
-  return new Promise((resolve, reject) => {
-    const sql = 'UPDATE Users SET personal_photo_path = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    db.run(sql, [personalPhotoPath, userId], function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve({ id: userId, personal_photo_path: personalPhotoPath });
-    });
-  });
-}
-
-exports.setMailNotifications = (userId, change) => {
-  return new Promise((resolve, reject) => {
-    const sql = 'UPDATE Users SET mail_notifications = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    const mailNotifications = change ? 1 : 0;
-    db.run(sql, [mailNotifications, userId], function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve({ id: userId, mail_notifications: change });
+      resolve({ 
+        id: userId, 
+        telegram_nickname: updateData.telegram_nickname, 
+        personal_photo_path: updateData.personal_photo_path, 
+        mail_notifications: updateData.mail_notifications 
+      });
     });
   });
 }
