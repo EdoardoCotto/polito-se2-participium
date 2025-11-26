@@ -125,15 +125,25 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(403).json({ error: 'You can only update your own profile' });
     }
     const updateData = {};
+    
     if (req.file) {
       updateData.personal_photo_path = `/static/avatars/${req.file.filename}`;
+    } 
+    else {
+      updateData.personal_photo_path = null;
     }
+    
     if (req.body.mail_notifications !== undefined) {
       updateData.mail_notifications = req.body.mail_notifications === 'true' || req.body.mail_notifications === true ? 1 : 0;
     }
-    if (req.body.telegram_nickname !== undefined && req.body.telegram_nickname.trim() !== '') {
-      updateData.telegram_nickname = req.body.telegram_nickname;
+    
+    if (req.body.telegram_nickname !== undefined) {
+      updateData.telegram_nickname = req.body.telegram_nickname.trim() === '' ? null : req.body.telegram_nickname;
     }
+    else {
+      updateData.telegram_nickname = null;
+    }
+    
     const result = await userRepository.updateUserProfile(userId, updateData);
     return res.status(200).json(result);
   } catch (err) {
