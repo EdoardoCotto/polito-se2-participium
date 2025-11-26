@@ -73,6 +73,10 @@ function App() {
     setMessage('');
   };
 
+  const handleProfileUpdate = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
     // Handlers to show/hide login modal
     const handleShowLogin = () => setShowLoginModal(true);
     const handleHideLogin = () => setShowLoginModal(false);
@@ -80,7 +84,7 @@ function App() {
     return (
     <>
     <Routes>
-      <Route element={ <DefaultLayout loggedIn={loggedIn} user={user} message={message} setMessage={setMessage} handleLogout={handleLogout} onShowLogin={handleShowLogin}/> }>
+      <Route element={ <DefaultLayout loggedIn={loggedIn} user={user} message={message} setMessage={setMessage} handleLogout={handleLogout} onShowLogin={handleShowLogin} onProfileUpdate={handleProfileUpdate}/> }>
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />

@@ -1,7 +1,7 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Button, Navbar, Image, Nav, Modal, Form, Alert } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogoutButton } from './AuthComponents';
 import API from '../API/API';
 
@@ -11,10 +11,10 @@ function NavHeader(props) {
   
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [telegramUser, setTelegramUser] = useState(props.user?.telegramUser || '');
-  const [emailNotifications, setEmailNotifications] = useState(props.user?.emailNotifications !== false);
-  const [profileImage, setProfileImage] = useState(props.user?.profileImage || null);
-  const [profileImagePreview, setProfileImagePreview] = useState(props.user?.profileImage || null);
+  const [telegram_nickname, settelegram_nickname] = useState('');
+  const [mail_notifications, setmail_notifications] = useState(true);
+  const [personal_photo, setpersonal_photo] = useState(null);
+  const [personal_photoPreview, setpersonal_photoPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -22,18 +22,90 @@ function NavHeader(props) {
   // Check if user is a citizen
   const isCitizen = props.user?.type === 'citizen';
 
-  // Handle profile modal open
-  const handleOpenProfile = () => {
-    setTelegramUser(props.user?.telegramUser || '');
-    setEmailNotifications(props.user?.emailNotifications !== false);
-    setProfileImagePreview(props.user?.profileImage || null);
-    setSaveError('');
-    setSaveSuccess('');
-    setShowProfileModal(true);
+  // Sync profile image with props.user when it changes (for navbar display)
+  const getProfileImageUrl = () => {
+    if (props.user?.personal_photo_path) {
+      return `http://localhost:3001${props.user.personal_photo_path}`;
+    }
+    return "http://localhost:3001/static/user.png";
+  };
+
+  // Handle profile modal open - Load fresh data from database
+  const handleOpenProfile = async () => {
+    try {
+      console.log('Opening profile modal...');
+      console.log('Current props.user:', props.user);
+      
+      // Fetch latest user data from database
+      const latestUser = await API.getCurrentUser();
+      console.log('Latest user from API:', latestUser);
+      
+      if (latestUser) {
+        // Update local states with database values
+        console.log('Setting telegram_nickname to:', latestUser.telegram_nickname || '');
+        console.log('Setting mail_notifications to:', latestUser.mail_notifications);
+        console.log('mail_notifications type:', typeof latestUser.mail_notifications);
+        console.log('Setting photo path to:', latestUser.personal_photo_path);
+        
+        settelegram_nickname(latestUser.telegram_nickname || '');
+        // Handle mail_notifications: could be boolean, 0/1, or null/undefined
+        // If it's explicitly false or 0, set to false; otherwise true
+        const mailNotifValue = latestUser.mail_notifications === false || latestUser.mail_notifications === 0 
+          ? false 
+          : Boolean(latestUser.mail_notifications !== null && latestUser.mail_notifications !== undefined);
+        setmail_notifications(mailNotifValue);
+        console.log('Final mail_notifications value:', mailNotifValue);
+        
+        if (latestUser.personal_photo_path) {
+          setpersonal_photoPreview(`http://localhost:3001${latestUser.personal_photo_path}`);
+        } else {
+          setpersonal_photoPreview(null);
+        }
+      } else {
+        console.log('No latestUser, falling back to props.user');
+        // Fallback to props.user if API call fails
+        settelegram_nickname(props.user?.telegram_nickname || '');
+        const mailNotifValue = props.user?.mail_notifications === false || props.user?.mail_notifications === 0 
+          ? false 
+          : Boolean(props.user?.mail_notifications !== null && props.user?.mail_notifications !== undefined);
+        setmail_notifications(mailNotifValue);
+        
+        if (props.user?.personal_photo_path) {
+          setpersonal_photoPreview(`http://localhost:3001${props.user.personal_photo_path}`);
+        } else {
+          setpersonal_photoPreview(null);
+        }
+      }
+      
+      setpersonal_photo(null); // Reset file input
+      setSaveError('');
+      setSaveSuccess('');
+      setShowProfileModal(true);
+      
+    } catch (err) {
+      console.error('Error loading profile data:', err);
+      // Fallback to props.user
+      settelegram_nickname(props.user?.telegram_nickname || '');
+      const mailNotifValue = props.user?.mail_notifications === false || props.user?.mail_notifications === 0 
+        ? false 
+        : Boolean(props.user?.mail_notifications !== null && props.user?.mail_notifications !== undefined);
+      setmail_notifications(mailNotifValue);
+      
+      if (props.user?.personal_photo_path) {
+        setpersonal_photoPreview(`http://localhost:3001${props.user.personal_photo_path}`);
+      } else {
+        setpersonal_photoPreview(null);
+      }
+      
+      setpersonal_photo(null);
+      setSaveError('');
+      setSaveSuccess('');
+      setShowProfileModal(true);
+    }
   };
 
   // Handle profile image change
-  const handleProfileImageChange = (e) => {
+  const handlepersonal_photoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
@@ -46,16 +118,16 @@ function NavHeader(props) {
         setSaveError('Image size must be less than 5MB');
         return;
       }
-      setProfileImage(file);
-      setProfileImagePreview(URL.createObjectURL(file));
+      setpersonal_photo(file);
+      setpersonal_photoPreview(URL.createObjectURL(file));
       setSaveError('');
     }
   };
 
   // Handle remove profile image
-  const handleRemoveProfileImage = () => {
-    setProfileImage(null);
-    setProfileImagePreview(null);
+  const handleRemovepersonal_photo = () => {
+    setpersonal_photo(null);
+    setpersonal_photoPreview(null);
   };
 
   // Handle save profile
@@ -70,38 +142,46 @@ function NavHeader(props) {
         return;
       }
 
+      console.log('Saving profile with mail_notifications:', mail_notifications);
+
       // Prepare profile data
       const profileData = {
-        telegram_nickname: telegramUser || '',
-        mail_notifications: emailNotifications,
+        telegram_nickname: telegram_nickname || '',
+        mail_notifications: mail_notifications ? 1 : 0, // Convert boolean to 0/1 for database
       };
 
-      // Add photo if selected
-      if (profileImage) {
-        profileData.personal_photo = profileImage;
+      console.log('Profile data being sent:', profileData);
+
+      // Add photo if selected (for new upload)
+      if (personal_photo) {
+        profileData.personal_photo = personal_photo;
+      }
+      // If photo was removed (preview is null but no new file)
+      else if (personal_photoPreview === null && !personal_photo) {
+        profileData.remove_photo = true;
       }
 
       // Call API to update user profile
-      const updatedUser = await API.updateUserProfile(props.user.id, profileData);
+      await API.updateUserProfile(props.user.id, profileData);
 
       setSaveSuccess('Profile updated successfully!');
       
-      // Update parent component user state if callback provided
-      if (props.onProfileUpdate) {
-        props.onProfileUpdate({
-          ...props.user,
-          ...updatedUser,
-          telegramUser: updatedUser.telegram_nickname || telegramUser,
-          emailNotifications: updatedUser.mail_notifications !== undefined ? updatedUser.mail_notifications : emailNotifications,
-          profileImage: updatedUser.personal_photo_path || profileImagePreview
-        });
+      // Refresh user data from backend
+      const refreshedUser = await API.getCurrentUser();
+      console.log('Refreshed user after save:', refreshedUser);
+      
+      // Update parent component user state
+      if (refreshedUser && props.onProfileUpdate) {
+        props.onProfileUpdate(refreshedUser);
       }
 
       setTimeout(() => {
         setShowProfileModal(false);
+        setSaveSuccess('');
       }, 1500);
 
     } catch (err) {
+      console.error('Error saving profile:', err);
       setSaveError(err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
@@ -150,7 +230,7 @@ function NavHeader(props) {
                   className="profile-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
                 >
                   <Image
-                    src={profileImagePreview || "http://localhost:3001/static/user.png"}
+                    src={getProfileImageUrl()}
                     alt="User Icon"
                     className="profile-avatar me-2"
                     roundedCircle
@@ -220,7 +300,7 @@ function NavHeader(props) {
               <div className="d-flex flex-column align-items-center">
                 <div className="profile-image-container mb-3">
                   <Image
-                    src={profileImagePreview || "http://localhost:3001/static/user.png"}
+                    src={personal_photoPreview || "http://localhost:3001/static/user.png"}
                     alt="Profile"
                     width={120}
                     height={120}
@@ -232,7 +312,7 @@ function NavHeader(props) {
                   <Form.Control
                     type="file"
                     accept="image/*"
-                    onChange={handleProfileImageChange}
+                    onChange={handlepersonal_photoChange}
                     style={{ display: 'none' }}
                     id="profile-image-upload"
                   />
@@ -247,11 +327,11 @@ function NavHeader(props) {
                       Upload
                     </Button>
                   </label>
-                  {profileImagePreview && (
+                  {personal_photoPreview && personal_photoPreview !== "http://localhost:3001/static/user.png" && (
                     <Button
                       variant="outline-danger"
                       size="sm"
-                      onClick={handleRemoveProfileImage}
+                      onClick={handleRemovepersonal_photo}
                       className="profile-upload-button"
                     >
                       <i className="bi bi-trash me-2"></i>
@@ -271,8 +351,8 @@ function NavHeader(props) {
               <Form.Control
                 type="text"
                 placeholder="@username"
-                value={telegramUser}
-                onChange={(e) => setTelegramUser(e.target.value)}
+                value={telegram_nickname}
+                onChange={(e) => settelegram_nickname(e.target.value)}
                 className="profile-form-input"
               />
               <Form.Text className="text-muted">
@@ -303,19 +383,19 @@ function NavHeader(props) {
             {/* Email Notifications Toggle - MOVED TO BOTTOM */}
             <Form.Group className="mt-4 mb-0">
               <div 
-                className={`p-3 rounded profile-notification-toggle ${emailNotifications ? 'profile-notification-active' : 'profile-notification-inactive'}`}
+                className={`p-3 rounded profile-notification-toggle ${mail_notifications ? 'profile-notification-active' : 'profile-notification-inactive'}`}
               >
                 <div className="d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center">
                     <i 
-                      className={`bi ${emailNotifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3 profile-notification-icon`}
+                      className={`bi ${mail_notifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3 profile-notification-icon`}
                     ></i>
                     <div>
                       <strong className="profile-notification-title">
                         Email Notifications
                       </strong>
                       <div className="text-muted profile-notification-subtitle">
-                        {emailNotifications 
+                        {mail_notifications 
                           ? 'You will receive email updates' 
                           : 'Email notifications are disabled'}
                       </div>
@@ -324,8 +404,8 @@ function NavHeader(props) {
                   <Form.Check 
                     type="switch"
                     id="email-notifications-switch"
-                    checked={emailNotifications}
-                    onChange={(e) => setEmailNotifications(e.target.checked)}
+                    checked={mail_notifications}
+                    onChange={(e) => setmail_notifications(e.target.checked)}
                     className="profile-notification-switch"
                   />
                 </div>
