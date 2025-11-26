@@ -4,6 +4,7 @@ jest.mock('../../server/repository/reportRepository', () => ({
   getReportById: jest.fn(),
   getPendingReports: jest.fn(),
   getApprovedReports: jest.fn(),
+  getCitizenReports: jest.fn(),
   getAssignedReports: jest.fn(),
   reviewReport: jest.fn(),
 }));
@@ -333,6 +334,15 @@ describe('reportController.getPendingReports', () => {
     await controller.getPendingReports(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
   });
+
+  it('propaga AppError', async () => {
+    const req = { protocol: 'http', get: () => 'host' };
+    const res = mkRes();
+    repo.getPendingReports.mockRejectedValue(new AppError('nope', 409));
+    await controller.getPendingReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ error: 'nope' });
+  });
 });
 
 // ──────────────────────────────────────────────
@@ -415,6 +425,15 @@ describe('reportController.getApprovedReports', () => {
     expect(res.status).toHaveBeenCalledWith(500);
   });
 
+  it('propaga AppError dal repository', async () => {
+    const req = { protocol: 'https', get: () => 'example.com', query: {} };
+    const res = mkRes();
+    repo.getApprovedReports.mockRejectedValue(new AppError('boom app', 451));
+    await controller.getApprovedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(451);
+    expect(res.json).toHaveBeenCalledWith({ error: 'boom app' });
+  });
+
   it('200 con photos non array (branch buildPhotoUrls early return)', async () => {
     const req = baseReq({});
     const res = mkRes();
@@ -422,6 +441,80 @@ describe('reportController.getApprovedReports', () => {
     await controller.getApprovedReports(req, res);
     const payload = res.json.mock.calls[0][0];
     expect(payload[0].photoUrls).toEqual([]);
+  });
+
+  it('filtra elementi vuoti/whitespace in photos', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getApprovedReports.mockResolvedValue([
+      { id: 3, photos: ["", "   ", null, "/static/uploads/ok.png"] },
+    ]);
+    await controller.getApprovedReports(req, res);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual([
+      'https://example.com/static/uploads/ok.png',
+    ]);
+  });
+});
+
+// ──────────────────────────────────────────────
+//   TEST getCitizenReports
+// ──────────────────────────────────────────────
+describe('reportController.getCitizenReports', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const baseReq = (query) => ({ protocol: 'http', get: () => 'host', query: query || {} });
+
+  it('200 senza bounding box: mapping photoUrls', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getCitizenReports.mockResolvedValue([{ id: 1, photos: [' /static/uploads/a.jpg '] }]);
+    await controller.getCitizenReports(req, res);
+    expect(repo.getCitizenReports).toHaveBeenCalledWith({});
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual(['http://host/static/uploads/a.jpg']);
+  });
+
+  it('200 con bounding box presente', async () => {
+    const req = baseReq({ north: '11', south: '10', east: '8', west: '7' });
+    const res = mkRes();
+    repo.getCitizenReports.mockResolvedValue([{ id: 2, photos: [] }]);
+    await controller.getCitizenReports(req, res);
+    expect(repo.getCitizenReports).toHaveBeenCalledWith({
+      boundingBox: { north: '11', south: '10', east: '8', west: '7' },
+    });
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it('propaga AppError dal repository', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getCitizenReports.mockRejectedValue(new AppError('bad citizen', 400));
+    await controller.getCitizenReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'bad citizen' });
+  });
+
+  it('500 per errore generico', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getCitizenReports.mockRejectedValue(new Error('x'));
+    await controller.getCitizenReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+  });
+
+  it('filtra elementi vuoti/whitespace in photos', async () => {
+    const req = baseReq({});
+    const res = mkRes();
+    repo.getCitizenReports.mockResolvedValue([
+      { id: 10, photos: ["", " ", null, "/static/uploads/a.png"] },
+    ]);
+    await controller.getCitizenReports(req, res);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual([
+      'http://host/static/uploads/a.png',
+    ]);
   });
 });
 
@@ -461,6 +554,15 @@ describe('reportController.getAssignedReports', () => {
     repo.getAssignedReports.mockRejectedValue(new Error('x'));
     await controller.getAssignedReports(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  it('propaga AppError', async () => {
+    const req = { user: { id: 9, type: 'urban_planner' }, protocol: 'http', get: () => 'h' };
+    const res = mkRes();
+    repo.getAssignedReports.mockRejectedValue(new AppError('nope', 409));
+    await controller.getAssignedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ error: 'nope' });
   });
 
   it('200 con photos non array (buildPhotoUrls early return)', async () => {

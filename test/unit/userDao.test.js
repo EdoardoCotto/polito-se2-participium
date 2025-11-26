@@ -427,4 +427,72 @@ describe('userDao Functions', () => {
       await expect(dao.findMunicipalityUsers()).rejects.toThrow('DB Error');
     });
   });
+
+  describe('updateUserProfile', () => {
+    test('rejects when select query errors', async () => {
+      mockGet.mockImplementation((sql, params, cb) => cb(new Error('Select Error')));
+      await expect(dao.updateUserProfile(1, {})).rejects.toThrow('Select Error');
+    });
+
+    test('rejects when user not found', async () => {
+      mockGet.mockImplementation((sql, params, cb) => cb(null, undefined));
+      await expect(dao.updateUserProfile(2, {})).rejects.toThrow('User not found');
+    });
+
+    test('resolves with id only when no fields provided', async () => {
+      mockGet.mockImplementation((sql, params, cb) => cb(null, { telegram_nickname: 't', personal_photo_path: 'p.png', mail_notifications: 1 }));
+      mockRun.mockImplementation((sql, params, cb) => cb(null));
+      const res = await dao.updateUserProfile(3, {});
+      expect(res).toEqual({ id: 3 });
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test('skips null-to-null updates and returns id only', async () => {
+      mockGet.mockImplementation((sql, params, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: null }));
+      mockRun.mockImplementation((sql, params, cb) => cb(null));
+      const res = await dao.updateUserProfile(4, { telegram_nickname: null });
+      expect(res).toEqual({ id: 4 });
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test('updates all fields and returns updated values', async () => {
+      const current = { telegram_nickname: 'oldNick', personal_photo_path: 'old.png', mail_notifications: 0 };
+      const updates = { telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 };
+      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
+      mockRun.mockImplementation((sql, params, cb) => cb(null));
+      const result = await dao.updateUserProfile(5, updates);
+      expect(mockRun).toHaveBeenCalled();
+      const [sql, params] = mockRun.mock.calls[0];
+      expect(sql).toMatch(/^UPDATE Users SET /);
+      expect(sql).toContain('telegram_nickname = ?');
+      expect(sql).toContain('personal_photo_path = ?');
+      expect(sql).toContain('mail_notifications = ?');
+      expect(sql).toContain('updated_at = CURRENT_TIMESTAMP');
+      expect(params.slice(0, 3)).toEqual(['newNick', 'new.png', 1]);
+      expect(params[3]).toBe(5);
+      expect(result).toEqual({ id: 5, telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 });
+    });
+
+    test('partial updates including setting null from non-null', async () => {
+      const current = { telegram_nickname: null, personal_photo_path: 'has.png', mail_notifications: 1 };
+      const updates = { telegram_nickname: 'nick', personal_photo_path: null };
+      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
+      mockRun.mockImplementation((sql, params, cb) => cb(null));
+      const result = await dao.updateUserProfile(6, updates);
+      expect(mockRun).toHaveBeenCalled();
+      const [sql, params] = mockRun.mock.calls[0];
+      expect(sql).toContain('telegram_nickname = ?');
+      expect(sql).toContain('personal_photo_path = ?');
+      expect(sql).not.toContain('mail_notifications = ?');
+      expect(params).toEqual(['nick', null, 6]);
+      expect(result).toEqual({ id: 6, telegram_nickname: 'nick', personal_photo_path: null });
+    });
+
+    test('rejects when update run errors', async () => {
+      const current = { telegram_nickname: 'x', personal_photo_path: 'y', mail_notifications: 0 };
+      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
+      mockRun.mockImplementation((sql, params, cb) => cb(new Error('Update Error')));
+      await expect(dao.updateUserProfile(7, { telegram_nickname: 'z' })).rejects.toThrow('Update Error');
+    });
+  });
 });

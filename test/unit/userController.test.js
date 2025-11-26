@@ -6,6 +6,7 @@ jest.mock('../../server/repository/userRepository', () => ({
   createUser: jest.fn(),
   createUserIfAdmin: jest.fn(),
   getMunicipalityUsers: jest.fn(),
+  updateUserProfile: jest.fn(),
 }));
 
 const userController = require('../../server/controller/userController');
@@ -223,5 +224,85 @@ describe('userController', () => {
     await userController.getMunicipalityUsers(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+  });
+
+  // updateUserProfile
+  describe('updateUserProfile', () => {
+    it('403 when updating other user profile', async () => {
+      const badReq = { user: { id: 10 }, params: { id: '11' }, body: {} };
+      await userController.updateUserProfile(badReq, res);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'You can only update your own profile' });
+    });
+
+    it('200 with file, mail_notifications "true", non-empty telegram', async () => {
+      const okReq = {
+        user: { id: 10 },
+        params: { id: '10' },
+        file: { filename: 'pic.png' },
+        body: { mail_notifications: 'true', telegram_nickname: ' nick ' },
+      };
+      const updated = { id: 10, personal_photo_path: '/static/avatars/pic.png', mail_notifications: 1, telegram_nickname: ' nick ' };
+      userRepository.updateUserProfile.mockResolvedValueOnce(updated);
+      await userController.updateUserProfile(okReq, res);
+      expect(userRepository.updateUserProfile).toHaveBeenCalledWith(10, expect.objectContaining({
+        personal_photo_path: '/static/avatars/pic.png',
+        mail_notifications: 1,
+        telegram_nickname: ' nick ',
+      }));
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it('200 without file, mail_notifications "false", empty telegram -> nulls', async () => {
+      const okReq = {
+        user: { id: 10 },
+        params: { id: '10' },
+        body: { mail_notifications: 'false', telegram_nickname: '   ' },
+      };
+      const updated = { id: 10, personal_photo_path: null, mail_notifications: 0, telegram_nickname: null };
+      userRepository.updateUserProfile.mockResolvedValueOnce(updated);
+      await userController.updateUserProfile(okReq, res);
+      expect(userRepository.updateUserProfile).toHaveBeenCalledWith(10, {
+        personal_photo_path: null,
+        mail_notifications: 0,
+        telegram_nickname: null,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it('mail_notifications boolean true -> 1; telegram undefined -> null included', async () => {
+      const okReq = {
+        user: { id: 5 },
+        params: { id: '5' },
+        body: { mail_notifications: true },
+      };
+      const updated = { id: 5 };
+      userRepository.updateUserProfile.mockResolvedValueOnce(updated);
+      await userController.updateUserProfile(okReq, res);
+      expect(userRepository.updateUserProfile).toHaveBeenCalledWith(5, {
+        personal_photo_path: null,
+        mail_notifications: 1,
+        telegram_nickname: null,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('propaga AppError from repository', async () => {
+      const okReq = { user: { id: 3 }, params: { id: '3' }, body: {} };
+      userRepository.updateUserProfile.mockRejectedValueOnce(new AppError('Denied', 403));
+      await userController.updateUserProfile(okReq, res);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Denied' });
+    });
+
+    it('unknown error -> 500', async () => {
+      const okReq = { user: { id: 4 }, params: { id: '4' }, body: {} };
+      userRepository.updateUserProfile.mockRejectedValueOnce(new Error('x'));
+      await userController.updateUserProfile(okReq, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+    });
   });
 });

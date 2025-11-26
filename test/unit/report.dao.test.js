@@ -93,6 +93,15 @@ describe("reportDao", () => {
     expect(result).toEqual(fakeReport);
   });
 
+  test("getReportById() should reject on error", async () => {
+    const dao = loadDao();
+    const sqlite = require("sqlite3");
+    const db = sqlite.Database.__mockDb;
+    db.get.mockImplementation((sql, params, cb) => cb(new Error("Get by id fail")));
+    await expect(dao.getReportById(11)).rejects.toThrow("Get by id fail");
+    expect(db.get).toHaveBeenCalled();
+  });
+
   test("getReportsByStatus() should return rows", async () => {
     const dao = loadDao();
     const sqlite = require("sqlite3");
@@ -211,6 +220,49 @@ describe("reportDao", () => {
     const db = sqlite.Database.__mockDb;
     db.all.mockImplementation((sql, params, cb) => cb(new Error("Tech fail")));
     await expect(dao.getReportsByTechnicalOffice("Tech A")).rejects.toThrow("Tech fail");
+  });
+
+  // getCitizenReports coverage (success, undefined rows, error, boundingBox)
+  test("getCitizenReports() should return rows", async () => {
+    const dao = loadDao();
+    const sqlite = require("sqlite3");
+    const db = sqlite.Database.__mockDb;
+    const rows = [{ id: 7 }];
+    db.all.mockImplementation((sql, params, cb) => cb(null, rows));
+    const result = await dao.getCitizenReports();
+    expect(db.all).toHaveBeenCalled();
+    expect(result).toEqual(rows);
+  });
+
+  test("getCitizenReports() should return [] when rows undefined", async () => {
+    const dao = loadDao();
+    const sqlite = require("sqlite3");
+    const db = sqlite.Database.__mockDb;
+    db.all.mockImplementation((sql, params, cb) => cb(null, undefined));
+    const result = await dao.getCitizenReports();
+    expect(result).toEqual([]);
+  });
+
+  test("getCitizenReports() should reject on error", async () => {
+    const dao = loadDao();
+    const sqlite = require("sqlite3");
+    const db = sqlite.Database.__mockDb;
+    db.all.mockImplementation((sql, params, cb) => cb(new Error("Citizen fail")));
+    await expect(dao.getCitizenReports()).rejects.toThrow("Citizen fail");
+  });
+
+  test("getCitizenReports() should apply boundingBox filter", async () => {
+    const dao = loadDao();
+    const sqlite = require("sqlite3");
+    const db = sqlite.Database.__mockDb;
+    const rows = [{ id: 8 }];
+    db.all.mockImplementation((sql, params, cb) => {
+      expect(sql).toMatch(/BETWEEN \?/);
+      expect(params.length).toBe(4); // 4 bounds (no status param in citizen query)
+      cb(null, rows);
+    });
+    const result = await dao.getCitizenReports({ boundingBox: { south: 0, north: 10, west: 0, east: 10 } });
+    expect(result).toEqual(rows);
   });
 
   test("getLeastLoadedOfficer() should return id", async () => {

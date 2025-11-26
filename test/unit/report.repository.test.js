@@ -3,6 +3,7 @@
 
 const reportRepository = require("../../server/repository/reportRepository");
 const reportDao = require("../../server/dao/reportDao");
+const userDao = require("../../server/dao/userDao");
 const BadRequestError = require("../../server/errors/BadRequestError");
 const NotFoundError = require("../../server/errors/NotFoundError");
 const REPORT_STATUSES = require("../../server/constants/reportStatus");
@@ -45,12 +46,24 @@ describe("reportRepository.createReport", () => {
     );
   });
 
+  test("throws if missing longitude (right side of OR)", async () => {
+    const data = { ...validData, longitude: undefined };
+    await expect(reportRepository.createReport(data, false)).rejects.toThrow(
+      /User ID, latitude, and longitude are required/i
+    );
+  });
+
   test("throws if title is invalid", async () => {
     const data = { ...validData, title: "  " };
 
     await expect(reportRepository.createReport(data, false)).rejects.toThrow(
       /Title is required/i
     );
+  });
+
+  test("throws if title is not a string (left side of OR)", async () => {
+    const data = { ...validData, title: 42 };
+    await expect(reportRepository.createReport(data, false)).rejects.toThrow(/Title is required/i);
   });
 
   test("throws if category invalid", async () => {
@@ -61,12 +74,22 @@ describe("reportRepository.createReport", () => {
     );
   });
 
+  test("throws if category is not a string (left side of OR)", async () => {
+    const data = { ...validData, category: 123 };
+    await expect(reportRepository.createReport(data, false)).rejects.toThrow(/Category is invalid/i);
+  });
+
   test("throws if photos array length invalid", async () => {
     const data = { ...validData, photos: [] };
 
     await expect(reportRepository.createReport(data, false)).rejects.toThrow(
       /Photos array must contain between 1 and 3 items/i
     );
+  });
+
+  test("throws if photos array too long (right side of OR)", async () => {
+    const data = { ...validData, photos: ["a.jpg", "b.jpg", "c.jpg", "d.jpg"] };
+    await expect(reportRepository.createReport(data, false)).rejects.toThrow(/Photos array must contain between 1 and 3 items/i);
   });
 
   test("throws if dao returns null", async () => {
@@ -78,6 +101,7 @@ describe("reportRepository.createReport", () => {
   });
 
   test("returns mapped report on success", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
     const daoRow = {
       reportId: 10,
       userId: 1,
@@ -128,7 +152,8 @@ describe("reportRepository.createReport", () => {
     });
   });
 
-  test("anonymous with userId present: throws error OR maps null userId", async () => {
+  test("anonymous true forces null userId and maps", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
     const daoRow = {
       reportId: 99,
       userId: null,
@@ -151,14 +176,14 @@ describe("reportRepository.createReport", () => {
       userEmail: "anon@example.com",
     };
     reportDao.createReport.mockResolvedValue(daoRow);
-    try {
-      const result = await reportRepository.createReport({ ...validData }, true);
-      expect(reportDao.createReport).toHaveBeenCalledWith(expect.objectContaining({ userId: null }));
-      expect(result.userId).toBe(null);
-    } catch (err) {
-      // New logic path: should throw specific anonymus error
-      expect(err.message).toMatch(/not anonymus/i);
-    }
+    const result = await reportRepository.createReport({ ...validData }, true);
+    expect(reportDao.createReport).toHaveBeenCalledWith(expect.objectContaining({ userId: null }));
+    expect(result.userId).toBe(null);
+  });
+
+  test("throws UnauthorizedError when user is not a citizen", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'admin' });
+    await expect(reportRepository.createReport(validData, false)).rejects.toThrow(/Only citizens can create reports/i);
   });
 
   test("latitude out of range throws", async () => {
@@ -176,6 +201,11 @@ describe("reportRepository.createReport", () => {
     await expect(reportRepository.createReport(d, false)).rejects.toThrow(/Description is required/i);
   });
 
+  test("description type invalid (left side of OR)", async () => {
+    const d = { ...validData, description: 123 };
+    await expect(reportRepository.createReport(d, false)).rejects.toThrow(/Description is required/i);
+  });
+
   test("photos not array throws", async () => {
     const d = { ...validData, photos: "no" };
     await expect(reportRepository.createReport(d, false)).rejects.toThrow(/Photos must be an array/i);
@@ -186,7 +216,13 @@ describe("reportRepository.createReport", () => {
     await expect(reportRepository.createReport(d, false)).rejects.toThrow(/Each photo must be a non-empty string/i);
   });
 
+  test("photo non-string throws (left side of OR)", async () => {
+    const d = { ...validData, photos: ["p1.jpg", 123] };
+    await expect(reportRepository.createReport(d, false)).rejects.toThrow(/Each photo must be a non-empty string/i);
+  });
+
   test("multi photos trimmed success", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
     const daoRow = {
       reportId: 11,
       userId: 1,
@@ -328,12 +364,24 @@ describe("reportRepository.reviewReport", () => {
     ).rejects.toThrow(/Explanation is required/i);
   });
 
+  test("reject with blank explanation (right side of OR)", async () => {
+    reportDao.getReportById.mockResolvedValue(baseReport);
+    await expect(
+      reportRepository.reviewReport(1, { status: "rejected", explanation: "   " })
+    ).rejects.toThrow(/Explanation is required/i);
+  });
+
   test("accept requires valid technical office", async () => {
     reportDao.getReportById.mockResolvedValue(baseReport);
 
     await expect(
       reportRepository.reviewReport(1, { status: "accepted", technicalOffice: "NOPE" })
     ).rejects.toThrow(/valid technical office/i);
+  });
+
+  test("accept path with non-string technicalOffice (left side of OR)", async () => {
+    reportDao.getReportById.mockResolvedValue(baseReport);
+    await expect(reportRepository.reviewReport(1, { status: "accepted", technicalOffice: 123 })).rejects.toThrow(/valid technical office/i);
   });
 
   test("successful reject returns mapped report", async () => {
@@ -455,6 +503,10 @@ describe("reportRepository.getAssignedReports", () => {
     await expect(reportRepository.getAssignedReports(" ")).rejects.toThrow(/Technical office is required/i);
   });
 
+  test("non-string technicalOffice throws (left side of OR)", async () => {
+    await expect(reportRepository.getAssignedReports(123)).rejects.toThrow(/Technical office is required/i);
+  });
+
   test("success maps", async () => {
     const row = {
       reportId: 30,
@@ -486,5 +538,38 @@ describe("reportRepository.getAssignedReports", () => {
   test("dao error propagates", async () => {
     reportDao.getReportsByTechnicalOffice = jest.fn().mockRejectedValue(new Error("Tech office fail"));
     await expect(reportRepository.getAssignedReports(TECHNICAL_OFFICER_ROLES[0])).rejects.toThrow(/Tech office fail/);
+  });
+});
+
+// ----------------------------------------------------
+// getCitizenReports
+// ----------------------------------------------------
+describe("reportRepository.getCitizenReports", () => {
+  test("maps rows via mapReportRow", async () => {
+    const row = {
+      reportId: 101,
+      userId: 7,
+      latitude: 10,
+      longitude: 20,
+      title: "T",
+      description: "D",
+      category: REPORT_CATEGORIES[0],
+      status: REPORT_STATUSES.PENDING,
+      rejection_reason: null,
+      technical_office: null,
+      created_at: "2024-01-01",
+      updated_at: "2024-01-02",
+      image_path1: "a.jpg",
+      image_path2: null,
+      image_path3: null,
+      userUsername: "u",
+      userName: "n",
+      userSurname: "s",
+      userEmail: "e@test.com",
+    };
+    reportDao.getCitizenReports = jest.fn().mockResolvedValue([row]);
+    const res = await reportRepository.getCitizenReports({});
+    expect(reportDao.getCitizenReports).toHaveBeenCalledWith({});
+    expect(res[0]).toMatchObject({ id: 101, userId: 7, photos: ["a.jpg"] });
   });
 });

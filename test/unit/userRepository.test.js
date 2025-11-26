@@ -9,6 +9,7 @@ jest.mock('../../server/dao/userDao', () => ({
   createUser: jest.fn(),
   updateUserTypeById: jest.fn(),
   findMunicipalityUsers: jest.fn(),
+  updateUserProfile: jest.fn(),
 }));
 
 const userDao = require('../../server/dao/userDao');
@@ -210,5 +211,46 @@ describe('userRepository.getMunicipalityUsers', () => {
     userDao.findMunicipalityUsers.mockResolvedValueOnce(list);
     const res = await userRepository.getMunicipalityUsers(1);
     expect(res).toEqual(list);
+  });
+});
+
+describe('userRepository.updateUserProfile', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('throws BadRequestError for non-integer userId', async () => {
+    await expect(userRepository.updateUserProfile('1', {})).rejects.toThrow(BadRequestError);
+    expect(userDao.updateUserProfile).not.toHaveBeenCalled();
+  });
+
+  test('throws NotFoundError when user not found (repo returns null)', async () => {
+    const spy = jest.spyOn(userRepository, 'getUserById').mockResolvedValueOnce(null);
+    await expect(userRepository.updateUserProfile(1, {})).rejects.toThrow(NotFoundError);
+    expect(spy).toHaveBeenCalledWith(1);
+    expect(userDao.updateUserProfile).not.toHaveBeenCalled();
+  });
+
+  test('throws BadRequestError for invalid photo extension', async () => {
+    jest.spyOn(userRepository, 'getUserById').mockResolvedValueOnce({ id: 1 });
+    await expect(
+      userRepository.updateUserProfile(1, { personal_photo_path: 'avatar.gif' })
+    ).rejects.toThrow(BadRequestError);
+    expect(userDao.updateUserProfile).not.toHaveBeenCalled();
+  });
+
+  test('updates successfully with valid photo extension (case-insensitive)', async () => {
+    jest.spyOn(userRepository, 'getUserById').mockResolvedValueOnce({ id: 1 });
+    userDao.updateUserProfile.mockResolvedValueOnce({ id: 1, ok: true });
+    const res = await userRepository.updateUserProfile(1, { personal_photo_path: 'avatar.JPG' });
+    expect(userDao.updateUserProfile).toHaveBeenCalledWith(1, { personal_photo_path: 'avatar.JPG' });
+    expect(res).toEqual({ id: 1, ok: true });
+  });
+
+  test('updates successfully without personal_photo_path', async () => {
+    jest.spyOn(userRepository, 'getUserById').mockResolvedValueOnce({ id: 2 });
+    userDao.updateUserProfile.mockResolvedValueOnce({ id: 2, name: 'New' });
+    const payload = { name: 'New' };
+    const res = await userRepository.updateUserProfile(2, payload);
+    expect(userDao.updateUserProfile).toHaveBeenCalledWith(2, payload);
+    expect(res).toEqual({ id: 2, name: 'New' });
   });
 });

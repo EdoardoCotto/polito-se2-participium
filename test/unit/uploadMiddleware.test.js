@@ -70,6 +70,18 @@ describe("uploadMiddleware", () => {
     mkdirSpy.mockRestore();
   });
 
+  it("should NOT create directories when they already exist", () => {
+    const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValue(true);
+    const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
+    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+    jest.isolateModules(() => {
+      require(modulePath);
+    });
+    expect(mkdirSpy).not.toHaveBeenCalled();
+    existsSpy.mockRestore();
+    mkdirSpy.mockRestore();
+  });
+
   it("should configure multer with proper limits and array field", () => {
     expect(uploadMiddleware).toBeDefined();
 
@@ -164,6 +176,20 @@ describe("uploadMiddleware", () => {
       const generatedName = cb.mock.calls[0][1];
       expect(typeof generatedName).toBe("string");
       expect(generatedName).toMatch(/^personal_photo_path-\d+-\d+\.png$/);
+    });
+
+    it("should export updateProfile middleware that calls next()", () => {
+      const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+      let exported;
+      jest.isolateModules(() => {
+        exported = require(modulePath);
+      });
+      const update = exported.updateProfile;
+      expect(typeof update).toBe("function");
+      const next = jest.fn();
+      // our mocked single() returns a function calling next()
+      update({}, {}, next);
+      expect(next).toHaveBeenCalled();
     });
   });
 });
