@@ -247,6 +247,11 @@ const updateUserProfile = async (userId, profileData) => {
     formData.append('personal_photo_path', profileData.personal_photo);
   }
 
+  // Handle photo action
+  if (profileData.photo_action) {
+    formData.append('photo_action', profileData.photo_action);
+  }
+
   const response = await fetch(`${SERVER_URL}/users/${userId}/update`, {
     method: 'PUT',
     credentials: 'include',

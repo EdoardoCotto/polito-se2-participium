@@ -121,17 +121,22 @@ exports.getMunicipalityUsers = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
   try {
     const userId = Number(req.params.id);
+    
     if (req.user.id !== userId){
       return res.status(403).json({ error: 'You can only update your own profile' });
     }
+    
     const updateData = {};
     
-    if (req.file) {
+    // Gestione della foto profilo basata su photo_action
+    if (req.body.photo_action === 'upload' && req.file) {
+      // Nuovo file caricato
       updateData.personal_photo_path = `/static/avatars/${req.file.filename}`;
-    } 
-    else {
+    } else if (req.body.photo_action === 'remove') {
+      // Richiesta esplicita di rimozione
       updateData.personal_photo_path = null;
     }
+    // Se photo_action non è presente o ha altro valore, mantieni il valore esistente
     
     if (req.body.mail_notifications !== undefined) {
       updateData.mail_notifications = req.body.mail_notifications === 'true' || req.body.mail_notifications === true ? 1 : 0;
@@ -139,9 +144,6 @@ exports.updateUserProfile = async (req, res) => {
     
     if (req.body.telegram_nickname !== undefined) {
       updateData.telegram_nickname = req.body.telegram_nickname.trim() === '' ? null : req.body.telegram_nickname;
-    }
-    else {
-      updateData.telegram_nickname = null;
     }
     
     const result = await userRepository.updateUserProfile(userId, updateData);
