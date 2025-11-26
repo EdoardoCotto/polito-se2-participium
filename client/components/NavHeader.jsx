@@ -3,6 +3,7 @@ import { Button, Navbar, Image, Nav, Modal, Form, Alert } from 'react-bootstrap'
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { LogoutButton } from './AuthComponents';
+import API from '../API/API';
 
 function NavHeader(props) {
   const location = useLocation();
@@ -64,17 +65,24 @@ function NavHeader(props) {
       setSaveError('');
       setSaveSuccess('');
 
-      // TODO: Call API to update user profile
-      // const formData = new FormData();
-      // formData.append('telegramUser', telegramUser);
-      // formData.append('emailNotifications', emailNotifications);
-      // if (profileImage) {
-      //   formData.append('profileImage', profileImage);
-      // }
-      // await API.updateUserProfile(formData);
+      if (!props.user?.id) {
+        setSaveError('User ID is required');
+        return;
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Prepare profile data
+      const profileData = {
+        telegram_nickname: telegramUser || '',
+        mail_notifications: emailNotifications,
+      };
+
+      // Add photo if selected
+      if (profileImage) {
+        profileData.personal_photo = profileImage;
+      }
+
+      // Call API to update user profile
+      const updatedUser = await API.updateUserProfile(props.user.id, profileData);
 
       setSaveSuccess('Profile updated successfully!');
       
@@ -82,9 +90,10 @@ function NavHeader(props) {
       if (props.onProfileUpdate) {
         props.onProfileUpdate({
           ...props.user,
-          telegramUser,
-          emailNotifications,
-          profileImage: profileImagePreview
+          ...updatedUser,
+          telegramUser: updatedUser.telegram_nickname || telegramUser,
+          emailNotifications: updatedUser.mail_notifications !== undefined ? updatedUser.mail_notifications : emailNotifications,
+          profileImage: updatedUser.personal_photo_path || profileImagePreview
         });
       }
 

@@ -282,12 +282,11 @@ export default function PublicRelationsOfficer({ user }) {
           </Col>
            {/* Pending Reports Section - Right Side */}
           <Col lg={6} className="d-flex flex-column">
-            <Card className="shadow-lg flex-grow-1" style={{ 
+            <Card className="shadow-lg flex-grow-1 pending-reports-container" style={{ 
               borderRadius: 'clamp(0.5rem, 2vw, 1rem)', 
               border: 'none'
             }}>
-              <Card.Header style={{ 
-                backgroundColor: '#5e7bb3', 
+              <Card.Header className="pending-reports-header" style={{ 
                 color: 'white', 
                 padding: 'clamp(0.75rem, 2vw, 1.25rem)',
                 borderTopLeftRadius: 'clamp(0.5rem, 2vw, 1rem)',
@@ -296,22 +295,22 @@ export default function PublicRelationsOfficer({ user }) {
                 <h4 className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <i className="bi bi-clipboard-check me-2"></i>
                   Pending Reports
-                  <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.9rem)' }}>
+                  <Badge className="ms-2 pending-reports-count-badge" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.9rem)' }}>
                     {pendingReports.length}
                   </Badge>
                 </h4>
               </Card.Header>
-              <Card.Body className="p-2 p-md-3" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+              <Card.Body className="p-2 p-md-3" style={{ maxHeight: '75vh', overflowY: 'auto', scrollbarWidth: 'thin' }}>
                 {/* Loading State */}
                 {loading && (
-                  <div className="text-center py-5">
+                  <div className="pending-reports-loading">
                     <Spinner animation="border" variant="primary" />
-                    <p className="mt-3 text-muted">Loading pending reports...</p>
+                    <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>Loading pending reports...</p>
                   </div>
                 )}
                 {/* Empty State */}
-                {!loading && !error && pendingReports.length === 0 && ( // Added empty state display
-                  <div className="text-center py-5">
+                {!loading && !error && pendingReports.length === 0 && (
+                  <div className="pending-reports-empty-state">
                     <i className="bi bi-inbox" style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', color: '#dee2e6' }}></i>
                     <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                       No pending reports to review
@@ -331,47 +330,30 @@ export default function PublicRelationsOfficer({ user }) {
                     {pendingReports.map((report) => (
                       <Card 
                         key={report.id} 
-                        className={`shadow-sm ${highlightedLocation?.reportId === report.id ? 'border-primary' : ''}`}
-                        style={{ 
-                          border: highlightedLocation?.reportId === report.id ? '0.125rem solid #0d6efd' : '0.0625rem solid #e0e0e0',
-                          borderRadius: '0.75rem',
-                          transition: 'all 0.2s',
-                          cursor: 'pointer'
-                        }}
+                        className={`pending-report-card ${highlightedLocation?.reportId === report.id ? 'selected' : ''}`}
                         onClick={() => handleReportClick(report)}
-                        onMouseEnter={(e) => {
-                          if (highlightedLocation?.reportId !== report.id) {
-                            e.currentTarget.style.transform = 'translateY(-0.125rem)';
-                            e.currentTarget.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (highlightedLocation?.reportId !== report.id) {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '';
-                          }
-                        }}
-                      ><Card.Body className="p-3">
+                      >
+                        <Card.Body className="p-3">
                           {/* Report Header */}
                           <div className="d-flex justify-content-between align-items-start mb-2">
-                            <h6 className="mb-0 fw-bold" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
+                            <h6 className="pending-report-title mb-0" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
                               {report.title}
                             </h6>
-                            <Badge bg="warning" text="dark" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                            <Badge className="pending-status-badge" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
                               Pending
                             </Badge>
                           </div>
 
                           {/* Category */}
                           <div className="mb-2">
-                            <Badge bg="secondary" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                            <Badge className="pending-category-badge" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
                               <i className="bi bi-tag me-1"></i>
                               {report.category}
                             </Badge>
                           </div>
 
                           {/* Description */}
-                          <p className="text-muted mb-2" style={{ 
+                          <p className="pending-report-description mb-2" style={{ 
                             fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -382,45 +364,30 @@ export default function PublicRelationsOfficer({ user }) {
                           </p>
 
                           {/* Location */}
-                          <div className="mb-2" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
-                            <i className="bi bi-geo-alt text-primary me-1"></i>
-                            <small className="text-muted">
+                          <div className="pending-report-info">
+                            <i className="bi bi-geo-alt"></i>
+                            <small>
                               {report.latitude?.toFixed(5)}, {report.longitude?.toFixed(5)}
                             </small>
                           </div>
 
                           {/* Submitted By & Date */}
-                          <div className="mb-3" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
-                            <i className="bi bi-person text-primary me-1"></i>
-                            <small className="text-muted">
-                              {report.user?.username || 'Anonymous'}
-                            </small>
-                            <br />
-                            <i className="bi bi-calendar text-primary me-1"></i>
-                            <small className="text-muted">
-                              {formatDate(report.created_at)}
-                            </small>
+                          <div className="pending-report-info">
+                            <i className="bi bi-person"></i>
+                            <small>{report.user?.username || 'Anonymous'}</small>
+                          </div>
+                          <div className="pending-report-info mb-2">
+                            <i className="bi bi-calendar"></i>
+                            <small>{formatDate(report.created_at)}</small>
                           </div>
 
                            {/* Photos Badge - Clickable to open photos modal */}
                           {hasPhotos(report) && (
                             <div className="mb-3">
                               <Badge 
-                                bg="info" 
-                                style={{ 
-                                  fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s'
-                                }}
+                                className="pending-report-photo-badge"
+                                style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}
                                 onClick={(e) => handleOpenPhotos(report, e)}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#0891b2';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '';
-                                  e.currentTarget.style.transform = 'scale(1)';
-                                }}
                               >
                                 <i className="bi bi-image me-1"></i>
                                 {countPhotos(report)} photo{countPhotos(report) !== 1 ? 's' : ''}
@@ -428,60 +395,41 @@ export default function PublicRelationsOfficer({ user }) {
                               </Badge>
                             </div>
                           )}
-                          {/* Click hint - Only show when not selected */}
-                          {highlightedLocation?.reportId !== report.id && (
-                            <div className="mb-2">
-                              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
-                                <i className="bi bi-hand-index me-1"></i>
-                                Click to show on map
-                              </small>
-                            </div>
-                          )}
-                          {/* Deselect hint - Only show when selected */}
-                          {highlightedLocation?.reportId === report.id && (
-                            <div className="mb-2">
-                              <small className="text-primary" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
-                                <i className="bi bi-check-circle me-1"></i>
-                                Selected - Click again to deselect
-                              </small>
-                            </div>
-                          )}
+                          {/* Click hint */}
+                          <div className={`pending-report-hint ${highlightedLocation?.reportId === report.id ? 'selected' : ''}`}>
+                            <i className={`bi ${highlightedLocation?.reportId === report.id ? 'bi-check-circle' : 'bi-hand-index'}`}></i>
+                            <span>
+                              {highlightedLocation?.reportId === report.id 
+                                ? 'Selected - Click again to deselect' 
+                                : 'Click to show on map'}
+                            </span>
+                          </div>
                             {/* Action Buttons */}
-                          <div className="d-flex gap-2">
+                          <div className="pending-report-actions">
                             <Button 
-                              variant="success" 
-                              size="sm" 
-                              className="flex-grow-1"
+                              className="pending-report-btn-accept flex-grow-1"
+                              size="sm"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent card click
+                                e.stopPropagation();
                                 handleReviewClick(report, 'accepted');
                               }}
-                              style={{ 
-                                borderRadius: '0.5rem',
-                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                                fontWeight: '500'
-                              }}
+                              style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}
                             >
                               <i className="bi bi-check-circle me-1"></i>
                               Accept
                             </Button>
                             <Button 
-                              variant="danger" 
-                              size="sm" 
-                              className="flex-grow-1"
+                              className="pending-report-btn-reject flex-grow-1"
+                              size="sm"
                               onClick={(e) => {
-                                e.stopPropagation(); // Prevent card click
+                                e.stopPropagation();
                                 handleReviewClick(report, 'rejected');
                               }}
-                              style={{ 
-                                borderRadius: '0.5rem',
-                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                                fontWeight: '500'
-                              }}
+                              style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}
                             >
                               <i className="bi bi-x-circle me-1"></i>
                               Reject
-                               </Button>
+                            </Button>
                           </div>
                         </Card.Body>
                       </Card>
@@ -587,14 +535,14 @@ export default function PublicRelationsOfficer({ user }) {
       </Modal>
 
       {/* Review Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} centered size="lg">
-        <Modal.Header closeButton style={{ backgroundColor: reviewAction === 'accepted' ? '#d4edda' : '#f8d7da' }}>
-          <Modal.Title style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
+      <Modal show={showModal} onHide={handleCloseModal} centered size="lg" className="review-report-modal">
+        <Modal.Header closeButton className={`review-modal-header ${reviewAction === 'accepted' ? 'accept-header' : 'reject-header'}`}>
+          <Modal.Title className="review-modal-title">
             <i className={`bi ${reviewAction === 'accepted' ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
             {reviewAction === 'accepted' ? 'Accept Report' : 'Reject Report'}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4">
+        <Modal.Body className="review-modal-body p-4">
           {reviewError && (
             <Alert variant="danger" dismissible onClose={() => setReviewError('')}>
               <i className="bi bi-exclamation-triangle me-2"></i>
@@ -610,16 +558,16 @@ export default function PublicRelationsOfficer({ user }) {
           {selectedReport && (
             <>
               {/* Report Details */}
-              <Card className="mb-3" style={{ border: '0.0625rem solid #dee2e6', borderRadius: '0.5rem' }}>
+              <Card className="review-report-card mb-3">
                 <Card.Body className="p-3">
-                  <h6 className="fw-bold mb-2" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
+                  <h6 className="review-report-title fw-bold mb-2">
                     {selectedReport.title}
                   </h6>
-                  <p className="text-muted mb-2" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                  <p className="review-report-description text-muted mb-2">
                     {selectedReport.description || 'No description provided'}
                   </p>
-                  <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
-                    <Badge bg="secondary" className="me-2">{selectedReport.category}</Badge>
+                  <div className="review-report-meta">
+                    <Badge bg="secondary" className="review-category-badge me-2">{selectedReport.category}</Badge>
                     <small className="text-muted">
                       <i className="bi bi-person me-1"></i>
                       {selectedReport.user?.username || 'Anonymous'}
@@ -629,15 +577,15 @@ export default function PublicRelationsOfficer({ user }) {
               </Card>
               {/* Accept: Technical Office Selection */}
               {reviewAction === 'accepted' && (
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                <Form.Group className="review-form-group mb-3">
+                  <Form.Label className="review-form-label fw-semibold">
                     <i className="bi bi-building me-2"></i>
                     Assign to Technical Office *
                   </Form.Label>
                   <Form.Select
                     value={technicalOffice}
                     onChange={(e) => setTechnicalOffice(e.target.value)}
-                    style={{ borderRadius: '0.5rem', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+                    className="review-form-select"
                   >
                     <option value="">Select a technical office...</option>
                     {technicalOffices.map((office) => (
@@ -646,7 +594,7 @@ export default function PublicRelationsOfficer({ user }) {
                       </option>
                     ))}
                   </Form.Select>
-                  <Form.Text className="text-muted" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
+                  <Form.Text className="review-form-help text-muted">
                     Select the appropriate technical office to handle this report
                   </Form.Text>
                 </Form.Group>
@@ -674,12 +622,12 @@ export default function PublicRelationsOfficer({ user }) {
             </>
           )}
            </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="review-modal-footer">
           <Button 
             variant="secondary" 
             onClick={handleCloseModal}
             disabled={submitting}
-            style={{ borderRadius: '0.5rem', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+            className="review-modal-btn-cancel"
           >
             Cancel
           </Button>
@@ -687,7 +635,7 @@ export default function PublicRelationsOfficer({ user }) {
             variant={reviewAction === 'accepted' ? 'success' : 'danger'}
             onClick={handleSubmitReview}
             disabled={submitting}
-            style={{ borderRadius: '0.5rem', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', fontWeight: '500' }}
+            className={`review-modal-btn-confirm ${reviewAction === 'accepted' ? 'accept-btn' : 'reject-btn'}`}
           >
             {submitting ? (
               <>
