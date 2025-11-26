@@ -76,6 +76,8 @@ export default function CitizenPage({ user }) {
     setSubmitError('');
     setSubmitOk('');
 
+    console.log('isAnonymous before submit:', isAnonymous); // Debug
+
     if (!selectedLocation) {
       setSubmitError('Please select a point on the map within the city boundaries.');
       return;
@@ -94,10 +96,14 @@ export default function CitizenPage({ user }) {
     }
     try {
       setSubmitting(true);
+      console.log('Creating report with isAnonymous:', isAnonymous); // Debug
+      
       // Use createAnonymousReport if isAnonymous is true, otherwise createReport
       const apiMethod = isAnonymous 
         ? (await import('../API/API.js')).default.createAnonymousReport
         : (await import('../API/API.js')).default.createReport;
+
+      console.log('API method selected:', isAnonymous ? 'createAnonymousReport' : 'createReport'); // Debug
 
       const files = photos.map(p => p.file);
 
@@ -114,14 +120,25 @@ export default function CitizenPage({ user }) {
       photos.forEach(p => URL.revokeObjectURL(p.preview));
 
       setSubmitOk(isAnonymous ? 'Anonymous report created successfully!' : 'Report created successfully!');
+      
+      console.log('Resetting form, isAnonymous before reset:', isAnonymous); // Debug
+      
       setTitle('');
       setCategory('');
       setDescription('');
       setPhotos([]);
       setSelectedLocation(null);
-      setIsAnonymous(false);
+      setIsAnonymous(false); // Reset to false after submit
+      
+      console.log('isAnonymous after reset:', false); // Debug
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setSubmitOk('');
+      }, 3000);
     } catch (err) {
       setSubmitError(err.message || 'An error occurred while creating the report.');
+      console.error('Error creating report:', err); // Debug
     } finally {
       setSubmitting(false);
     }
