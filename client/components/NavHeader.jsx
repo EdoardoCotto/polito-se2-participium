@@ -147,18 +147,20 @@ function NavHeader(props) {
       // Prepare profile data
       const profileData = {
         telegram_nickname: telegram_nickname || '',
-        mail_notifications: mail_notifications ? 1 : 0, // Convert boolean to 0/1 for database
+        mail_notifications: mail_notifications ? 1 : 0,
       };
 
-      console.log('Profile data being sent:', profileData);
-
-      // Add photo if selected (for new upload)
+      // Handle photo upload or removal
       if (personal_photo) {
+        // User selected a new photo to upload
         profileData.personal_photo = personal_photo;
-      }
-      // If photo was removed (preview is null but no new file)
-      else if (personal_photoPreview === null && !personal_photo) {
-        profileData.remove_photo = true;
+        profileData.photo_action = 'upload';
+      } else if (personal_photoPreview === null || personal_photoPreview === "http://localhost:3001/static/user.png") {
+        // User removed the photo (no preview or default avatar showing)
+        if (props.user?.personal_photo_path) {
+          // Only send remove action if user had a photo before
+          profileData.photo_action = 'remove';
+        }
       }
 
       // Call API to update user profile
