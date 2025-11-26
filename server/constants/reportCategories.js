@@ -1,5 +1,5 @@
 const REPORT_CATEGORIES = [
-  'Water Supply – Drinking Water',
+  'Water Supply - Drinking Water',
   'Architectural Barriers',
   'Sewer System',
   'Public Lighting',
