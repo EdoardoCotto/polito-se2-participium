@@ -293,16 +293,20 @@ exports.getCitizenReports = async (options = {}) => {
 };
 /**
  * Get reports assigned to a technical office staff member
- * @param {string} technicalOffice
+ * @param {number} officerId
  * @returns {Promise<Object[]>}
  */
-exports.getAssignedReports = async (technicalOffice) => {
+exports.getAssignedReports = async (officerId) => {
   try {
-    if (typeof technicalOffice !== 'string' || !technicalOffice.trim()) {
-      throw new BadRequestError('Technical office is required');
+    if (!officerId) {
+      throw new BadRequestError('Officer ID is required');
     }
 
-    const rows = await reportDao.getReportsByTechnicalOffice(technicalOffice);
+    if (!Number.isInteger(officerId)) {
+      throw new BadRequestError('Officer ID must be a valid integer');
+    }
+
+    const rows = await reportDao.getReportsByOfficerId(officerId);
     return rows.map(mapReportRow);
   } catch (err) {
     throw err;

@@ -239,11 +239,11 @@ exports.getCitizenReports = async (req, res) => {
  */
 exports.getAssignedReports = async (req, res) => {
   try {
-    if (!req.user || !req.user.type) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const reports = await reportRepository.getAssignedReports(req.user.type);
+    const reports = await reportRepository.getAssignedReports(req.user.id);
     const enriched = reports.map((report) => ({
       ...report,
       photoUrls: buildPhotoUrls(report.photos, req),
