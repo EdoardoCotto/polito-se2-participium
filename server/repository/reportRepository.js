@@ -296,13 +296,13 @@ exports.getCitizenReports = async (options = {}) => {
  * @param {string} technicalOffice
  * @returns {Promise<Object[]>}
  */
-exports.getAssignedReports = async (technicalOffice) => {
+exports.getAssignedReports = async (officerId) => {
   try {
-    if (typeof technicalOffice !== 'string' || !technicalOffice.trim()) {
-      throw new BadRequestError('Technical office is required');
+    if (!officerId.trim()) {
+      throw new BadRequestError('OfficerId office is required');
     }
 
-    const rows = await reportDao.getReportsByTechnicalOffice(technicalOffice);
+    const rows = await reportDao.getReportsByOfficerId(technicalOffice);
     return rows.map(mapReportRow);
   } catch (err) {
     throw err;
