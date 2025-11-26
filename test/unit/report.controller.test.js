@@ -531,8 +531,8 @@ describe('reportController.getAssignedReports', () => {
     expect(res.status).toHaveBeenCalledWith(401);
   });
 
-  it('401 se manca user.type', async () => {
-    const req = { user: { id: 1 } };
+  it('401 se manca user.id', async () => {
+    const req = { user: { type: 'urban_planner' } };
     const res = mkRes();
     await controller.getAssignedReports(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
@@ -543,7 +543,7 @@ describe('reportController.getAssignedReports', () => {
     const res = mkRes();
     repo.getAssignedReports.mockResolvedValue([{ id: 5, photos: ['/static/uploads/a.png'] }]);
     await controller.getAssignedReports(req, res);
-    expect(repo.getAssignedReports).toHaveBeenCalledWith('urban_planner');
+    expect(repo.getAssignedReports).toHaveBeenCalledWith(2);
     const payload = res.json.mock.calls[0][0];
     expect(payload[0].photoUrls[0]).toMatch(/http:\/\/h\/static\/uploads\/a.png/);
   });

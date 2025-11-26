@@ -499,12 +499,12 @@ describe("reportRepository.getReportsByStatus and helpers", () => {
 // getAssignedReports
 // ----------------------------------------------------
 describe("reportRepository.getAssignedReports", () => {
-  test("invalid technicalOffice throws", async () => {
-    await expect(reportRepository.getAssignedReports(" ")).rejects.toThrow(/Technical office is required/i);
+  test("invalid officerId throws", async () => {
+    await expect(reportRepository.getAssignedReports(undefined)).rejects.toThrow(/Officer ID is required/i);
   });
 
-  test("non-string technicalOffice throws (left side of OR)", async () => {
-    await expect(reportRepository.getAssignedReports(123)).rejects.toThrow(/Technical office is required/i);
+  test("non-integer officerId throws", async () => {
+    await expect(reportRepository.getAssignedReports("123")).rejects.toThrow(/Officer ID must be a valid integer/i);
   });
 
   test("success maps", async () => {
@@ -529,15 +529,15 @@ describe("reportRepository.getAssignedReports", () => {
       userSurname: "s3",
       userEmail: "u3@test.com",
     };
-    reportDao.getReportsByTechnicalOffice = jest.fn().mockResolvedValue([row]);
-    const res = await reportRepository.getAssignedReports(TECHNICAL_OFFICER_ROLES[0]);
-    expect(reportDao.getReportsByTechnicalOffice).toHaveBeenCalledWith(TECHNICAL_OFFICER_ROLES[0]);
+    reportDao.getReportsByOfficerId = jest.fn().mockResolvedValue([row]);
+    const res = await reportRepository.getAssignedReports(42);
+    expect(reportDao.getReportsByOfficerId).toHaveBeenCalledWith(42);
     expect(res[0].technical_office).toBe(TECHNICAL_OFFICER_ROLES[0]);
   });
 
   test("dao error propagates", async () => {
-    reportDao.getReportsByTechnicalOffice = jest.fn().mockRejectedValue(new Error("Tech office fail"));
-    await expect(reportRepository.getAssignedReports(TECHNICAL_OFFICER_ROLES[0])).rejects.toThrow(/Tech office fail/);
+    reportDao.getReportsByOfficerId = jest.fn().mockRejectedValue(new Error("Officer fail"));
+    await expect(reportRepository.getAssignedReports(42)).rejects.toThrow(/Officer fail/);
   });
 });
 

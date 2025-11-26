@@ -195,31 +195,31 @@ describe("reportDao", () => {
     expect(result).toEqual([]);
   });
 
-  test("getReportsByTechnicalOffice() should return rows", async () => {
+  test("getReportsByOfficerId() should return rows", async () => {
     const dao = loadDao();
     const sqlite = require("sqlite3");
     const db = sqlite.Database.__mockDb;
     const rows = [{ reportId: 1 }];
     db.all.mockImplementation((sql, params, cb) => cb(null, rows));
-    const result = await dao.getReportsByTechnicalOffice("Tech A");
+    const result = await dao.getReportsByOfficerId(123);
     expect(result).toEqual(rows);
   });
 
-  test("getReportsByTechnicalOffice() should return [] when undefined", async () => {
+  test("getReportsByOfficerId() should return [] when undefined", async () => {
     const dao = loadDao();
     const sqlite = require("sqlite3");
     const db = sqlite.Database.__mockDb;
     db.all.mockImplementation((sql, params, cb) => cb(null, undefined));
-    const result = await dao.getReportsByTechnicalOffice("Tech A");
+    const result = await dao.getReportsByOfficerId(123);
     expect(result).toEqual([]);
   });
 
-  test("getReportsByTechnicalOffice() should reject on error", async () => {
+  test("getReportsByOfficerId() should reject on error", async () => {
     const dao = loadDao();
     const sqlite = require("sqlite3");
     const db = sqlite.Database.__mockDb;
-    db.all.mockImplementation((sql, params, cb) => cb(new Error("Tech fail")));
-    await expect(dao.getReportsByTechnicalOffice("Tech A")).rejects.toThrow("Tech fail");
+    db.all.mockImplementation((sql, params, cb) => cb(new Error("Officer fail")));
+    await expect(dao.getReportsByOfficerId(123)).rejects.toThrow("Officer fail");
   });
 
   // getCitizenReports coverage (success, undefined rows, error, boundingBox)
