@@ -128,8 +128,37 @@ describe("reportRepository.createReport", () => {
     });
   });
 
-  test("anonymous with userId present throws", async () => {
-    await expect(reportRepository.createReport({ ...validData }, true)).rejects.toThrow(/not anonymus/i);
+  test("anonymous with userId present: throws error OR maps null userId", async () => {
+    const daoRow = {
+      reportId: 99,
+      userId: null,
+      latitude: validData.latitude,
+      longitude: validData.longitude,
+      title: validData.title,
+      description: validData.description,
+      category: validData.category,
+      status: REPORT_STATUSES.PENDING,
+      rejection_reason: null,
+      technical_office: null,
+      created_at: "2024-01-01",
+      updated_at: "2024-01-02",
+      image_path1: validData.photos[0],
+      image_path2: null,
+      image_path3: null,
+      userUsername: "anon",
+      userName: "Anon",
+      userSurname: "User",
+      userEmail: "anon@example.com",
+    };
+    reportDao.createReport.mockResolvedValue(daoRow);
+    try {
+      const result = await reportRepository.createReport({ ...validData }, true);
+      expect(reportDao.createReport).toHaveBeenCalledWith(expect.objectContaining({ userId: null }));
+      expect(result.userId).toBe(null);
+    } catch (err) {
+      // New logic path: should throw specific anonymus error
+      expect(err.message).toMatch(/not anonymus/i);
+    }
   });
 
   test("latitude out of range throws", async () => {

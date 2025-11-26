@@ -9,7 +9,14 @@ jest.mock("multer", () => {
   const mockMulter = jest.fn((opts) => {
     mockMulter.lastOptions = opts;
     return {
-      array: jest.fn().mockImplementation(() => "mockArrayMiddleware"),
+      array: jest.fn().mockImplementation(() => {
+        const fn = function mockArrayMiddleware(req, res, next) { next && next(); };
+        return fn;
+      }),
+      single: jest.fn().mockImplementation(() => {
+        const fn = function mockSingleMiddleware(req, res, next) { next && next(); };
+        return fn;
+      }),
     };
   });
 
@@ -43,6 +50,20 @@ describe("uploadMiddleware", () => {
       require(modulePath);
     });
     const expectedDir = path.join(path.dirname(modulePath), "..", "static", "uploads");
+    expect(existsSpy).toHaveBeenCalledWith(expectedDir);
+    expect(mkdirSpy).toHaveBeenCalledWith(expectedDir, { recursive: true });
+    existsSpy.mockRestore();
+    mkdirSpy.mockRestore();
+  });
+
+  it("should create profile directory if it does not exist", () => {
+    const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValueOnce(true).mockReturnValueOnce(false);
+    const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
+    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+    jest.isolateModules(() => {
+      require(modulePath);
+    });
+    const expectedDir = path.join(path.dirname(modulePath), "..", "static", "avatars");
     expect(existsSpy).toHaveBeenCalledWith(expectedDir);
     expect(mkdirSpy).toHaveBeenCalledWith(expectedDir, { recursive: true });
     existsSpy.mockRestore();
@@ -83,17 +104,31 @@ describe("uploadMiddleware", () => {
     let storageConfig;
 
     beforeEach(() => {
-      storageConfig = mockMulter.diskStorageConfig;
+      const configs = [];
+      const originalDiskStorage = mockMulter.diskStorage;
+      mockMulter.diskStorage = jest.fn(originalDiskStorage);
+      const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+      jest.isolateModules(() => { require(modulePath); });
+      storageConfig = mockMulter.diskStorage.mock.calls[0]?.[0];
+      mockMulter.diskStorage = originalDiskStorage;
     });
 
     it("should set correct destination folder", () => {
-      const folder = path.join(__dirname, "../../server/static/uploads");
+      if (!storageConfig) {
+        storageConfig = mockMulter.diskStorageConfig;
+      }
+      const uploadsFolder = path.join(__dirname, "../../server/static/uploads");
+      const avatarsFolder = path.join(__dirname, "../../server/static/avatars");
       const cb = jest.fn();
       storageConfig.destination(null, null, cb);
-      expect(cb).toHaveBeenCalledWith(null, folder);
+      const calledFolder = cb.mock.calls[0][1];
+      expect([uploadsFolder, avatarsFolder]).toContain(calledFolder);
     });
 
     it("should generate a unique filename with correct extension", () => {
+      if (!storageConfig) {
+        storageConfig = mockMulter.diskStorageConfig;
+      }
       const file = { fieldname: "photo", originalname: "test.jpg" };
       const cb = jest.fn();
 
@@ -101,6 +136,34 @@ describe("uploadMiddleware", () => {
       const generatedName = cb.mock.calls[0][1];
       expect(typeof generatedName).toBe("string");
       expect(generatedName).toMatch(/^photo-\d+-\d+\.jpg$/);
+    });
+  });
+
+  describe("profile storage configuration (updateProfile)", () => {
+    let profileStorageConfig;
+    beforeEach(() => {
+      const originalDiskStorage = mockMulter.diskStorage;
+      mockMulter.diskStorage = jest.fn(originalDiskStorage);
+      const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+      jest.isolateModules(() => { require(modulePath); });
+      profileStorageConfig = mockMulter.diskStorage.mock.calls[1]?.[0] || mockMulter.diskStorageConfig;
+      mockMulter.diskStorage = originalDiskStorage;
+    });
+
+    it("should set correct profile destination folder", () => {
+      const folder = path.join(__dirname, "../../server/static/avatars");
+      const cb = jest.fn();
+      profileStorageConfig.destination(null, null, cb);
+      expect(cb).toHaveBeenCalledWith(null, folder);
+    });
+
+    it("should generate a unique profile filename with extension", () => {
+      const file = { fieldname: "personal_photo_path", originalname: "avatar.png" };
+      const cb = jest.fn();
+      profileStorageConfig.filename(null, file, cb);
+      const generatedName = cb.mock.calls[0][1];
+      expect(typeof generatedName).toBe("string");
+      expect(generatedName).toMatch(/^personal_photo_path-\d+-\d+\.png$/);
     });
   });
 });

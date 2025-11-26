@@ -42,12 +42,15 @@ describe('reportController.createReport', () => {
 
     await controller.createReport(req, res);
 
-    expect(repo.createReport).toHaveBeenCalledWith(expect.objectContaining({
+    const call = repo.createReport.mock.calls[0];
+    expect(call).toBeDefined();
+    expect(call[1]).toBeUndefined();
+    expect(call[0]).toMatchObject({
       userId: 1,
       latitude: 45,
       longitude: 7,
       photos: ['/static/uploads/x.jpg', '/static/uploads/y.png'],
-    }));
+    });
 
     expect(res.status).toHaveBeenCalledWith(201);
   });
@@ -123,12 +126,14 @@ describe('reportController.createReport', () => {
 
     await controller.createReport(req, res);
 
-    expect(repo.createReport).toHaveBeenCalledWith(expect.objectContaining({
+    const call = repo.createReport.mock.calls[0];
+    expect(call[1]).toBeUndefined();
+    expect(call[0]).toMatchObject({
       userId: 2,
       latitude: 45.1,
       longitude: 7.2,
       photos: ['http://a/img1.jpg', 'http://a/img2.png'],
-    }));
+    });
 
     expect(res.status).toHaveBeenCalledWith(201);
   });
@@ -151,12 +156,14 @@ describe('reportController.createReport', () => {
 
     await controller.createReport(req, res);
 
-    expect(repo.createReport).toHaveBeenCalledWith(expect.objectContaining({
+    const call = repo.createReport.mock.calls[0];
+    expect(call[1]).toBeUndefined();
+    expect(call[0]).toMatchObject({
       userId: 3,
       latitude: 46,
       longitude: 8,
       photos: ['http://host/pic.jpg'],
-    }));
+    });
 
     expect(res.status).toHaveBeenCalledWith(201);
   });
