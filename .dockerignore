@@ -1,0 +1,18 @@
+# Ignora node_modules ovunque (root, client, server)
+node_modules
+**/node_modules
+server/node_modules
+client/node_modules
+
+# Altri file
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+*.db
+*.db-journal
+.DS_Store
+dist
+build
+docker-compose.yml
