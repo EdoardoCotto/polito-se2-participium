@@ -63,7 +63,7 @@ exports.getUser = (username, password) => {
  */
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, email, name, surname, type FROM Users WHERE id = ?';
+    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
     db.get(sql, [id], (err, row) => {
       if (err) {
         reject(err);
