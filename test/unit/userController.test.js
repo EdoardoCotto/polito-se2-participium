@@ -240,7 +240,7 @@ describe('userController', () => {
         user: { id: 10 },
         params: { id: '10' },
         file: { filename: 'pic.png' },
-        body: { mail_notifications: 'true', telegram_nickname: ' nick ' },
+        body: { mail_notifications: 'true', telegram_nickname: ' nick ', photo_action: 'upload' },
       };
       const updated = { id: 10, personal_photo_path: '/static/avatars/pic.png', mail_notifications: 1, telegram_nickname: ' nick ' };
       userRepository.updateUserProfile.mockResolvedValueOnce(updated);
@@ -258,7 +258,7 @@ describe('userController', () => {
       const okReq = {
         user: { id: 10 },
         params: { id: '10' },
-        body: { mail_notifications: 'false', telegram_nickname: '   ' },
+        body: { mail_notifications: 'false', telegram_nickname: '   ', photo_action: 'remove' },
       };
       const updated = { id: 10, personal_photo_path: null, mail_notifications: 0, telegram_nickname: null };
       userRepository.updateUserProfile.mockResolvedValueOnce(updated);
@@ -281,10 +281,9 @@ describe('userController', () => {
       const updated = { id: 5 };
       userRepository.updateUserProfile.mockResolvedValueOnce(updated);
       await userController.updateUserProfile(okReq, res);
+      // Controller sets only provided fields: expect only mail_notifications here
       expect(userRepository.updateUserProfile).toHaveBeenCalledWith(5, {
-        personal_photo_path: null,
         mail_notifications: 1,
-        telegram_nickname: null,
       });
       expect(res.status).toHaveBeenCalledWith(200);
     });
