@@ -218,22 +218,84 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
               }
             }}
           >
-          <Popup>
-              <div style={{ minWidth: '150px' }}>
-                <h6 style={{ marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1rem' }}>
+          <Popup className="report-map-popup">
+              <div style={{ minWidth: '220px', maxWidth: '300px' }}>
+                <h6 style={{ marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1rem', color: '#212529' }}>
                   {report.title}
                 </h6>
+                {report.category && (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#6c757d',
+                    marginBottom: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <i className="bi bi-tag me-1 text-primary"></i>
+                    {report.category}
+                  </div>
+                )}
+                {report.status && (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#6c757d',
+                    marginBottom: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <i className="bi bi-info-circle me-1 text-info"></i>
+                    Status: <strong style={{ marginLeft: '0.25rem' }}>{report.status}</strong>
+                  </div>
+                )}
                 {report.user && (
                   <div style={{ 
                     fontSize: '0.85rem', 
                     color: '#6c757d',
                     display: 'flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    marginBottom: '0.5rem',
+                    paddingBottom: '0.5rem',
+                    borderBottom: '1px solid #dee2e6'
                   }}>
-                    <i className="bi bi-person-circle me-2"></i>
-                    <span>{report.user.username || report.user.name}</span>
+                    <i className="bi bi-person-circle me-2 text-primary"></i>
+                    <span>{report.user.username || report.user.name || 'Anonymous'}</span>
                   </div>
                 )}
+                {report.description && (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#495057',
+                    marginTop: '0.5rem',
+                    paddingTop: '0.5rem',
+                    borderTop: '1px solid #dee2e6',
+                    lineHeight: '1.4'
+                  }}>
+                    {report.description.length > 100 
+                      ? `${report.description.substring(0, 100)}...` 
+                      : report.description}
+                  </div>
+                )}
+                <div style={{ 
+                  marginTop: '0.5rem',
+                  paddingTop: '0.5rem',
+                  borderTop: '1px solid #dee2e6',
+                  fontSize: '0.75rem',
+                  color: '#6c757d',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span>
+                    <i className="bi bi-calendar me-1"></i>
+                    {new Date(report.created_at).toLocaleDateString()}
+                  </span>
+                  {report.photoUrls && report.photoUrls.length > 0 && (
+                    <span style={{ color: '#0d6efd' }}>
+                      <i className="bi bi-image me-1"></i>
+                      {report.photoUrls.length}
+                    </span>
+                  )}
+                </div>
               </div>
             </Popup>
           </Marker>

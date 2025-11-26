@@ -1,6 +1,6 @@
 // components/CitizenPage.jsx
-import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge } from 'react-bootstrap';
-import { useState, useEffect} from 'react';
+import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge, InputGroup, Carousel } from 'react-bootstrap';
+import { useState, useEffect, useMemo} from 'react';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
 
@@ -27,6 +27,17 @@ export default function CitizenPage({ user }) {
   const [loadingReports, setLoadingReports] = useState(false);
   const [reportsError, setReportsError] = useState('');
   const [highlightedReportId, setHighlightedReportId] = useState(null);
+  
+  // Filtering and search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  
+  // Report detail modal state
+  const [showReportDetailModal, setShowReportDetailModal] = useState(false);
+  const [selectedReportDetail, setSelectedReportDetail] = useState(null);
+  const [showReportPhotosModal, setShowReportPhotosModal] = useState(false);
+  const [selectedReportPhotos, setSelectedReportPhotos] = useState([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -141,24 +152,28 @@ export default function CitizenPage({ user }) {
     }
   };
 
-  // Handle report marker click in view mode - Just open popup, don't set location
+  // Handle report marker click in view mode - Show detail modal
   const handleReportMarkerClick = (report) => {
-    // In view mode, we don't need to set selected location
-    // The popup will be shown automatically by Leaflet
-    console.log('Report clicked:', report.title);
+    setSelectedReportDetail(report);
+    setShowReportDetailModal(true);
+    setHighlightedReportId(report.id);
+    if (report?.latitude && report?.longitude) {
+      setSelectedLocation({
+        lat: report.latitude,
+        lng: report.longitude,
+        reportId: report.id,
+        title: report.title
+      });
+    }
   };
 
-  // Handle report click in the list - toggle highlight
+  // Handle report click in the list - show detail modal
   const handleReportListClick = (reportId) => {
-    if (highlightedReportId === reportId) {
-      // If already highlighted, remove highlight
-      setHighlightedReportId(null);
-      setSelectedLocation(null);
-    } else {
-      // Otherwise highlight this report
+    const report = allReports.find(r => r.id === reportId);
+    if (report) {
+      setSelectedReportDetail(report);
+      setShowReportDetailModal(true);
       setHighlightedReportId(reportId);
-      // Find the report and set its location
-      const report = allReports.find(r => r.id === reportId);
       if (report?.latitude && report?.longitude) {
         setSelectedLocation({
           lat: report.latitude,
@@ -169,6 +184,48 @@ export default function CitizenPage({ user }) {
       }
     }
   };
+  
+  // Handle viewing report photos
+  const handleViewReportPhotos = (report, e) => {
+    e.stopPropagation();
+    if (report.photoUrls && report.photoUrls.length > 0) {
+      setSelectedReportPhotos(report.photoUrls);
+      setShowReportPhotosModal(true);
+    }
+  };
+  
+  // Filtered reports
+  const filteredReports = useMemo(() => {
+    let filtered = [...allReports];
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(report => 
+        report.title.toLowerCase().includes(query) ||
+        report.description?.toLowerCase().includes(query) ||
+        report.category.toLowerCase().includes(query)
+      );
+    }
+    
+    if (filterCategory) {
+      filtered = filtered.filter(report => report.category === filterCategory);
+    }
+    
+    if (filterStatus) {
+      filtered = filtered.filter(report => report.status === filterStatus);
+    }
+    
+    return filtered;
+  }, [allReports, searchQuery, filterCategory, filterStatus]);
+  
+  // Get unique categories and statuses
+  const availableCategories = useMemo(() => {
+    return [...new Set(allReports.map(r => r.category))].sort();
+  }, [allReports]);
+  
+  const availableStatuses = useMemo(() => {
+    return [...new Set(allReports.map(r => r.status))].sort();
+  }, [allReports]);
 
   // Get category icon
   const getCategoryIcon = (category) => {
@@ -225,7 +282,9 @@ export default function CitizenPage({ user }) {
                   </span>
                   {viewMode === 'view' && allReports.length > 0 && (
                     <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      {allReports.length} report{allReports.length !== 1 ? 's' : ''}
+                      {filteredReports.length !== allReports.length 
+                        ? `${filteredReports.length}/${allReports.length}` 
+                        : allReports.length} report{filteredReports.length !== 1 ? 's' : ''}
                     </span>
                   )}
                 </Card.Title>
@@ -236,7 +295,7 @@ export default function CitizenPage({ user }) {
                     onLocationSelected={viewMode === 'create' ? setSelectedLocation : undefined}
                     selectedLocation={selectedLocation}
                     readOnly={viewMode === 'view'}
-                    allReports={viewMode === 'view' ? allReports : []}
+                    allReports={viewMode === 'view' ? filteredReports : []}
                     onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
                     highlightedReportId={highlightedReportId}
                     shouldZoomToSelection={viewMode === 'view' && highlightedReportId !== null}
@@ -302,11 +361,11 @@ export default function CitizenPage({ user }) {
 
                 {/* Show loading state when fetching reports */}
                 {viewMode === 'view' && loadingReports && (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
+                  <div className="text-center py-5 report-loading-state">
+                    <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
                       <span className="visually-hidden">Loading reports...</span>
                     </div>
-                    <p className="mt-3 text-muted">Loading reports...</p>
+                    <p className="mt-3 text-muted fw-semibold">Loading reports...</p>
                   </div>
                 )}
 
@@ -321,23 +380,109 @@ export default function CitizenPage({ user }) {
                 {/* Show reports list when in view mode and reports loaded */}
                 {viewMode === 'view' && !loadingReports && !reportsError && allReports.length > 0 && (
                   <div>
-                    <h6 className="mb-3 text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      <i className="bi bi-list-ul me-2"></i>
-                      Click on a report to highlight it on the map
+                    {/* Search and Filters */}
+                    <div className="mb-3">
+                      <InputGroup className="mb-2 report-search-input-group">
+                        <InputGroup.Text>
+                          <i className="bi bi-search"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          type="text"
+                          placeholder="Search reports..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="report-search-input"
+                          style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', borderLeft: 'none' }}
+                        />
+                        {searchQuery && (
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() => setSearchQuery('')}
+                            style={{ borderLeft: 'none' }}
+                          >
+                            <i className="bi bi-x"></i>
+                          </Button>
+                        )}
+                      </InputGroup>
+                      
+                      <Row className="g-2 mb-2">
+                        <Col xs={6}>
+                          <Form.Select
+                            size="sm"
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="report-filter-select"
+                            style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}
+                          >
+                            <option value="">All Categories</option>
+                            {availableCategories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </Form.Select>
+                        </Col>
+                        <Col xs={6}>
+                          <Form.Select
+                            size="sm"
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="report-filter-select"
+                            style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}
+                          >
+                            <option value="">All Statuses</option>
+                            {availableStatuses.map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </Form.Select>
+                        </Col>
+                      </Row>
+                      
+                      {filteredReports.length !== allReports.length && (
+                        <Alert variant="info" className="py-2 mt-2 mb-0 report-filter-alert" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
+                          <i className="bi bi-funnel me-2"></i>
+                          Showing {filteredReports.length} of {allReports.length} reports
+                        </Alert>
+                      )}
+                    </div>
+                    
+                    <h6 className="mb-3 report-view-section-header">
+                      <i className="bi bi-list-ul"></i>
+                      Click on a report to view details
                     </h6>
-                    <ListGroup>
-                      {allReports.map((report) => (
+                    <ListGroup className="report-list-group">
+                      {filteredReports.length === 0 ? (
+                        <Alert variant="info" className="mt-3">
+                          <i className="bi bi-info-circle me-2"></i>
+                          No reports match your filters. Try adjusting your search or filters.
+                        </Alert>
+                      ) : (
+                        filteredReports.map((report) => (
                         <ListGroup.Item
                           key={report.id}
                           action
                           active={highlightedReportId === report.id}
                           onClick={() => handleReportListClick(report.id)}
-                          className="mb-2"
+                          className="mb-2 report-list-item"
                           style={{ 
-                            borderRadius: '8px',
+                            borderRadius: '12px',
                             cursor: 'pointer',
                             border: highlightedReportId === report.id ? '2px solid #5e7bb3' : '1px solid #dee2e6',
-                            backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white'
+                            backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white',
+                            transition: 'all 0.3s ease',
+                            boxShadow: highlightedReportId === report.id ? '0 4px 12px rgba(94, 123, 179, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (highlightedReportId !== report.id) {
+                              e.currentTarget.style.transform = 'translateX(4px)';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                              e.currentTarget.style.borderColor = '#5e7bb3';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (highlightedReportId !== report.id) {
+                              e.currentTarget.style.transform = 'translateX(0)';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                              e.currentTarget.style.borderColor = '#dee2e6';
+                            }
                           }}
                         >
                           <div className="d-flex justify-content-between align-items-start">
@@ -373,26 +518,42 @@ export default function CitizenPage({ user }) {
                                   }
                                 </p>
                               )}
-                              <small className="text-muted">
-                                <i className="bi bi-calendar me-1"></i>
-                                {new Date(report.created_at).toLocaleDateString()}
-                              </small>
+                              <div className="d-flex justify-content-between align-items-center">
+                                <small className="text-muted">
+                                  <i className="bi bi-calendar me-1"></i>
+                                  {new Date(report.created_at).toLocaleDateString()}
+                                </small>
+                                {report.photoUrls && report.photoUrls.length > 0 && (
+                                  <Badge 
+                                    bg="info" 
+                                    className="report-photo-badge"
+                                    style={{ cursor: 'pointer', fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}
+                                    onClick={(e) => handleViewReportPhotos(report, e)}
+                                  >
+                                    <i className="bi bi-image me-1"></i>
+                                    {report.photoUrls.length}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             {highlightedReportId === report.id && (
                               <i className="bi bi-check-circle-fill text-primary ms-2" style={{ fontSize: '1.2rem' }}></i>
                             )}
                           </div>
                         </ListGroup.Item>
-                      ))}
+                        ))
+                      )}
                     </ListGroup>
                   </div>
                 )}
 
                 {/* Show message when in view mode with no reports */}
                 {viewMode === 'view' && !loadingReports && !reportsError && allReports.length === 0 && (
-                  <div className="text-center py-5">
-                    <i className="bi bi-inbox" style={{ fontSize: '3rem', color: '#ccc' }}></i>
-                    <h5 className="mt-3 mb-2">No Reports Available</h5>
+                  <div className="text-center py-5 report-empty-state">
+                    <div className="report-empty-icon mb-3">
+                      <i className="bi bi-inbox"></i>
+                    </div>
+                    <h5 className="mt-3 mb-2 fw-bold">No Reports Available</h5>
                     <p className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       There are no approved reports to display at the moment.
                     </p>
@@ -635,6 +796,177 @@ export default function CitizenPage({ user }) {
             />
           )}
         </Modal.Body>
+      </Modal>
+
+      {/* Report Detail Modal */}
+      <Modal show={showReportDetailModal} onHide={() => {
+        setShowReportDetailModal(false);
+        setSelectedReportDetail(null);
+      }} size="lg" centered className="report-detail-modal">
+        <Modal.Header closeButton className="report-detail-header">
+          <Modal.Title>
+            <i className="bi bi-file-text me-2"></i>
+            Report Details
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="report-detail-body">
+          {selectedReportDetail && (
+            <>
+              <div className="mb-3">
+                <h5 className="fw-bold report-detail-title">{selectedReportDetail.title}</h5>
+                <div className="d-flex gap-2 flex-wrap mb-2">
+                  <Badge bg={getStatusColor(selectedReportDetail.status)} className="report-status-badge">
+                    {selectedReportDetail.status}
+                  </Badge>
+                  <Badge bg="secondary" className="report-category-badge">
+                    <i className={`bi ${getCategoryIcon(selectedReportDetail.category)} me-1`}></i>
+                    {selectedReportDetail.category}
+                  </Badge>
+                </div>
+              </div>
+              
+              {selectedReportDetail.description && (
+                <div className="mb-3">
+                  <h6 className="fw-semibold report-detail-section-title">
+                    <i className="bi bi-text-left me-2"></i>Description
+                  </h6>
+                  <p className="text-muted report-detail-description">{selectedReportDetail.description}</p>
+                </div>
+              )}
+              
+              <Row className="mb-3">
+                <Col md={6}>
+                  <div className="report-detail-info-item">
+                    <small className="text-muted d-block">Submitted by:</small>
+                    <div>
+                      <i className="bi bi-person-circle me-1 text-primary"></i>
+                      {selectedReportDetail.user?.username || selectedReportDetail.user?.name || 'Anonymous'}
+                    </div>
+                  </div>
+                </Col>
+                <Col md={6}>
+                  <div className="report-detail-info-item">
+                    <small className="text-muted d-block">Date:</small>
+                    <div>
+                      <i className="bi bi-calendar me-1 text-primary"></i>
+                      {new Date(selectedReportDetail.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+              
+              {selectedReportDetail.latitude && selectedReportDetail.longitude && (
+                <div className="mb-3 report-detail-info-item">
+                  <small className="text-muted d-block">Location:</small>
+                  <div>
+                    <i className="bi bi-geo-alt me-1 text-primary"></i>
+                    {selectedReportDetail.latitude.toFixed(5)}, {selectedReportDetail.longitude.toFixed(5)}
+                  </div>
+                </div>
+              )}
+              
+              {selectedReportDetail.photoUrls && selectedReportDetail.photoUrls.length > 0 && (
+                <div>
+                  <h6 className="fw-semibold mb-2 report-detail-section-title">
+                    <i className="bi bi-images me-2"></i>Photos ({selectedReportDetail.photoUrls.length})
+                  </h6>
+                  <Carousel interval={null} className="report-photo-carousel">
+                    {selectedReportDetail.photoUrls.map((photoUrl, index) => (
+                      <Carousel.Item key={index}>
+                        <div className="report-photo-container">
+                          <img
+                            src={photoUrl}
+                            alt={`Report photo ${index + 1}`}
+                            className="report-photo-image"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                            }}
+                          />
+                        </div>
+                        <Carousel.Caption className="report-photo-caption">
+                          <p>Photo {index + 1} of {selectedReportDetail.photoUrls.length}</p>
+                        </Carousel.Caption>
+                      </Carousel.Item>
+                    ))}
+                  </Carousel>
+                </div>
+              )}
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="report-detail-footer">
+          <Button variant="secondary" onClick={() => {
+            setShowReportDetailModal(false);
+            setSelectedReportDetail(null);
+          }}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Report Photos Modal */}
+      <Modal show={showReportPhotosModal} onHide={() => {
+        setShowReportPhotosModal(false);
+        setSelectedReportPhotos([]);
+      }} size="lg" centered className="report-photos-modal">
+        <Modal.Header closeButton className="report-photos-header">
+          <Modal.Title>
+            <i className="bi bi-images me-2"></i>
+            Report Photos
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {selectedReportPhotos.length > 0 ? (
+            selectedReportPhotos.length === 1 ? (
+              <div className="report-photo-single-container">
+                <img 
+                  src={selectedReportPhotos[0]} 
+                  alt="Report photo"
+                  className="report-photo-single-image"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                  }}
+                />
+              </div>
+            ) : (
+              <Carousel interval={null} className="report-photos-carousel">
+                {selectedReportPhotos.map((photo, index) => (
+                  <Carousel.Item key={index}>
+                    <div className="report-photo-container">
+                      <img
+                        src={photo}
+                        alt={`Report photo ${index + 1}`}
+                        className="report-photo-image"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    </div>
+                    <Carousel.Caption className="report-photo-caption">
+                      <p>Photo {index + 1} of {selectedReportPhotos.length}</p>
+                    </Carousel.Caption>
+                  </Carousel.Item>
+                ))}
+              </Carousel>
+            )
+          ) : (
+            <div className="text-center py-5">
+              <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
+              <p className="mt-3 text-muted">No photos available</p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="report-photos-footer">
+          <Button variant="secondary" onClick={() => {
+            setShowReportPhotosModal(false);
+            setSelectedReportPhotos([]);
+          }}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );
