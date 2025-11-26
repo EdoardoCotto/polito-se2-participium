@@ -292,7 +292,7 @@ router.get('/reports/citizen', isLoggedIn, reportController.getCitizenReports);
  *   get:
  *     summary: Get reports assigned to the logged-in technical office staff member
  *     description: >
- *       Returns all reports assigned to the technical office of the authenticated user.
+ *       Returns all reports assigned the authenticated user.
  *       Only technical office staff members can access this endpoint.
  *     tags: [Reports]
  *     responses:

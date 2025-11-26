@@ -223,11 +223,11 @@ exports.getCitizenReports = (options = {}) => {
   });
 };
 /**
- * Get reports assigned to a specific technical office
- * @param {string} technicalOffice
+ * Get reports assigned to a specific officer
+ * @param {number} officerId
  * @returns {Promise<Object[]>}
  */
-exports.getReportsByTechnicalOffice = (technicalOffice) => {
+exports.getReportsByOfficerId = (officerId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
@@ -253,11 +253,11 @@ exports.getReportsByTechnicalOffice = (technicalOffice) => {
         U.email       AS userEmail
       FROM Reports R
       LEFT JOIN Users U ON R.userId = U.id
-      WHERE R.technical_office = ?
+      WHERE R.officerId = ?
         AND R.status != 'rejected'
       ORDER BY R.created_at DESC
     `;
-    db.all(sql, [technicalOffice], (err, rows) => {
+    db.all(sql, [officerId], (err, rows) => {
       if (err) {
         return reject(err);
       }
