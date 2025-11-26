@@ -186,18 +186,57 @@ exports.findMunicipalityUsers = () => {
 
 exports.updateUserProfile = (userId, updateData) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE Users SET telegram_nickname = ?, personal_photo_path = ?, mail_notifications = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    db.run(sql, [updateData.telegram_nickname, updateData.personal_photo_path, updateData.mail_notifications, userId], function (err) {
+    // Costruisci dinamicamente la query in base ai campi non nulli
+    const fields = [];
+    const values = [];
+
+    if (updateData.telegram_nickname !== null && updateData.telegram_nickname !== undefined) {
+      fields.push('telegram_nickname = ?');
+      values.push(updateData.telegram_nickname);
+    }
+
+    if (updateData.personal_photo_path !== null && updateData.personal_photo_path !== undefined) {
+      fields.push('personal_photo_path = ?');
+      values.push(updateData.personal_photo_path);
+    }
+
+    if (updateData.mail_notifications !== null && updateData.mail_notifications !== undefined) {
+      fields.push('mail_notifications = ?');
+      values.push(updateData.mail_notifications);
+    }
+
+    // Se non ci sono campi da aggiornare, ritorna senza fare nulla
+    if (fields.length === 0) {
+      resolve({ id: userId });
+      return;
+    }
+
+    // Aggiungi sempre updated_at
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+
+    // Costruisci la query SQL
+    const sql = `UPDATE Users SET ${fields.join(', ')} WHERE id = ?`;
+    values.push(userId);
+
+    db.run(sql, values, function (err) {
       if (err) {
         reject(err);
         return;
       }
-      resolve({ 
-        id: userId, 
-        telegram_nickname: updateData.telegram_nickname, 
-        personal_photo_path: updateData.personal_photo_path, 
-        mail_notifications: updateData.mail_notifications 
-      });
+      
+      // Restituisci solo i campi effettivamente aggiornati
+      const result = { id: userId };
+      if (updateData.telegram_nickname !== null && updateData.telegram_nickname !== undefined) {
+        result.telegram_nickname = updateData.telegram_nickname;
+      }
+      if (updateData.personal_photo_path !== null && updateData.personal_photo_path !== undefined) {
+        result.personal_photo_path = updateData.personal_photo_path;
+      }
+      if (updateData.mail_notifications !== null && updateData.mail_notifications !== undefined) {
+        result.mail_notifications = updateData.mail_notifications;
+      }
+      
+      resolve(result);
     });
   });
 }
