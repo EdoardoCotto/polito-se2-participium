@@ -5,15 +5,15 @@ RETROSPECTIVE 2 (Team 3)
 ### Macro statistics
 
 - Number of stories committed 5 vs. done 5
-- Total points committed  vs. done 
-- Nr of hours planned  vs. spent  (as a team)
+- Total points committed 51 vs. done 51 
+- Nr of hours planned 98h vs. spent 96h 50m
 
 **Remember**a story is done ONLY if it fits the Definition of Done:
  
-- Unit Tests passing
-- Code review completed
+- Unit Tests passing 274
+- Code review completed 5
 - Code present on VCS
-- End-to-End tests performed
+- End-to-End tests performed 17
 
 > Please refine your DoD if required (you cannot remove items!) 
 
@@ -21,12 +21,12 @@ RETROSPECTIVE 2 (Team 3)
 
 | Story  | # Tasks | Points | Hours est. | Hours actual |
 |--------|---------|--------|------------|--------------|
-| _Uncategorized_  |       |      |           |             |
-|     |       |        |          |         |  
-|      |         |        |              |       |
-|      |         |       |           |         |
-|      |        |       |              |           |
-|      |         |        |            |          |
+| _Uncategorized_  |    9   |      |    30h       |  33h           |
+|   6  |    7   |    5    |    11h 30m      |   12h 30m      |  
+|   7   |   9      |   8     |   15h 30m           |   15h 20m    |
+|   8   |   10      |   5    |    14h 30m       |   12h 30m      |
+|   9   |    8    |      3 |     12h         |     11h 45m      |
+|   10  |    8     |     5   |     14h 30m       |   11h 45m       |
 
 > story `Uncategorized` is for technical tasks, leave out story points (not applicable in this case)
 
@@ -34,31 +34,35 @@ RETROSPECTIVE 2 (Team 3)
 
 |            | Mean | StDev |
 |------------|------|-------|
-| Estimation |   |  | 
-| Actual     |  |  |
+| Estimation |  1.95  |  1.66 | 
+| Actual     | 1.98 |  1.76 |
 
-- Total estimation error ratio: sum of total hours spent / sum of total hours effort - 1 = 
+- Total estimation error ratio: sum of total hours spent / sum of total hours effort - 1 =  -0.0119
 
     $$\frac{\sum_i spent_{task_i}}{\sum_i estimation_{task_i}} - 1$$
     
-- Absolute relative task estimation error: sum( abs( spent-task-i / estimation-task-i - 1))/n = 
+- Absolute relative task estimation error: sum( abs( spent-task-i / estimation-task-i - 1))/n = 0.0036
 
     $$\frac{1}{n}\sum_i^n \left| \frac{spent_{task_i}}{estimation_task_i}-1 \right| $$
   
 ## QUALITY MEASURES 
 
 - Unit Testing:
-  - Total hours estimated 
-  - Total hours spent 
-  - Nr of automated unit test cases 
-  - Coverage 
+  - Total hours estimated 7h 30m
+  - Total hours spent 10h
+  - Nr of automated unit test cases 274 
+  - Coverage:
+      - statements: 99.75%
+      - branches: 95.71%
+      - functions: 100%
+      - Lines: 100%
 - E2E testing:
-  - Total hours estimated 
-  - Total hours spent 
-  - Nr of test cases  
+  - Total hours estimated: 2h 30m 
+  - Total hours spent: 2h
+  - Nr of test cases: 17  
 - Code review 
-  - Total hours estimated 
-  - Total hours spent 
+  - Total hours estimated: 5h 30m  
+  - Total hours spent: 6h
   
 
 
