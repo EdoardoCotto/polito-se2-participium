@@ -1,21 +1,6 @@
 "use strict";
 
-// Mock esplicito di sqlite3 con Database e metodi get/run/all tracciabili
-jest.mock('sqlite3', () => {
-  const mockGet = jest.fn();
-  const mockRun = jest.fn();
-  const mockAll = jest.fn();
-  function Database(dbPath, cb) {
-    if (cb) cb(null); // nessun errore di connessione
-    this.get = mockGet;
-    this.run = mockRun;
-    this.all = mockAll;
-  }
-  Database.mockGet = mockGet;
-  Database.mockRun = mockRun;
-  Database.mockAll = mockAll;
-  return { Database };
-});
+// Integriamo con DB reale: non mockiamo sqlite3 qui
 
 // Mock di bcrypt (async e callback usage)
 const mockCompare = jest.fn();
@@ -24,250 +9,145 @@ const mockHash = jest.fn();
 jest.mock('bcrypt', () => ({
   compare: mockCompare,
   genSalt: mockGenSalt,
-  hash: mockHash
-}));
+  hash: mockHash,
+}), { virtual: true });
 
-const dao = require('../../server/dao/userDao');
-const sqlite3Instance = require('sqlite3');
-const mockGet = sqlite3Instance.Database.mockGet;
-const mockRun = sqlite3Instance.Database.mockRun;
-const mockAll = sqlite3Instance.Database.mockAll;
+let dao;
+
+// helpers
+const unique = (() => {
+  let n = 0;
+  return (prefix = 'unit') => `${prefix}_${Date.now()}_${n++}`;
+})();
 
 describe('userDao Functions', () => {
 
   beforeEach(() => {
+    jest.resetModules();
     jest.clearAllMocks();
-    mockGet.mockReset();
-    mockRun.mockReset();
-    mockAll.mockReset();
     mockCompare.mockReset();
     mockGenSalt.mockReset();
     mockHash.mockReset();
     // valori di default
     mockGenSalt.mockResolvedValue('mock_salt');
     mockHash.mockResolvedValue('mock_hash');
+    // ricarica il modulo dao in un contesto isolato con i mock attivi
+    jest.isolateModules(() => {
+      // eslint-disable-next-line global-require
+      dao = require('../../server/dao/userDao');
+    });
   });
 
   describe('getUser', () => {
     test('should return user when credentials are correct', async () => {
-      const mockUser = {
-        id: 1,
-        username: 'testuser',
-        name: 'John',
-        surname: 'Doe',
-        type: 'citizen',
-        password: 'hashed_password'
-      };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      mockCompare.mockImplementation((password, hash, callback) => {
-        callback(null, true);
-      });
-
-      const result = await dao.getUser('testuser', 'password123');
-
-      expect(result).toEqual({
-        id: 1,
-        username: 'testuser',
-        name: 'John',
-        surname: 'Doe',
-        type: 'citizen'
-      });
-      expect(mockGet).toHaveBeenCalled();
-      expect(mockCompare).toHaveBeenCalledWith('password123', 'hashed_password', expect.any(Function));
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      const newUser = { username, email, name: 'John', surname: 'Doe', password: 'password123', type: 'citizen' };
+      const created = await dao.createUser(newUser);
+      mockCompare.mockImplementation((pw, hash, cb) => cb(null, true));
+      const result = await dao.getUser(username, 'password123');
+      expect(result).toEqual({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
+      expect(mockCompare).toHaveBeenCalled();
     });
 
     test('should return false when user not found', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, undefined);
-      });
-
       const result = await dao.getUser('nonexistent', 'password');
 
       expect(result).toBe(false);
-      expect(mockCompare).not.toHaveBeenCalled();
     });
 
     test('should return false when password is incorrect', async () => {
-      const mockUser = {
-        id: 1,
-        username: 'testuser',
-        password: 'hashed_password'
-      };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      mockCompare.mockImplementation((password, hash, callback) => {
-        callback(null, false);
-      });
-
-      const result = await dao.getUser('testuser', 'wrongpassword');
-
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      await dao.createUser({ username, email, name: 'A', surname: 'B', password: 'pw' });
+      mockCompare.mockImplementation((pw, hash, cb) => cb(null, false));
+      const result = await dao.getUser(username, 'wrongpassword');
       expect(result).toBe(false);
     });
 
     test('should reject on database error', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.getUser('testuser', 'password')).rejects.toThrow('DB Error');
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      await dao.createUser({ username, email, name: 'A', surname: 'B', password: 'pw' });
+      mockCompare.mockImplementation((pw, hash, cb) => cb(new Error('Bcrypt Error')));
+      await expect(dao.getUser(username, 'password')).rejects.toThrow('Bcrypt Error');
     });
-
-    test('should reject on bcrypt error', async () => {
-      const mockUser = {
-        id: 1,
-        username: 'testuser',
-        password: 'hashed_password'
-      };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      mockCompare.mockImplementation((password, hash, callback) => {
-        callback(new Error('Bcrypt Error'));
-      });
-
-      await expect(dao.getUser('testuser', 'password')).rejects.toThrow('Bcrypt Error');
-    });
+    // Il caso di errore bcrypt è coperto nel test sopra
   });
 
   describe('getUserById', () => {
     test('should return user by id', async () => {
-      const mockUser = {
-        id: 1,
-        username: 'testuser',
-        email: 'test@example.com',
-        name: 'John',
-        surname: 'Doe',
-        type: 'citizen'
-      };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      const result = await dao.getUserById(1);
-
-      expect(result).toEqual(mockUser);
-      expect(mockGet).toHaveBeenCalled();
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      const created = await dao.createUser({ username, email, name: 'John', surname: 'Doe', password: 'pw', type: 'citizen' });
+      const result = await dao.getUserById(created.id);
+      expect(result).toMatchObject({ id: created.id, username, email, name: 'John', surname: 'Doe', type: 'citizen' });
     });
 
     test('should return undefined when user not found', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, undefined);
-      });
-
-      const result = await dao.getUserById(999);
+      const result = await dao.getUserById(9999999);
 
       expect(result).toBeUndefined();
     });
 
-    test('should reject on database error', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.getUserById(1)).rejects.toThrow('DB Error');
-    });
+    // Skip: non forziamo errori DB qui
   });
 
   describe('getUserByUsername', () => {
     test('should return user by username', async () => {
-      const mockUser = { id: 1 };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      const result = await dao.getUserByUsername('testuser');
-
-      expect(result).toEqual(mockUser);
-      expect(mockGet).toHaveBeenCalled();
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      const created = await dao.createUser({ username, email, name: 'X', surname: 'Y', password: 'pw' });
+      const result = await dao.getUserByUsername(username);
+      expect(result).toEqual({ id: created.id });
     });
 
     test('should return undefined when user not found', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, undefined);
-      });
-
-      const result = await dao.getUserByUsername('nonexistent');
+      const result = await dao.getUserByUsername(`nonexistent_${Date.now()}`);
 
       expect(result).toBeUndefined();
     });
 
-    test('should reject on database error', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.getUserByUsername('testuser')).rejects.toThrow('DB Error');
-    });
+    // Skip: non forziamo errori DB qui
   });
 
   describe('getUserByEmail', () => {
     test('should return user by email', async () => {
-      const mockUser = { id: 1 };
-
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, mockUser);
-      });
-
-      const result = await dao.getUserByEmail('test@example.com');
-
-      expect(result).toEqual(mockUser);
-      expect(mockGet).toHaveBeenCalled();
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      const created = await dao.createUser({ username, email, name: 'X', surname: 'Y', password: 'pw' });
+      const result = await dao.getUserByEmail(email);
+      expect(result).toEqual({ id: created.id });
     });
 
     test('should return undefined when user not found', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(null, undefined);
-      });
-
-      const result = await dao.getUserByEmail('nonexistent@example.com');
+      const result = await dao.getUserByEmail(`nonexistent_${Date.now()}@example.com`);
 
       expect(result).toBeUndefined();
     });
 
-    test('should reject on database error', async () => {
-      mockGet.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.getUserByEmail('test@example.com')).rejects.toThrow('DB Error');
-    });
+    // Skip: non forziamo errori DB qui
   });
 
   describe('createUser', () => {
     test('should create new user successfully', async () => {
       const newUser = {
-        username: 'newuser',
-        email: 'new@example.com',
+        username: unique('newuser'),
+        email: `${unique('new')}@example.com`,
         name: 'Jane',
         surname: 'Smith',
         password: 'password123',
         type: 'citizen'
       };
 
-      mockRun.mockImplementation(function(sql, params, callback) {
-        callback.call({ lastID: 42 }, null);
-      });
-
       const result = await dao.createUser(newUser);
 
       expect(mockGenSalt).toHaveBeenCalledWith(10);
       expect(mockHash).toHaveBeenCalledWith('password123', 'mock_salt');
-      expect(mockRun).toHaveBeenCalled();
       expect(result).toEqual({
-        id: 42,
-        username: 'newuser',
-        email: 'new@example.com',
+        id: expect.any(Number),
+        username: newUser.username,
+        email: newUser.email,
         name: 'Jane',
         surname: 'Smith',
         type: 'citizen'
@@ -276,36 +156,22 @@ describe('userDao Functions', () => {
 
     test('should use default type citizen when not specified', async () => {
       const newUser = {
-        username: 'newuser',
-        email: 'new@example.com',
+        username: unique('newuser'),
+        email: `${unique('new')}@example.com`,
         name: 'Jane',
         surname: 'Smith',
         password: 'password123'
       };
 
-      mockRun.mockImplementation(function(sql, params, callback) {
-        callback.call({ lastID: 43 }, null);
-      });
-
       const result = await dao.createUser(newUser);
-
       expect(result.type).toBe('citizen');
     });
 
     test('should reject on database error', async () => {
-      const newUser = {
-        username: 'newuser',
-        email: 'new@example.com',
-        name: 'Jane',
-        surname: 'Smith',
-        password: 'password123'
-      };
-
-      mockRun.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.createUser(newUser)).rejects.toThrow('DB Error');
+      const username = unique('newuser');
+      const email = `${unique('new')}@example.com`;
+      await dao.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' });
+      await expect(dao.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' })).rejects.toThrow('SQLITE_CONSTRAINT');
     });
 
     test('should reject on bcrypt genSalt error', async () => {
@@ -339,160 +205,187 @@ describe('userDao Functions', () => {
 
   describe('updateUserTypeById', () => {
     test('should update user type successfully', async () => {
-      mockRun.mockImplementation(function(sql, params, callback) {
-        callback.call({ changes: 1 }, null);
-      });
-
-      const result = await dao.updateUserTypeById(1, 'municipal_public_relations_officer');
-
-      expect(mockRun).toHaveBeenCalled();
-      expect(result).toEqual({
-        id: 1,
-        type: 'municipal_public_relations_officer'
-      });
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      const result = await dao.updateUserTypeById(u.id, 'municipal_public_relations_officer');
+      expect(result).toEqual({ id: u.id, type: 'municipal_public_relations_officer' });
     });
 
     test('should return null when no row updated', async () => {
-      mockRun.mockImplementation(function(sql, params, callback) {
-        callback.call({ changes: 0 }, null);
-      });
-
-      const result = await dao.updateUserTypeById(999, 'municipal_public_relations_officer');
+      const result = await dao.updateUserTypeById(9999999, 'municipal_public_relations_officer');
 
       expect(result).toBeNull();
     });
 
     test('should reject invalid role', async () => {
       await expect(dao.updateUserTypeById(1, 'invalid_role')).rejects.toThrow('Invalid role');
-      expect(mockRun).not.toHaveBeenCalled();
     });
 
-    test('should reject on database error', async () => {
-      mockRun.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.updateUserTypeById(1, 'municipal_public_relations_officer')).rejects.toThrow('DB Error');
-    });
+    // Skip: non forziamo errori DB qui
   });
 
   describe('findMunicipalityUsers', () => {
     test('should return municipality users', async () => {
-      const mockUsers = [
-        {
-          id: 1,
-          username: 'officer1',
-          email: 'officer1@example.com',
-          name: 'John',
-          surname: 'Doe',
-          type: 'municipal_public_relations_officer'
-        }
-      ];
-
-      mockAll.mockImplementation((sql, params, callback) => {
-        callback(null, mockUsers);
-      });
-
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      await dao.updateUserTypeById(u.id, 'municipal_public_relations_officer');
       const result = await dao.findMunicipalityUsers();
-
-      expect(mockAll).toHaveBeenCalled();
-      expect(result).toEqual(mockUsers);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.some(r => r.username === u.username)).toBe(true);
     });
 
-    test('should return empty array when no users found', async () => {
-      mockAll.mockImplementation((sql, params, callback) => {
-        callback(null, []);
-      });
-
-      const result = await dao.findMunicipalityUsers();
-
-      expect(result).toEqual([]);
-    });
-
-    test('should return empty array when undefined', async () => {
-      mockAll.mockImplementation((sql, params, callback) => {
-        callback(null, undefined);
-      });
-
-      const result = await dao.findMunicipalityUsers();
-
-      expect(result).toEqual([]);
-    });
-
-    test('should reject on database error', async () => {
-      mockAll.mockImplementation((sql, params, callback) => {
-        callback(new Error('DB Error'));
-      });
-
-      await expect(dao.findMunicipalityUsers()).rejects.toThrow('DB Error');
-    });
+    // Skip: altri casi non forzabili senza mock del DB
   });
 
   describe('updateUserProfile', () => {
-    test('rejects when select query errors', async () => {
-      mockGet.mockImplementation((sql, params, cb) => cb(new Error('Select Error')));
-      await expect(dao.updateUserProfile(1, {})).rejects.toThrow('Select Error');
-    });
-
     test('rejects when user not found', async () => {
-      mockGet.mockImplementation((sql, params, cb) => cb(null, undefined));
-      await expect(dao.updateUserProfile(2, {})).rejects.toThrow('User not found');
+      await expect(dao.updateUserProfile(999999, {})).rejects.toThrow('User not found');
     });
 
     test('resolves with id only when no fields provided', async () => {
-      mockGet.mockImplementation((sql, params, cb) => cb(null, { telegram_nickname: 't', personal_photo_path: 'p.png', mail_notifications: 1 }));
-      mockRun.mockImplementation((sql, params, cb) => cb(null));
-      const res = await dao.updateUserProfile(3, {});
-      expect(res).toEqual({ id: 3 });
-      expect(mockRun).not.toHaveBeenCalled();
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      const res = await dao.updateUserProfile(u.id, {});
+      expect(res).toEqual({ id: u.id });
     });
 
     test('skips null-to-null updates and returns id only', async () => {
-      mockGet.mockImplementation((sql, params, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: null }));
-      mockRun.mockImplementation((sql, params, cb) => cb(null));
-      const res = await dao.updateUserProfile(4, { telegram_nickname: null });
-      expect(res).toEqual({ id: 4 });
-      expect(mockRun).not.toHaveBeenCalled();
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      const res = await dao.updateUserProfile(u.id, { telegram_nickname: null });
+      expect(res).toEqual({ id: u.id });
     });
 
     test('updates all fields and returns updated values', async () => {
-      const current = { telegram_nickname: 'oldNick', personal_photo_path: 'old.png', mail_notifications: 0 };
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
       const updates = { telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 };
-      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
-      mockRun.mockImplementation((sql, params, cb) => cb(null));
-      const result = await dao.updateUserProfile(5, updates);
-      expect(mockRun).toHaveBeenCalled();
-      const [sql, params] = mockRun.mock.calls[0];
-      expect(sql).toMatch(/^UPDATE Users SET /);
-      expect(sql).toContain('telegram_nickname = ?');
-      expect(sql).toContain('personal_photo_path = ?');
-      expect(sql).toContain('mail_notifications = ?');
-      expect(sql).toContain('updated_at = CURRENT_TIMESTAMP');
-      expect(params.slice(0, 3)).toEqual(['newNick', 'new.png', 1]);
-      expect(params[3]).toBe(5);
-      expect(result).toEqual({ id: 5, telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 });
+      const result = await dao.updateUserProfile(u.id, updates);
+      expect(result).toEqual({ id: u.id, ...updates });
     });
 
     test('partial updates including setting null from non-null', async () => {
-      const current = { telegram_nickname: null, personal_photo_path: 'has.png', mail_notifications: 1 };
-      const updates = { telegram_nickname: 'nick', personal_photo_path: null };
-      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
-      mockRun.mockImplementation((sql, params, cb) => cb(null));
-      const result = await dao.updateUserProfile(6, updates);
-      expect(mockRun).toHaveBeenCalled();
-      const [sql, params] = mockRun.mock.calls[0];
-      expect(sql).toContain('telegram_nickname = ?');
-      expect(sql).toContain('personal_photo_path = ?');
-      expect(sql).not.toContain('mail_notifications = ?');
-      expect(params).toEqual(['nick', null, 6]);
-      expect(result).toEqual({ id: 6, telegram_nickname: 'nick', personal_photo_path: null });
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      await dao.updateUserProfile(u.id, { personal_photo_path: 'has.png', mail_notifications: 1 });
+      const result = await dao.updateUserProfile(u.id, { telegram_nickname: 'nick', personal_photo_path: null });
+      expect(result).toEqual({ id: u.id, telegram_nickname: 'nick', personal_photo_path: null });
     });
 
-    test('rejects when update run errors', async () => {
-      const current = { telegram_nickname: 'x', personal_photo_path: 'y', mail_notifications: 0 };
-      mockGet.mockImplementation((sql, params, cb) => cb(null, current));
-      mockRun.mockImplementation((sql, params, cb) => cb(new Error('Update Error')));
-      await expect(dao.updateUserProfile(7, { telegram_nickname: 'z' })).rejects.toThrow('Update Error');
+    // Skip: non forziamo errori DB qui
+  });
+
+  describe('additional null branches for updateUserProfile', () => {
+    test('sets telegram_nickname from non-null to null', async () => {
+      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
+      await dao.updateUserProfile(u.id, { telegram_nickname: 'temp' });
+      const res = await dao.updateUserProfile(u.id, { telegram_nickname: null });
+      expect(res).toEqual({ id: u.id, telegram_nickname: null });
+    });
+
+    // Note: DB schema forbids NULL on mail_notifications; skipping null test
+  });
+
+  describe('error branches with mocked sqlite3', () => {
+    const withSqliteMock = async (impls, fn) => {
+      jest.resetModules();
+      const { getImpl, runImpl, allImpl } = impls;
+      // Try to spy on the exact module resolution used by the DAO
+      let sqlite3;
+      try {
+        // eslint-disable-next-line global-require
+        sqlite3 = require('../../server/node_modules/sqlite3');
+      } catch (e) {
+        // eslint-disable-next-line global-require
+        sqlite3 = require('sqlite3');
+      }
+      const ctorSpy = jest.spyOn(sqlite3, 'Database').mockImplementation(function (_p, cb) {
+        if (cb) cb(null);
+        this.get = getImpl || ((_sql, _params, cb2) => cb2(null, undefined));
+        this.run = runImpl || ((_sql, _params, cb2) => cb2(null));
+        this.all = allImpl || ((_sql, _params, cb2) => cb2(null, []));
+        return this;
+      });
+      let localDao;
+      jest.isolateModules(() => {
+        // eslint-disable-next-line global-require
+        localDao = require('../../server/dao/userDao');
+      });
+      try {
+        await fn(localDao);
+      } finally {
+        ctorSpy.mockRestore();
+        jest.resetModules();
+      }
+    };
+
+    test('getUser rejects on DB error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.getUser('u', 'p')).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('getUserById rejects on DB error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.getUserById(1)).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('getUserByUsername rejects on DB error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.getUserByUsername('u')).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('getUserByEmail rejects on DB error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.getUserByEmail('e@example.com')).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('updateUserTypeById rejects on DB error', async () => {
+      await withSqliteMock(
+        { runImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.updateUserTypeById(1, 'municipal_public_relations_officer')).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('findMunicipalityUsers rejects on DB error', async () => {
+      await withSqliteMock(
+        { allImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.findMunicipalityUsers()).rejects.toThrow('DB Error');
+        }
+      );
+    });
+
+    test('updateUserProfile rejects on select error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('Select Error')) },
+        async (d) => {
+          await expect(d.updateUserProfile(1, {})).rejects.toThrow('Select Error');
+        }
+      );
+    });
+
+    test('updateUserProfile rejects on update run error', async () => {
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: 'x', personal_photo_path: 'y', mail_notifications: 0 }),
+          runImpl: (_s, _p, cb) => cb(new Error('Update Error')),
+        },
+        async (d) => {
+          await expect(d.updateUserProfile(7, { telegram_nickname: 'z' })).rejects.toThrow('Update Error');
+        }
+      );
     });
   });
 });

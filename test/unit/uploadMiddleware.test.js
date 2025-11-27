@@ -4,39 +4,64 @@ const path = require("path");
 
 // utilizzeremo degli spy sul modulo reale fs
 
-// mock di multer (definito dentro jest.mock!)
+// mock di multer (due mapping: 'multer' e la possibile risoluzione in server/node_modules)
 jest.mock("multer", () => {
-  const mockMulter = jest.fn((opts) => {
-    mockMulter.lastOptions = opts;
+  const shared = global.__multerState__ || (global.__multerState__ = {});
+  const mockMulter = (opts) => {
+    shared.lastOptions = opts;
     const instance = {
-      array: jest.fn((field, max) => {
-        mockMulter.lastArrayArgs = [field, max];
+      array: (field, max) => {
+        shared.lastArrayArgs = [field, max];
         const fn = function mockArrayMiddleware(req, res, next) { next && next(); };
         return fn;
-      }),
-      single: jest.fn().mockImplementation(() => {
+      },
+      single: () => {
         const fn = function mockSingleMiddleware(req, res, next) { next && next(); };
         return fn;
-      }),
+      },
     };
-    mockMulter.lastInstance = instance;
-    if (!mockMulter.instances) mockMulter.instances = [];
-    mockMulter.instances.push(instance);
+    if (!shared.instances) shared.instances = [];
+    shared.instances.push(instance);
     return instance;
-  });
-
-  mockMulter.diskStorage = jest.fn((config) => {
-    mockMulter.diskStorageConfig = config;
-    if (!mockMulter.diskStorageConfigs) mockMulter.diskStorageConfigs = [];
-    mockMulter.diskStorageConfigs.push(config);
+  };
+  mockMulter.diskStorage = (config) => {
+    if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
+    shared.diskStorageConfigs.push(config);
+    shared.diskStorageConfig = config;
     return config;
-  });
+  };
+  return mockMulter;
+});
 
+jest.mock("../../server/node_modules/multer", () => {
+  const shared = global.__multerState__ || (global.__multerState__ = {});
+  const mockMulter = (opts) => {
+    shared.lastOptions = opts;
+    const instance = {
+      array: (field, max) => {
+        shared.lastArrayArgs = [field, max];
+        const fn = function mockArrayMiddleware(req, res, next) { next && next(); };
+        return fn;
+      },
+      single: () => {
+        const fn = function mockSingleMiddleware(req, res, next) { next && next(); };
+        return fn;
+      },
+    };
+    if (!shared.instances) shared.instances = [];
+    shared.instances.push(instance);
+    return instance;
+  };
+  mockMulter.diskStorage = (config) => {
+    if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
+    shared.diskStorageConfigs.push(config);
+    shared.diskStorageConfig = config;
+    return config;
+  };
   return mockMulter;
 });
 
 const fs = require("fs");
-const mockMulter = require("multer");
 
 // carica il middleware in un modulo isolato per garantire l'uso dei mock
 let uploadMiddleware;
@@ -46,10 +71,10 @@ let firstUploadInstance;
 jest.isolateModules(() => {
   uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
   // Capture the diskStorage configuration objects from the initial module load
-  initialStorageConfig = mockMulter.diskStorage.mock.calls[0]?.[0];
-  initialProfileStorageConfig = mockMulter.diskStorage.mock.calls[1]?.[0];
+  initialStorageConfig = global.__multerState__?.diskStorageConfigs?.[0];
+  initialProfileStorageConfig = global.__multerState__?.diskStorageConfigs?.[1];
   // Capture the first multer instance (used for upload)
-  firstUploadInstance = mockMulter.mock.results[0]?.value;
+  firstUploadInstance = global.__multerState__?.instances?.[0];
 });
 
 describe("uploadMiddleware", () => {
@@ -100,7 +125,7 @@ describe("uploadMiddleware", () => {
   it("should configure multer with proper limits and array field", () => {
     expect(uploadMiddleware).toBeDefined();
 
-    const opts = mockMulter.lastOptions;
+    const opts = global.__multerState__?.lastOptions;
     expect(opts).toBeDefined();
     expect(opts.limits.fileSize).toBe(1024 * 1024 * 5);
     expect(typeof opts.fileFilter).toBe("function");
@@ -111,7 +136,7 @@ describe("uploadMiddleware", () => {
     let fileFilter;
 
     beforeEach(() => {
-      fileFilter = mockMulter.lastOptions?.fileFilter;
+      fileFilter = global.__multerState__?.lastOptions?.fileFilter;
     });
 
     it("should accept image files", () => {
@@ -188,6 +213,8 @@ describe("uploadMiddleware", () => {
       update({}, {}, next);
       expect(next).toHaveBeenCalled();
     });
+
+    // no explicit assertion on single field args; validated via mock middleware call above
   });
 
   describe("default upload middleware export", () => {
@@ -207,7 +234,7 @@ describe("uploadMiddleware", () => {
     it("should configure array field 'photos' with max 3 files", () => {
       // Access the first created multer instance (upload) and its array() calls
       expect(firstUploadInstance).toBeDefined();
-      const args = mockMulter.lastArrayArgs;
+      const args = global.__multerState__?.lastArrayArgs;
       expect(args).toEqual(["photos", 3]);
     });
   });

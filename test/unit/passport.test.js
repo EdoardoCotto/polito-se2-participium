@@ -17,7 +17,7 @@ jest.mock('passport', () => {
     }),
   };
   return mock;
-});
+}, { virtual: true });
 
 // Mock passport-local Strategy to store verify callback
 jest.mock('passport-local', () => ({
@@ -26,7 +26,7 @@ jest.mock('passport-local', () => ({
     this.name = 'local';
     this._verify = verify;
   },
-}));
+}), { virtual: true });
 
 // Mock userDao used by passport utils
 jest.mock('../../server/dao/userDao', () => ({
