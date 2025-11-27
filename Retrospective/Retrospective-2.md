@@ -65,41 +65,38 @@ RETROSPECTIVE 2 (Team 3)
 ## ASSESSMENT
 
 - What did go wrong in the sprint?
-    
-      -We were supposed to do things early and not leave them for the last day, like in the previous sprint. But it got worse than the previous sprint. We didn't do a third of the work in the first 9 days because the tasks are interconnected. We all have to do the tasks according to the correct schedule to do well. Unfortunately, most people didn't do their work on time, so we ended up with this problem.And it was the same problem until the last day, and most of the work was completed in the last 2 days.
 
-      -Another problem is that when some people wanted to do their own task, they didn't read the group first to see what message the previous person had left that was related to their task. They did the work without paying attention to the group and then checked the group.
+      - We wanted to improve our schedule time to don't work too much in the last day, but we don't reach this goal for the different commitment we have and because of the interconnaction of the task that link the work of all of us.
 
-      -Another problem was that some people didn't have a role in some stories, and everyone had to have a role in every story.
+      - We had more problem with the organitation of the scrum meeting for our different calendary, so we didn't have enough comparisons between us.
 
 - What caused your errors in estimation (if any)?
 
-      The estimate had a problem because it was not done realistically and was just done like the previous sprint. It needs to be reviewed and done more carefully and each task needs to be discussed. Most people, when they estimate their work, think it is much lower than expected and it is not realistic.
+      We have done a good estimation but we have to discuss more about the story because sometimes we lost some details that could change the estimation of some task.
 
 - What lessons did you learn (both positive and negative) in this sprint?
-        
-      People should do their jobs more responsibly so that other people can do their jobs and not harm others. Most of the work should be done throughout the week and not just on the last 2-3 days of the week.
+
+      A positive lessons is that together we can solve the problem very fast, when we find a bug also if we have to change front end and back end together to solve it.
+
+      The negative one is that we have learned that it is difficult to organize work so that the others don't have to wait for someone else to finish theirs
        
 - Which improvement goals set in the previous retrospective were you able to achieve? 
 
       We were able to do a better job of dividing tasks than in the previous sprint, but it is still far from our ideal and is simply better than before.
 
-     
-  
 - Which ones you were not able to achieve? Why?
 
-      We couldn't manage the time and it got even worse than the previous sprint. Because people couldn't be responsible and do their own work according to the time and only started doing the work in the last 2-3 days.
+      We couldn't manage the time well as we want, because the tasks were highly interdependent, making it difficult to start a task before the previous one was finished. As a result, we lost time even when we were available to work on this project.
 
          
 
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
 
+      -Better task time estimation: By talking more about those tasks to understand possible features that we don't see immediately.
 
-
-      -Better task time estimation: By talking more about those tasks and being realistic about how long they will take.
-
-      -Better time management: By completing your task on a specific day and not leaving it until the last day.
+      -Better time management: By organize meeting to find the needs of backend and frontend to don't have problem with API's results, so we can start working on the same time knowing what the others are doing and don't leaving task that is necessary for others component of the group unresolved for too much time.
 
 - One thing you are proud of as a Team!!
   
+      - Things we are proud of as a team is that we consistently work to deliver high-quality results for each sprint and we are always ready to help each other whenever needed.
          
