@@ -34,8 +34,8 @@ RETROSPECTIVE 2 (Team 3)
 
 |            | Mean | StDev |
 |------------|------|-------|
-| Estimation |  1.95  |  1.66 | 
-| Actual     | 1.98 |  1.76 |
+| Estimation |  1.92  |  1.66 | 
+| Actual     | 1.89 |  1.76 |
 
 - Total estimation error ratio: sum of total hours spent / sum of total hours effort - 1 =  -0.0119
 
