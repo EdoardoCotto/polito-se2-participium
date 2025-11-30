@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies and Run Tests to Generate Coverage
         run: |
           npm install
+          cd server && npm install && cd ..
           # This command MUST generate the coverage file (e.g., coverage/lcov.info)
           npm run test:coverage 
 
