@@ -281,30 +281,44 @@ describe('userDao Functions', () => {
   });
 
   describe('error branches with mocked sqlite3', () => {
-    const withSqliteMock = async (impls, fn) => {
-      jest.resetModules();
-      const { getImpl, runImpl, allImpl } = impls;
-      // Try to spy on the exact module resolution used by the DAO
-      let sqlite3;
+    const getSqlite3Module = () => {
       try {
         // eslint-disable-next-line global-require
-        sqlite3 = require('../../server/node_modules/sqlite3');
+        return require('../../server/node_modules/sqlite3');
       } catch (e) {
         // eslint-disable-next-line global-require
-        sqlite3 = require('sqlite3');
+        return require('sqlite3');
       }
-      const ctorSpy = jest.spyOn(sqlite3, 'Database').mockImplementation(function (_p, cb) {
+    };
+
+    const createMockDatabase = (getImpl, runImpl, allImpl) => {
+      return function (_p, cb) {
         if (cb) cb(null);
         this.get = getImpl || ((_sql, _params, cb2) => cb2(null, undefined));
         this.run = runImpl || ((_sql, _params, cb2) => cb2(null));
         this.all = allImpl || ((_sql, _params, cb2) => cb2(null, []));
         return this;
-      });
+      };
+    };
+
+    const loadDaoInIsolatedModule = () => {
       let localDao;
       jest.isolateModules(() => {
         // eslint-disable-next-line global-require
         localDao = require('../../server/dao/userDao');
       });
+      return localDao;
+    };
+
+    const withSqliteMock = async (impls, fn) => {
+      jest.resetModules();
+      const { getImpl, runImpl, allImpl } = impls;
+      const sqlite3 = getSqlite3Module();
+      const mockDbConstructor = createMockDatabase(getImpl, runImpl, allImpl);
+      const ctorSpy = jest.spyOn(sqlite3, 'Database').mockImplementation(mockDbConstructor);
+      
+      const localDao = loadDaoInIsolatedModule();
+      
       try {
         await fn(localDao);
       } finally {
