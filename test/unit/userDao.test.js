@@ -291,12 +291,16 @@ describe('userDao Functions', () => {
       }
     };
 
+    const defaultGetImpl = (_sql, _params, cb2) => cb2(null, undefined);
+    const defaultRunImpl = (_sql, _params, cb2) => cb2(null);
+    const defaultAllImpl = (_sql, _params, cb2) => cb2(null, []);
+
     const createMockDatabase = (getImpl, runImpl, allImpl) => {
       return function (_p, cb) {
         if (cb) cb(null);
-        this.get = getImpl || ((_sql, _params, cb2) => cb2(null, undefined));
-        this.run = runImpl || ((_sql, _params, cb2) => cb2(null));
-        this.all = allImpl || ((_sql, _params, cb2) => cb2(null, []));
+        this.get = getImpl || defaultGetImpl;
+        this.run = runImpl || defaultRunImpl;
+        this.all = allImpl || defaultAllImpl;
         return this;
       };
     };
