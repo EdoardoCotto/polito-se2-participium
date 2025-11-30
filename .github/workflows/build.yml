@@ -1,19 +1,42 @@
 name: Build
+
 on:
   push:
     branches:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   sonarqube:
     name: SonarQube
+    # Using 'windows-latest' is fine, but 'ubuntu-latest' is often faster/cheaper for Node.js
     runs-on: windows-latest
     steps:
+      # 1. Checkout the code (REQUIRED)
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0 # Mandatory for SonarQube/SonarCloud SCM features
+
+      # 2. Setup the required environment (e.g., Node.js for JS/TS projects)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Set to your project's version
+
+      # 3. Install dependencies and RUN UNIT TESTS (REQUIRED for coverage report)
+      - name: Install dependencies and Run Tests to Generate Coverage
+        run: |
+          npm install
+          # This command MUST generate the coverage file (e.g., coverage/lcov.info)
+          npm run test:coverage 
+
+      # 4. Run SonarQube Scan
+      # It will automatically read coverage settings from sonar-project.properties
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # GITHUB_TOKEN is required for Pull Request Decoration
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # No need for 'with: args' if all keys are in sonar-project.properties
