@@ -4,7 +4,6 @@ const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const { REPORT_CATEGORIES } = require('../constants/reportCategories');
-// const { CATEGORY_TO_OFFICE } = require('../constants/categoryToOfficeMap');
 const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
 const REPORT_STATUSES = require('../constants/reportStatus');
 
@@ -58,9 +57,6 @@ exports.createReport = async (reportData, anonymous) => {
       category,
       photos,
     } = reportData || {};
-
-    console.log(reportData) //DEBUG
-    console.log(anonymous) //DEBUG
 
     if (!anonymous && userId == null){
       throw new BadRequestError('User ID, latitude, and longitude are required');
