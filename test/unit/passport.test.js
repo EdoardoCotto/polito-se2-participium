@@ -4,29 +4,31 @@ let userDao;
 let mockPassport;
 
 describe('utils/passport configuration', () => {
+  const createPassportMock = () => {
+    const handlers = { serialize: null, deserialize: null };
+    const mock = {
+      _handlers: handlers,
+      _strategy: null,
+      use: jest.fn((strategyInstance) => {
+        mock._strategy = strategyInstance;
+      }),
+      serializeUser: jest.fn((cb) => {
+        handlers.serialize = cb;
+      }),
+      deserializeUser: jest.fn((cb) => {
+        handlers.deserialize = cb;
+      }),
+    };
+    return mock;
+  };
+
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
 
     // Isolate module registry and re-install mocks deterministically
     jest.isolateModules(() => {
-      jest.doMock('passport', () => {
-        const handlers = { serialize: null, deserialize: null };
-        const mock = {
-          _handlers: handlers,
-          _strategy: null,
-          use: jest.fn((strategyInstance) => {
-            mock._strategy = strategyInstance;
-          }),
-          serializeUser: jest.fn((cb) => {
-            handlers.serialize = cb;
-          }),
-          deserializeUser: jest.fn((cb) => {
-            handlers.deserialize = cb;
-          }),
-        };
-        return mock;
-      }, { virtual: true });
+      jest.doMock('passport', () => createPassportMock(), { virtual: true });
 
       jest.doMock('passport-local', () => ({
         Strategy: function Strategy(verify) {
