@@ -153,6 +153,41 @@ exports.getReportById = async (reportId) => {
 };
 
 /**
+ * Process review data based on status (rejection or assignment)
+ * @param {string} normalizedStatus
+ * @param {string} explanation
+ * @param {string} technicalOffice
+ * @returns {Promise<{ rejectionReason: string|null, technicalOfficeValue: string|null, assignedOfficerId: number|null }>}
+ */
+const processReviewData = async (normalizedStatus, explanation, technicalOffice) => {
+  if (normalizedStatus === REPORT_STATUSES.REJECTED) {
+    if (typeof explanation !== 'string' || !explanation.trim()) {
+      throw new BadRequestError('Explanation is required when rejecting a report');
+    }
+    return {
+      rejectionReason: explanation.trim(),
+      technicalOfficeValue: null,
+      assignedOfficerId: null,
+    };
+  }
+
+  if (typeof technicalOffice !== 'string' || !TECHNICAL_OFFICER_ROLES.includes(technicalOffice)) {
+    throw new BadRequestError('A valid technical office is required when accepting a report');
+  }
+
+  const assignedOfficerId = await reportDao.getLeastLoadedOfficer(technicalOffice);
+  if (!assignedOfficerId) {
+    throw new BadRequestError(`No workers found for role: ${technicalOffice}. Cannot assign report.`);
+  }
+
+  return {
+    rejectionReason: null,
+    technicalOfficeValue: technicalOffice,
+    assignedOfficerId,
+  };
+};
+
+/**
  * Review (accept or reject) a report
  * @param {number} reportId
  * @param {{ status: string, explanation?: string, technicalOffice?: string }} reviewData
@@ -188,36 +223,11 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
       throw new BadRequestError('Only pending reports can be reviewed');
     }
 
-    let rejectionReason = null;
-    let technicalOfficeValue = null;
-    let assignedOfficerId = null; // Nuova variabile
-
-    if (normalizedStatus === REPORT_STATUSES.REJECTED) {
-      // LOGICA RIFIUTO
-      if (typeof explanation !== 'string' || !explanation.trim()) {
-        throw new BadRequestError('Explanation is required when rejecting a report');
-      }
-      rejectionReason = explanation.trim();
-      technicalOfficeValue = null;
-      
-    } else if (normalizedStatus === REPORT_STATUSES.ASSIGNED) {
-      // LOGICA APPROVAZIONE
-      if (typeof technicalOffice !== 'string' || !TECHNICAL_OFFICER_ROLES.includes(technicalOffice)) {
-        throw new BadRequestError('A valid technical office is required when accepting a report');
-      }
-      technicalOfficeValue = technicalOffice;
-
-      // -----------------------------------------------------
-      // new logic to assign the least loaded officer
-      // -----------------------------------------------------
-      assignedOfficerId = await reportDao.getLeastLoadedOfficer(technicalOfficeValue);
-
-      if (!assignedOfficerId) {
-        // Se non troviamo nessun lavoratore con quel ruolo nel DB (es. nessun "urban_planner" esiste)
-        //possiamo anche scegliere se in futuro mettere il report in suspended
-        throw new BadRequestError(`No workers found for role: ${technicalOfficeValue}. Cannot assign report.`);
-      }
-    }
+    const { rejectionReason, technicalOfficeValue, assignedOfficerId } = await processReviewData(
+      normalizedStatus,
+      explanation,
+      technicalOffice
+    );
 
     // Eseguiamo l'update passando anche l'officerId trovato
     const updated = await reportDao.updateReportReview(reportId, {
