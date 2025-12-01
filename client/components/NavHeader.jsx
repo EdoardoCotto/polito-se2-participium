@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { LogoutButton } from './AuthComponents';
 import API from '../API/API';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '../utils/cropImage';
 
 function NavHeader(props) {
   const location = useLocation();
@@ -18,6 +20,14 @@ function NavHeader(props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
+  
+  // Crop modal state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [cropping, setCropping] = useState(false);
 
   // Check if user is a citizen
   const isCitizen = props.user?.type === 'citizen';
@@ -104,7 +114,7 @@ function NavHeader(props) {
     }
   };
 
-  // Handle profile image change
+  // Handle profile image change - open crop modal
   const handlepersonal_photoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -118,9 +128,55 @@ function NavHeader(props) {
         setSaveError('Image size must be less than 5MB');
         return;
       }
-      setpersonal_photo(file);
-      setpersonal_photoPreview(URL.createObjectURL(file));
+      // Reset crop state
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setImageToCrop(URL.createObjectURL(file));
+      setShowCropModal(true);
       setSaveError('');
+    }
+  };
+
+  // Handle crop completion
+  const onCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  // Handle crop and save
+  const handleCropAndSave = async () => {
+    if (!imageToCrop || !croppedAreaPixels) return;
+    
+    try {
+      setCropping(true);
+      const croppedImageBlob = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      
+      // Convert blob to file
+      const file = new File([croppedImageBlob], 'profile-photo.jpg', { type: 'image/jpeg' });
+      
+      setpersonal_photo(file);
+      setpersonal_photoPreview(URL.createObjectURL(croppedImageBlob));
+      setShowCropModal(false);
+      setImageToCrop(null);
+      setCroppedAreaPixels(null);
+    } catch (error) {
+      console.error('Error cropping image:', error);
+      setSaveError('Failed to crop image. Please try again.');
+    } finally {
+      setCropping(false);
+    }
+  };
+
+  // Handle crop cancel
+  const handleCropCancel = () => {
+    setShowCropModal(false);
+    setImageToCrop(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    // Reset file input
+    const fileInput = document.getElementById('profile-image-upload');
+    if (fileInput) {
+      fileInput.value = '';
     }
   };
 
@@ -272,7 +328,7 @@ function NavHeader(props) {
       </Navbar>
 
       {/* Profile Settings Modal */}
-      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="md" className="profile-modal">
+      <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="lg" className="profile-modal">
         <Modal.Header closeButton className="profile-modal-header">
           <Modal.Title className="profile-modal-title">
             <i className="bi bi-person-circle"></i>
@@ -294,125 +350,149 @@ function NavHeader(props) {
           )}
 
           <Form>
-            {/* Profile Image Section */}
-            <Form.Group className="mb-4 text-center">
-              <Form.Label className="fw-semibold d-block mb-3 profile-image-label">
-                <i className="bi bi-image me-2"></i>Profile Picture
-              </Form.Label>
-              <div className="d-flex flex-column align-items-center">
-                <div className="profile-image-container mb-3">
-                  <Image
-                    src={personal_photoPreview || "http://localhost:3001/static/user.png"}
-                    alt="Profile"
-                    width={120}
-                    height={120}
-                    roundedCircle
-                    className="profile-image-preview"
-                  />
+            <div className="row g-4">
+              {/* Left Column - Profile Image */}
+              <div className="col-12 col-lg-4">
+                <div className="profile-image-section">
+                  <Form.Label className="fw-semibold d-block mb-3 profile-image-label">
+                    <i className="bi bi-image me-2"></i>Profile Picture
+                  </Form.Label>
+                  <div className="d-flex flex-column align-items-center">
+                    <div className="profile-image-container mb-3">
+                      <Image
+                        src={personal_photoPreview || "http://localhost:3001/static/user.png"}
+                        alt="Profile"
+                        width={160}
+                        height={160}
+                        roundedCircle
+                        className="profile-image-preview"
+                      />
+                    </div>
+                    <div className="d-flex flex-column gap-2 w-100">
+                      <Form.Control
+                        type="file"
+                        accept="image/*"
+                        onChange={handlepersonal_photoChange}
+                        style={{ display: 'none' }}
+                        id="profile-image-upload"
+                      />
+                      <label htmlFor="profile-image-upload" className="w-100">
+                        <Button
+                          as="span"
+                          variant="outline-primary"
+                          className="profile-upload-button w-100"
+                        >
+                          <i className="bi bi-upload me-2"></i>
+                          Upload Photo
+                        </Button>
+                      </label>
+                      {personal_photoPreview && personal_photoPreview !== "http://localhost:3001/static/user.png" && (
+                        <Button
+                          variant="outline-danger"
+                          onClick={handleRemovepersonal_photo}
+                          className="profile-upload-button w-100"
+                        >
+                          <i className="bi bi-trash me-2"></i>
+                          Remove Photo
+                        </Button>
+                      )}
+                    </div>
+                    <small className="text-muted mt-3 text-center">
+                      <i className="bi bi-info-circle me-1"></i>
+                      Max 5MB - JPG, PNG, GIF
+                    </small>
+                  </div>
                 </div>
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    type="file"
-                    accept="image/*"
-                    onChange={handlepersonal_photoChange}
-                    style={{ display: 'none' }}
-                    id="profile-image-upload"
-                  />
-                  <label htmlFor="profile-image-upload">
-                    <Button
-                      as="span"
-                      variant="outline-primary"
-                      size="sm"
-                      className="profile-upload-button"
+              </div>
+
+              {/* Right Column - Form Fields */}
+              <div className="col-12 col-lg-8">
+                <div className="profile-form-section">
+                  {/* Telegram Username */}
+                  <Form.Group className="mb-4">
+                    <Form.Label className="fw-semibold profile-form-label">
+                      <i className="bi bi-telegram me-2 text-primary"></i>Telegram Username
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="@username"
+                      value={telegram_nickname}
+                      onChange={(e) => settelegram_nickname(e.target.value)}
+                      className="profile-form-input"
+                    />
+                    <Form.Text className="text-muted">
+                      <i className="bi bi-info-circle me-1"></i>
+                      Link your Telegram to receive notifications (optional)
+                    </Form.Text>
+                  </Form.Group>
+
+                  {/* Email Notifications Toggle */}
+                  <Form.Group className="mb-4">
+                    <div 
+                      className={`p-4 rounded profile-notification-toggle ${mail_notifications ? 'profile-notification-active' : 'profile-notification-inactive'}`}
                     >
-                      <i className="bi bi-upload me-2"></i>
-                      Upload
-                    </Button>
-                  </label>
-                  {personal_photoPreview && personal_photoPreview !== "http://localhost:3001/static/user.png" && (
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={handleRemovepersonal_photo}
-                      className="profile-upload-button"
-                    >
-                      <i className="bi bi-trash me-2"></i>
-                      Remove
-                    </Button>
-                  )}
-                </div>
-                <small className="text-muted mt-2">Max 5MB - JPG, PNG, GIF</small>
-              </div>
-            </Form.Group>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center">
+                          <i 
+                            className={`bi ${mail_notifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3 profile-notification-icon`}
+                          ></i>
+                          <div>
+                            <strong className="profile-notification-title">
+                              Email Notifications
+                            </strong>
+                            <div className="text-muted profile-notification-subtitle">
+                              {mail_notifications 
+                                ? 'You will receive email updates' 
+                                : 'Email notifications are disabled'}
+                            </div>
+                          </div>
+                        </div>
+                        <Form.Check 
+                          type="switch"
+                          id="email-notifications-switch"
+                          checked={mail_notifications}
+                          onChange={(e) => setmail_notifications(e.target.checked)}
+                          className="profile-notification-switch"
+                        />
+                      </div>
+                    </div>
+                  </Form.Group>
 
-            {/* Telegram Username */}
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold profile-form-label">
-                <i className="bi bi-telegram me-2 text-primary"></i>Telegram Username
-              </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="@username"
-                value={telegram_nickname}
-                onChange={(e) => settelegram_nickname(e.target.value)}
-                className="profile-form-input"
-              />
-              <Form.Text className="text-muted">
-                <i className="bi bi-info-circle me-1"></i>
-                Link your Telegram to receive notifications (optional)
-              </Form.Text>
-            </Form.Group>
-
-            {/* User Info Display */}
-            <div className="mt-4 p-3 bg-light rounded profile-account-info">
-              <h6 className="mb-3 profile-account-title">
-                <i className="bi bi-person-vcard me-2"></i>Account Information
-              </h6>
-              <div className="mb-2">
-                <small className="text-muted">Name:</small>
-                <div className="fw-medium">{props.user?.name} {props.user?.surname}</div>
-              </div>
-              <div className="mb-2">
-                <small className="text-muted">Username:</small>
-                <div className="fw-medium">{props.user?.username}</div>
-              </div>
-              <div>
-                <small className="text-muted">Email:</small>
-                <div className="fw-medium">{props.user?.email || 'Not provided'}</div>
-              </div>
-            </div>
-
-            {/* Email Notifications Toggle - MOVED TO BOTTOM */}
-            <Form.Group className="mt-4 mb-0">
-              <div 
-                className={`p-3 rounded profile-notification-toggle ${mail_notifications ? 'profile-notification-active' : 'profile-notification-inactive'}`}
-              >
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center">
-                    <i 
-                      className={`bi ${mail_notifications ? 'bi-envelope-check' : 'bi-envelope-slash'} me-3 profile-notification-icon`}
-                    ></i>
-                    <div>
-                      <strong className="profile-notification-title">
-                        Email Notifications
-                      </strong>
-                      <div className="text-muted profile-notification-subtitle">
-                        {mail_notifications 
-                          ? 'You will receive email updates' 
-                          : 'Email notifications are disabled'}
+                  {/* User Info Display */}
+                  <div className="profile-account-info">
+                    <h6 className="mb-3 profile-account-title">
+                      <i className="bi bi-person-vcard me-2"></i>Account Information
+                    </h6>
+                    <div className="row g-3">
+                      <div className="col-12 col-md-6">
+                        <div className="profile-info-item">
+                          <small className="text-muted d-block mb-1">Full Name</small>
+                          <div className="fw-semibold profile-info-value">
+                            {props.user?.name} {props.user?.surname}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <div className="profile-info-item">
+                          <small className="text-muted d-block mb-1">Username</small>
+                          <div className="fw-semibold profile-info-value">
+                            {props.user?.username}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-12">
+                        <div className="profile-info-item">
+                          <small className="text-muted d-block mb-1">Email Address</small>
+                          <div className="fw-semibold profile-info-value">
+                            {props.user?.email || 'Not provided'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <Form.Check 
-                    type="switch"
-                    id="email-notifications-switch"
-                    checked={mail_notifications}
-                    onChange={(e) => setmail_notifications(e.target.checked)}
-                    className="profile-notification-switch"
-                  />
                 </div>
               </div>
-            </Form.Group>
+            </div>
           </Form>
         </Modal.Body>
         <Modal.Footer className="profile-modal-footer">
@@ -438,6 +518,88 @@ function NavHeader(props) {
               <>
                 <i className="bi bi-check-circle me-2"></i>
                 Save Changes
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Crop Modal */}
+      <Modal 
+        show={showCropModal} 
+        onHide={handleCropCancel} 
+        centered 
+        size="lg" 
+        className="crop-modal"
+      >
+        <Modal.Header closeButton className="crop-modal-header">
+          <Modal.Title className="crop-modal-title">
+            <i className="bi bi-scissors me-2"></i>
+            Crop Your Photo
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="crop-modal-body">
+          {imageToCrop && (
+            <>
+              <div className="crop-container">
+                <Cropper
+                  image={imageToCrop}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                  cropShape="round"
+                  showGrid={false}
+                  style={{
+                    containerStyle: {
+                      width: '100%',
+                      height: '400px',
+                      position: 'relative',
+                      background: '#f0f0f0',
+                    },
+                  }}
+                />
+              </div>
+              <div className="crop-controls mt-3">
+                <Form.Label className="d-block mb-2">
+                  <i className="bi bi-zoom-in me-2"></i>Zoom
+                </Form.Label>
+                <Form.Range
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="crop-zoom-slider"
+                />
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="crop-modal-footer">
+          <Button 
+            variant="secondary" 
+            onClick={handleCropCancel}
+            disabled={cropping}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleCropAndSave}
+            disabled={cropping || !croppedAreaPixels}
+          >
+            {cropping ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Cropping...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle me-2"></i>
+                Apply Crop
               </>
             )}
           </Button>
