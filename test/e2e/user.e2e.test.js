@@ -1,12 +1,16 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const request = require('supertest');
 const { initializeDatabase } = require('../../server/db/init');
+
+// DEBUG: Verifica che le variabili siano caricate
+console.log('🔍 DEBUG - TEST_SEED_PASSWORD:', process.env.TEST_SEED_PASSWORD);
+console.log('🔍 DEBUG - SEED_PASSWORD:', process.env.SEED_PASSWORD);
 
 let app;
 let userDao;
 let agent;
 
 beforeAll(async () => {
-  // Assicura che lo schema sia creato prima di importare app/dao
   await initializeDatabase();
   app = require('../../server/index');
   userDao = require('../../server/dao/userDao');
@@ -22,7 +26,7 @@ describe('User API End-to-End Tests', () => {
       email: `${unique}@example.com`,
       name: 'Test',
       surname: 'User',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD
     };
     const res = await agent.post('/api/users').send(newUser);
     // Evitiamo 500: se appare, fallisce esplicitamente
@@ -41,11 +45,11 @@ describe('User API End-to-End Tests', () => {
       email: `${adminU}@example.com`,
       name: 'Admin',
       surname: 'E2E',
-      password: 'Password123!',
+      password: process.env.TEST_SEED_PASSWORD,
       type: 'admin'
     });
 
-    const loginRes = await agent.post('/api/sessions').send({ username: adminU, password: 'Password123!' });
+    const loginRes = await agent.post('/api/sessions').send({ username: adminU, password: process.env.TEST_SEED_PASSWORD });
     expect(loginRes.statusCode).toBe(200);
 
     const unique = `tech_${Date.now()}`;
@@ -54,7 +58,7 @@ describe('User API End-to-End Tests', () => {
       email: `${unique}@example.com`,
       name: 'Tech',
       surname: 'User',
-      password: 'Password123!',
+      password: process.env.TEST_SEED_PASSWORD,
       type: 'urban_planner'
     });
     expect([201, 409, 400]).toContain(createRes.statusCode);
@@ -82,10 +86,10 @@ describe('User API End-to-End Tests', () => {
       email: `${adminU}@example.com`,
       name: 'Admin',
       surname: 'Roles',
-      password: 'Password123!',
+      password: process.env.TEST_SEED_PASSWORD,
       type: 'admin'
     });
-    const loginRes = await agent.post('/api/sessions').send({ username: adminU, password: 'Password123!' });
+    const loginRes = await agent.post('/api/sessions').send({ username: adminU, password: process.env.TEST_SEED_PASSWORD });
     expect(loginRes.statusCode).toBe(200);
 
     const res = await agent.get('/api/users/roles');
@@ -103,16 +107,16 @@ describe('User API End-to-End Tests', () => {
       email: `${cU}@example.com`,
       name: 'Cit',
       surname: 'Forbidden',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD
     });
     const target = await userDao.createUser({
       username: targetU,
       email: `${targetU}@example.com`,
       name: 'Target',
       surname: 'User',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD
     });
-    const loginRes = await agent.post('/api/sessions').send({ username: cU, password: 'Password123!' });
+    const loginRes = await agent.post('/api/sessions').send({ username: cU, password: process.env.TEST_SEED_PASSWORD });
     expect(loginRes.statusCode).toBe(200);
 
     const createAdminOnly = await agent.post('/api/users/admin').send({
@@ -120,7 +124,7 @@ describe('User API End-to-End Tests', () => {
       email: `x_${Date.now()}@example.com`,
       name: 'X',
       surname: 'Y',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD,
     });
     expect(createAdminOnly.statusCode).toBe(401);
 
@@ -139,17 +143,17 @@ describe('User API End-to-End Tests', () => {
       email: `${aliceU}@example.com`,
       name: 'Alice',
       surname: 'E2E',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD
     });
     const bob = await userDao.createUser({
       username: bobU,
       email: `${bobU}@example.com`,
       name: 'Bob',
       surname: 'E2E',
-      password: 'Password123!'
+      password: process.env.TEST_SEED_PASSWORD
     });
 
-    const loginRes = await agent.post('/api/sessions').send({ username: aliceU, password: 'Password123!' });
+    const loginRes = await agent.post('/api/sessions').send({ username: aliceU, password: process.env.TEST_SEED_PASSWORD });
     expect(loginRes.statusCode).toBe(200);
 
     // Forbidden to update another user's profile

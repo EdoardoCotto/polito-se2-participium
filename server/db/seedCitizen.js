@@ -1,3 +1,4 @@
+require('dotenv').config();
 const sqlite = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const path = require('path');
@@ -101,7 +102,7 @@ function runQuery(query, params = []) {
 
     // B. INSERIMENTO UTENTI
     console.log("👥 Inserimento utenti...");
-    const password = 'test1234';
+    const password = process.env.SEED_PASSWORD;
     const saltRounds = 10;
     
     // Mappa per salvare la corrispondenza: username -> ID reale nel DB

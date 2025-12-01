@@ -13,6 +13,7 @@
     "supertest": "^6.3.4"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "multer": "^2.0.2",
     "sqlite3": "^5.1.7"
   }
