@@ -173,11 +173,21 @@ export default function PublicRelationsOfficer({ user }) {
       
       setReviewSuccess(`Report successfully ${reviewAction}!`);
       
-      // Refresh the pending reports list
+      // Close modal first, then refresh and clear state
       setTimeout(() => {
-        fetchPendingReports();
-        handleCloseModal();
-        setHighlightedLocation(null); // Clear highlighted marker
+        setShowModal(false); // Close modal
+        setTimeout(() => {
+          // Reset all state after modal is closed
+          setSelectedReport(null);
+          setReviewAction('');
+          setTechnicalOffice('');
+          setExplanation('');
+          setReviewError('');
+          setReviewSuccess('');
+          setHighlightedLocation(null);
+          // Refresh the pending reports list
+          fetchPendingReports();
+        }, 300); // Wait for modal close animation
       }, 1500);
       
     } catch (err) {
