@@ -431,7 +431,13 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
         key={mapKey}
         center={turinPosition} 
         zoom={13} 
-        style={{ height: '100%', width: '100%' }}
+        style={{ 
+          height: '100%', 
+          width: '100%',
+          border: '2px solid #5e7bb3',
+          borderRadius: '1rem',
+          overflow: 'hidden'
+        }}
         scrollWheelZoom={true}
         zoomControl={true}
       >
