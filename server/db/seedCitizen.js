@@ -1,6 +1,6 @@
 const sqlite = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
-const path = require('path');
+const path = require('node:path');
 
 // Percorso al database
 const dbPath = path.join(__dirname, 'participium.db');
@@ -43,7 +43,7 @@ const reports = [
     title: 'Baby Park damaged',
     description: 'The park was damaged and some lights are not working.',
     category: 'Public Lighting',
-    latitude: 45.05380,
+    latitude: 45.0538,
     longitude: 7.6835,
     image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
@@ -95,7 +95,9 @@ function runQuery(query, params = []) {
         await runQuery(`DELETE FROM Users`);
         // Reset autoincrement ID a 1
         await runQuery(`DELETE FROM sqlite_sequence WHERE name='Users' OR name='Reports'`);
-    } catch (e) {
+    } catch {
+        // Ignore errors: tables may be empty or non-existent on first run
+        // This is expected behavior, so we continue with seeding
         console.log("   Info: Tabelle forse vuote o non esistenti, proseguo.");
     }
 
