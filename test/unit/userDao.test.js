@@ -282,13 +282,8 @@ describe('userDao Functions', () => {
 
   describe('error branches with mocked sqlite3', () => {
     const getSqlite3Module = () => {
-      try {
-        // eslint-disable-next-line global-require
-        return require('../../server/node_modules/sqlite3');
-      } catch (e) {
-        // eslint-disable-next-line global-require
-        return require('sqlite3');
-      }
+      // eslint-disable-next-line global-require
+      return require('sqlite3');
     };
 
     const defaultGetImpl = (_sql, _params, cb2) => cb2(null, undefined);
