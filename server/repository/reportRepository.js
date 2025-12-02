@@ -133,19 +133,15 @@ exports.createReport = async (reportData, anonymous) => {
  * @returns {Promise<Object>}
  */
 exports.getReportById = async (reportId) => {
-  try {
-    if (!reportId) {
-      throw new BadRequestError('Report ID is required');
-    }
-    const report = await reportDao.getReportById(reportId);
-    if (!report) {
-      throw new NotFoundError('Report not found');
-    }
-
-    return mapReportRow(report);
-  } catch (err) {
-    throw err;
+  if (!reportId) {
+    throw new BadRequestError('Report ID is required');
   }
+  const report = await reportDao.getReportById(reportId);
+  if (!report) {
+    throw new NotFoundError('Report not found');
+  }
+
+  return mapReportRow(report);
 };
 
 /**
@@ -271,11 +267,7 @@ const getReportsByStatusInternal = async (status, options = {}) => {
  * Get reports by status (helper generale)
  */
 exports.getReportsByStatus = async (status, options = {}) => {
-  try {
-    return await getReportsByStatusInternal(status, options);
-  } catch (err) {
-    throw err;
-  }
+  return await getReportsByStatusInternal(status, options);
 };
 
 /**
@@ -303,18 +295,14 @@ exports.getCitizenReports = async (options = {}) => {
  * @returns {Promise<Object[]>}
  */
 exports.getAssignedReports = async (officerId) => {
-  try {
-    if (!officerId) {
-      throw new BadRequestError('Officer ID is required');
-    }
-
-    if (!Number.isInteger(officerId)) {
-      throw new BadRequestError('Officer ID must be a valid integer');
-    }
-
-    const rows = await reportDao.getReportsByOfficerId(officerId);
-    return rows.map(mapReportRow);
-  } catch (err) {
-    throw err;
+  if (!officerId) {
+    throw new BadRequestError('Officer ID is required');
   }
+
+  if (!Number.isInteger(officerId)) {
+    throw new BadRequestError('Officer ID must be a valid integer');
+  }
+
+  const rows = await reportDao.getReportsByOfficerId(officerId);
+  return rows.map(mapReportRow);
 };
