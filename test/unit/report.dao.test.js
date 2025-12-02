@@ -1,15 +1,10 @@
 "use strict";
 
-// Helper to get sqlite3 module, trying local path first, then falling back to global
+// Helper to get sqlite3 module
+// Node's module resolution will automatically find sqlite3 in node_modules
 const getSqlite3Module = () => {
-  try {
-    // eslint-disable-next-line global-require
-    return require("../../server/node_modules/sqlite3");
-  } catch {
-    // Fallback to global sqlite3 if local path doesn't exist
-    // eslint-disable-next-line global-require
-    return require("sqlite3");
-  }
+  // eslint-disable-next-line global-require
+  return require("sqlite3");
 };
 
 // Helper to load DAO with a spy-mocked sqlite3 Database that the DAO will use
