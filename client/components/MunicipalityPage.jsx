@@ -187,8 +187,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                   Map View
                   {highlightedLocation && (
                     <Badge bg="info" className="ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      <i className="bi bi-geo-alt-fill me-1"></i>
-                      Selected
+                      <i className="bi bi-geo-alt-fill me-1"></i>Selected
                     </Badge>
                   )}
                 </h4>

@@ -83,8 +83,7 @@ function LoginModal(props) {
                 <Form onSubmit={onSubmit}>
                     <Form.Group controlId='username' className='mb-3'>
                         <Form.Label className="login-form-label fw-semibold">
-                            <i className="bi bi-person-fill login-form-icon me-2"></i>
-                            Username
+                            <i className="bi bi-person-fill login-form-icon me-2"></i>Username
                         </Form.Label>
                         <Form.Control 
                             type='text' 
@@ -98,8 +97,7 @@ function LoginModal(props) {
                     </Form.Group>
                     <Form.Group controlId='password' className='mb-4'>
                         <Form.Label className="login-form-label fw-semibold">
-                            <i className="bi bi-lock-fill login-form-icon me-2"></i>
-                            Password
+                            <i className="bi bi-lock-fill login-form-icon me-2"></i>Password
                         </Form.Label>
                         <Form.Control 
                             type='password' 
@@ -121,13 +119,11 @@ function LoginModal(props) {
                     >
                         {isPending ? (
                             <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Signing in...
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...
                             </>
                         ) : (
                             <>
-                                <i className="bi bi-box-arrow-in-right me-2"></i>
-                                Sign In
+                                <i className="bi bi-box-arrow-in-right me-2"></i>Sign In
                             </>
                         )}
                     </Button>
@@ -151,8 +147,7 @@ function LoginModal(props) {
                             className="login-register-btn w-100"
                             onClick={handleClose}
                         >
-                            <i className="bi bi-person-plus-fill me-2"></i>
-                            Create New Account
+                            <i className="bi bi-person-plus-fill me-2"></i>Create New Account
                         </Button>
                     </div>
                 </Form>
@@ -176,8 +171,7 @@ function LogoutButton(props) {
       onClick={props.handleLogout}
       className="logout-button d-flex align-items-center my-2 my-lg-0"
     >
-      <i className="bi bi-box-arrow-right me-2"></i>
-      Logout
+      <i className="bi bi-box-arrow-right me-2"></i>Logout
     </Button>
   );
 }

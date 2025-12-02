@@ -276,8 +276,7 @@ export default function PublicRelationsOfficer({ user }) {
                   Reports Map View
                   {highlightedLocation && ( // Show indicator when location is highlighted
                     <Badge bg="info" className="ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      <i className="bi bi-geo-alt-fill me-1"></i>
-                      Selected
+                      <i className="bi bi-geo-alt-fill me-1"></i>Selected
                     </Badge>
                   )}
                 </h4>
@@ -428,8 +427,7 @@ export default function PublicRelationsOfficer({ user }) {
                               }}
                               style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}
                             >
-                              <i className="bi bi-check-circle me-1"></i>
-                              Accept
+                              <i className="bi bi-check-circle me-1"></i>Accept
                             </Button>
                             <Button 
                               className="pending-report-btn-reject flex-grow-1"
@@ -440,8 +438,7 @@ export default function PublicRelationsOfficer({ user }) {
                               }}
                               style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}
                             >
-                              <i className="bi bi-x-circle me-1"></i>
-                              Reject
+                              <i className="bi bi-x-circle me-1"></i>Reject
                             </Button>
                           </div>
                         </Card.Body>
@@ -592,8 +589,7 @@ export default function PublicRelationsOfficer({ user }) {
               {reviewAction === 'accepted' && (
                 <Form.Group className="review-form-group mb-3">
                   <Form.Label className="review-form-label fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                    <i className="bi bi-building me-2"></i>
-                    Assign to Technical Office *
+                    <i className="bi bi-building me-2"></i>Assign to Technical Office *
                   </Form.Label>
                   <Form.Select
                     value={technicalOffice}
@@ -617,8 +613,7 @@ export default function PublicRelationsOfficer({ user }) {
               {reviewAction === 'rejected' && (
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                    <i className="bi bi-chat-left-text me-2"></i>
-                    Explanation for Rejection *
+                    <i className="bi bi-chat-left-text me-2"></i>Explanation for Rejection *
                   </Form.Label>
                   <Form.Control
                     as="textarea"
