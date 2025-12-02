@@ -106,6 +106,47 @@ function resetDatabase() {
 }
 
 /**
+ * Helper: Check and log service types
+ */
+function checkServiceTypes(db, resolve, reject) {
+    db.all('SELECT * FROM service_types', [], (err, serviceTypes) => {
+        if (err) {
+            console.error('❌ Error querying service_types:', err.message);
+            db.close();
+            reject(err);
+            return;
+        }
+
+        console.log(`✅ Service Types: ${serviceTypes.length} records`);
+        serviceTypes.forEach(st => {
+            console.log(`   - ${st.code}: ${st.name}`);
+        });
+
+        // Check counters
+        checkCounters(db, resolve, reject);
+    });
+}
+
+/**
+ * Helper: Check and log counters
+ */
+function checkCounters(db, resolve, reject) {
+    db.all('SELECT * FROM counters', [], (err, counters) => {
+        if (err) {
+            console.error('❌ Error querying counters:', err.message);
+            db.close();
+            reject(err);
+            return;
+        }
+
+        console.log(`✅ Counters: ${counters.length} records`);
+        console.log('\n🎉 Database verification complete!\n');
+        db.close();
+        resolve();
+    });
+}
+
+/**
  * Verify database structure
  */
 function verifyDatabase() {
@@ -131,36 +172,7 @@ function verifyDatabase() {
             console.log('📋 Tables:', tables.map(t => t.name).join(', '));
 
             // Check service types
-            db.all('SELECT * FROM service_types', [], (err, serviceTypes) => {
-                if (err) {
-                    console.error('❌ Error querying service_types:', err.message);
-                    db.close();
-                    reject(err);
-                    return;
-                }
-
-                console.log(`✅ Service Types: ${serviceTypes.length} records`);
-                serviceTypes.forEach(st => {
-                    console.log(`   - ${st.code}: ${st.name}`);
-                });
-
-                // Check counters
-                db.all('SELECT * FROM counters', [], (err, counters) => {
-                    if (err) {
-                        console.error('❌ Error querying counters:', err.message);
-                        db.close();
-                        reject(err);
-                        return;
-                    }
-
-                    console.log(`✅ Counters: ${counters.length} records`);
-                    
-                    console.log('\n🎉 Database verification complete!\n');
-                    
-                    db.close();
-                    resolve();
-                });
-            });
+            checkServiceTypes(db, resolve, reject);
         });
     });
 }
