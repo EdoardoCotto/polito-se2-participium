@@ -186,7 +186,7 @@ module.exports = {
 };
 
 // Run if called directly
-async function runDatabaseCommand() {
+if (require.main === module) {
     const args = new Set(process.argv.slice(2));
     
     try {
@@ -208,8 +208,4 @@ async function runDatabaseCommand() {
         }
         process.exit(1);
     }
-}
-
-if (require.main === module) {
-    runDatabaseCommand();
 }
