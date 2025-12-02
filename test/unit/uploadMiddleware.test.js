@@ -7,17 +7,19 @@ const path = require("node:path");
 // mock di multer (due mapping: 'multer' e la possibile risoluzione in server/node_modules)
 jest.mock("multer", () => {
   const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
+  
+  function mockArrayMiddleware(req, res, next) { next?.(); }
+  function mockSingleMiddleware(req, res, next) { next?.(); }
+  
   const mockMulter = (opts) => {
     shared.lastOptions = opts;
     const instance = {
       array: (field, max) => {
         shared.lastArrayArgs = [field, max];
-        const fn = function mockArrayMiddleware(req, res, next) { next?.(); };
-        return fn;
+        return mockArrayMiddleware;
       },
       single: () => {
-        const fn = function mockSingleMiddleware(req, res, next) { next?.(); };
-        return fn;
+        return mockSingleMiddleware;
       },
     };
     if (!shared.instances) shared.instances = [];
