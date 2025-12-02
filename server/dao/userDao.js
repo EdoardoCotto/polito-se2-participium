@@ -2,7 +2,7 @@
 
 const sqlite = require('sqlite3');
 const bcrypt = require('bcrypt');
-const path = require('path');
+const path = require('node:path');
 const { ALLOWED_ROLES } = require('../constants/roles');
 
 // Connessione al database

@@ -5,8 +5,8 @@
  */
 
 const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
          
 // Database file path
 const DB_PATH = path.join(__dirname, 'participium.db');

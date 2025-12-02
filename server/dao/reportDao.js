@@ -1,7 +1,7 @@
 "use strict";
 
 const sqlite = require('sqlite3');
-const path = require('path');
+const path = require('node:path');
 
 // Connessione al database
 const dbPath = path.join(__dirname, '..', 'db', 'participium.db');
