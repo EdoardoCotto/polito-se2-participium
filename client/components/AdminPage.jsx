@@ -261,8 +261,7 @@ export default function MapPage() {
                         borderBottom: '2px solid #dee2e6',
                         borderTop: 'none'
                       }}>
-                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>
-                        Name
+                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Name
                       </th>
                       <th style={{ 
                         fontWeight: '600', 
@@ -273,8 +272,7 @@ export default function MapPage() {
                         borderBottom: '2px solid #dee2e6',
                         borderTop: 'none'
                       }}>
-                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>
-                        Surname
+                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Surname
                       </th>
                       <th style={{ 
                         fontWeight: '600', 
@@ -285,8 +283,7 @@ export default function MapPage() {
                         borderBottom: '2px solid #dee2e6',
                         borderTop: 'none'
                       }}>
-                        <i className="bi bi-envelope-fill me-2" style={{ color: '#5e7bb3' }}></i>
-                        Email
+                        <i className="bi bi-envelope-fill me-2" style={{ color: '#5e7bb3' }}></i>Email
                       </th>
                       <th style={{ 
                         fontWeight: '600', 
@@ -297,8 +294,7 @@ export default function MapPage() {
                         borderBottom: '2px solid #dee2e6',
                         borderTop: 'none'
                       }}>
-                        <i className="bi bi-shield-check me-2" style={{ color: '#5e7bb3' }}></i>
-                        Role
+                        <i className="bi bi-shield-check me-2" style={{ color: '#5e7bb3' }}></i>Role
                       </th>
                     </tr>
                   </thead>
@@ -409,8 +405,7 @@ export default function MapPage() {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
-              <i className="bi bi-person-plus-fill me-2" style={{ WebkitTextFillColor: 'initial' }}></i>
-              Add New User
+              <i className="bi bi-person-plus-fill me-2" style={{ WebkitTextFillColor: 'initial' }}></i>Add New User
             </Modal.Title>
           </Modal.Header>
           <Modal.Body className="p-4">
@@ -539,8 +534,7 @@ export default function MapPage() {
               disabled={isSubmitting}
               style={{ borderRadius: '8px' }}
             >
-              <i className="bi bi-x-circle me-2"></i>
-              Cancel
+              <i className="bi bi-x-circle me-2"></i>Cancel
             </Button>
             <Button 
               variant="primary" 
@@ -560,8 +554,7 @@ export default function MapPage() {
                 </>
               ) : (
                 <>
-                  <i className="bi bi-person-plus-fill me-2"></i>
-                  Create User
+                  <i className="bi bi-person-plus-fill me-2"></i>Create User
                 </>
               )}
             </Button>
@@ -601,8 +594,7 @@ export default function MapPage() {
 
               <div className="mb-3">
                 <div className="form-label fw-semibold" style={{ color: '#495057' }}>
-                  <i className="bi bi-tag-fill me-2"></i>
-                  Select New Role
+                  <i className="bi bi-tag-fill me-2"></i>Select New Role
                 </div>
                 <div className="d-flex flex-column gap-2" role="radiogroup" aria-label="Select New Role">
                   {availableRoles.map((role) => (
@@ -686,8 +678,7 @@ export default function MapPage() {
               fontWeight: '500'
             }}
           >
-            <i className="bi bi-x-circle me-2"></i>
-            Cancel
+            <i className="bi bi-x-circle me-2"></i>Cancel
           </Button>
           <Button 
             variant="primary"
@@ -702,8 +693,7 @@ export default function MapPage() {
               boxShadow: '0 2px 8px rgba(94, 123, 179, 0.3)'
             }}
           >
-            <i className="bi bi-check-circle-fill me-2"></i>
-            Confirm Change
+            <i className="bi bi-check-circle-fill me-2"></i>Confirm Change
           </Button>
         </Modal.Footer>
       </Modal>

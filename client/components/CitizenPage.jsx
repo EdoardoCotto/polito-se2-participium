@@ -357,8 +357,7 @@ export default function CitizenPage({ user }) {
                         padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)'
                       }}
                     >
-                      <i className="bi bi-file-earmark-plus me-2"></i>
-                      Create Report
+                      <i className="bi bi-file-earmark-plus me-2"></i>Create Report
                     </Dropdown.Item>
                     <Dropdown.Item 
                       active={viewMode === 'view'}
@@ -369,8 +368,7 @@ export default function CitizenPage({ user }) {
                         padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)'
                       }}
                     >
-                      <i className="bi bi-eye me-2"></i>
-                      View Reports on Map
+                      <i className="bi bi-eye me-2"></i>View Reports on Map
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
@@ -463,14 +461,12 @@ export default function CitizenPage({ user }) {
                     </div>
                     
                     <h6 className="mb-3 report-view-section-header">
-                      <i className="bi bi-list-ul"></i>
-                      Click on a report to view details
+                      <i className="bi bi-list-ul"></i>Click on a report to view details
                     </h6>
                     <ListGroup className="report-list-group">
                       {filteredReports.length === 0 ? (
                         <Alert variant="info" className="mt-3">
-                          <i className="bi bi-info-circle me-2"></i>
-                          No reports match your filters. Try adjusting your search or filters.
+                          <i className="bi bi-info-circle me-2"></i>No reports match your filters. Try adjusting your search or filters.
                         </Alert>
                       ) : (
                         filteredReports.map((report) => (
@@ -700,8 +696,7 @@ export default function CitizenPage({ user }) {
                                 className="w-100"
                                 style={{ borderRadius: '8px', cursor: 'pointer' }}
                               >
-                                <i className="bi bi-plus-circle me-2"></i>
-                                Add Photo
+                                <i className="bi bi-plus-circle me-2"></i>Add Photo
                               </Button>
                             </label>
                           </>
@@ -789,8 +784,7 @@ export default function CitizenPage({ user }) {
                       >
                         {submitting ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Submitting...
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...
                           </>
                         ) : (
                           <>
@@ -831,8 +825,7 @@ export default function CitizenPage({ user }) {
       }} size="lg" centered className="report-detail-modal">
         <Modal.Header closeButton className="report-detail-header">
           <Modal.Title>
-            <i className="bi bi-file-text me-2"></i>
-            Report Details
+            <i className="bi bi-file-text me-2"></i>Report Details
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="report-detail-body">
@@ -902,7 +895,7 @@ export default function CitizenPage({ user }) {
                         <div className="report-photo-container">
                           <img
                             src={photoUrl}
-                            alt={`Report photo ${index + 1}`}
+                            alt={`Report visual detail ${index + 1}`}
                             className="report-photo-image"
                             onError={(e) => {
                               e.target.onerror = null;
@@ -938,8 +931,7 @@ export default function CitizenPage({ user }) {
       }} size="lg" centered className="report-photos-modal">
         <Modal.Header closeButton className="report-photos-header">
           <Modal.Title>
-            <i className="bi bi-images me-2"></i>
-            Report Photos
+            <i className="bi bi-images me-2"></i>Report Photos
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
@@ -948,7 +940,7 @@ export default function CitizenPage({ user }) {
               <div className="report-photo-single-container">
                 <img 
                   src={selectedReportPhotos[0]} 
-                  alt="Report photo"
+                  alt="Report visual detail"
                   className="report-photo-single-image"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -963,7 +955,7 @@ export default function CitizenPage({ user }) {
                     <div className="report-photo-container">
                       <img
                         src={photo}
-                        alt={`Report photo ${index + 1}`}
+                        alt={`Report visual detail ${index + 1}`}
                         className="report-photo-image"
                         onError={(e) => {
                           e.target.onerror = null;
