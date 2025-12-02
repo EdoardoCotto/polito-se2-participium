@@ -549,8 +549,7 @@ export default function MapPage() {
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Creating...
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating...
                 </>
               ) : (
                 <>
@@ -570,8 +569,7 @@ export default function MapPage() {
           borderBottom: 'none'
         }}>
           <Modal.Title style={{ fontWeight: '600' }}>
-            <i className="bi bi-shield-lock me-2"></i>
-            Change User Role
+            <i className="bi bi-shield-lock me-2"></i>Change User Role
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
