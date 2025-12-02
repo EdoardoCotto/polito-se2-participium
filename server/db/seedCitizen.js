@@ -53,8 +53,8 @@ const reports = [
     title: 'Rifiuti abbandonati in Piazza Castello',
     description: 'Accumulo di sacchi neri non ritirati vicino alla fermata del tram.',
     category: 'Waste',
-    latitude: 45.07090,
-    longitude: 7.68570,
+    latitude: 45.0709,
+    longitude: 7.6857,
     image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending', 
     author_username: 'citizen'
@@ -63,8 +63,8 @@ const reports = [
     title: 'Weed too high on sidewalk',
     description: 'Weed too high on sidewalk',
     category: 'Architectural Barriers',
-    latitude: 45.06210,
-    longitude: 7.66100,
+    latitude: 45.0621,
+    longitude: 7.661,
     image_path1: '/static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'citizen'
