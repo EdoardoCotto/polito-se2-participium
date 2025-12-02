@@ -240,7 +240,7 @@ exports.getCitizenReports = async (req, res) => {
  */
 exports.getAssignedReports = async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
+    if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
