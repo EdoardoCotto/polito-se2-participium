@@ -175,16 +175,16 @@ module.exports = {
 
 // Run if called directly
 if (require.main === module) {
-    const args = process.argv.slice(2);
+    const args = new Set(process.argv.slice(2));
     
-    if (args.includes('--reset')) {
+    if (args.has('--reset')) {
         resetDatabase()
             .then(() => process.exit(0))
             .catch((err) => {
                 console.error('Failed to reset database:', err);
                 process.exit(1);
             });
-    } else if (args.includes('--verify')) {
+    } else if (args.has('--verify')) {
         verifyDatabase()
             .then(() => process.exit(0))
             .catch((err) => {
