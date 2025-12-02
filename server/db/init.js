@@ -116,7 +116,6 @@ function verifyDatabase() {
             if (err) {
                 console.error('❌ Error opening database:', err.message);
                 reject(err);
-                return;
             }
         });
 
