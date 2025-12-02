@@ -325,8 +325,8 @@ LocationMarker.propTypes = {
   onReportMarkerClick: PropTypes.func,
   highlightedReportId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   selectedLocation: PropTypes.shape({
-    lat: PropTypes.number,
-    lng: PropTypes.number,
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
     title: PropTypes.string
   })
 };
@@ -376,6 +376,15 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
 
     return null;
   }
+
+  MapCenterZoom.propTypes = {
+    selectedLocation: PropTypes.shape({
+      lat: PropTypes.number.isRequired,
+      lng: PropTypes.number.isRequired,
+      title: PropTypes.string
+    }),
+    shouldZoom: PropTypes.bool
+  };
 
   useEffect(() => {
     setMapKey(1);
@@ -511,4 +520,18 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
     </div>
   );
 }
+
+TurinMap.propTypes = {
+  onLocationSelected: PropTypes.func,
+  selectedLocation: PropTypes.shape({
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+    title: PropTypes.string
+  }),
+  readOnly: PropTypes.bool,
+  allReports: PropTypes.array,
+  onReportMarkerClick: PropTypes.func,
+  highlightedReportId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  shouldZoomToSelection: PropTypes.bool
+};
 
