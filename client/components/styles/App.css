@@ -3489,6 +3489,35 @@
   transform: scale(1.1);
 }
 
+/* Map popup status value */
+.report-map-popup-status-value {
+  margin-left: 0.25rem;
+  font-weight: 600;
+}
+
+/* GeoJSON error banner */
+.geo-json-error-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: #fff3cd;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ffc107;
+}
+
+/* Map loading container */
+.map-loading-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
 /* Responsive Login Modal */
 @media (max-width: 576px) {
   .login-modal-body {
