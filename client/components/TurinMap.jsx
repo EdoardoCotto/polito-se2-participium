@@ -220,7 +220,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
               }
             }}
           >
-          <Popup className="report-map-popup">
+          <Popup>
               <div className="report-map-popup-content">
                 <h6 className="report-map-popup-title">
                   {report.title}
