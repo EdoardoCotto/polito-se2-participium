@@ -73,7 +73,7 @@ exports.createReport = async (req, res) => {
       anonymous
     } = req.body || {};
 
-    if (!req.user || !req.user.id) {
+    if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
