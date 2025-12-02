@@ -18,7 +18,7 @@ describe('constantRoutes', () => {
 
   test('handler diretto restituisce le stesse categorie', () => {
     // Estrae l'handler dal router per invocarlo direttamente
-    const layer = constantRoutes.stack.find(l => l.route && l.route.path === '/categories');
+    const layer = constantRoutes.stack.find(l => l.route?.path === '/categories');
     expect(layer).toBeDefined();
     const handler = layer.route.stack[0].handle;
 
