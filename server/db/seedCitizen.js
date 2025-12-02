@@ -83,7 +83,7 @@ function runQuery(query, params = []) {
 }
 
 // --- LOGICA PRINCIPALE ---
-(async () => {
+async function seedDatabase() {
   try {
     console.log("🚀 Inizio procedura di seeding...");
 
@@ -156,4 +156,6 @@ function runQuery(query, params = []) {
   } finally {
     db.close(() => console.log("🔒 Database chiuso."));
   }
-})();
+}
+
+seedDatabase();
