@@ -7,6 +7,7 @@ import * as turf from '@turf/turf';
 import PropTypes from 'prop-types';
 import 'leaflet/dist/leaflet.css';
 import './styles/cluster.css';
+import './styles/App.css';
 
 // Fix for default marker icons in react-leaflet
 if (typeof window !== 'undefined') {
