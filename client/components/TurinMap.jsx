@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { Button, Alert } from 'react-bootstrap';
+import { Alert } from 'react-bootstrap';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
+import PropTypes from 'prop-types';
 import 'leaflet/dist/leaflet.css';
 import './styles/cluster.css';
 
@@ -306,6 +307,29 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
     </>
   );
 }
+
+LocationMarker.propTypes = {
+  markers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      position: PropTypes.arrayOf(PropTypes.number),
+      timestamp: PropTypes.string
+    })
+  ).isRequired,
+  setMarkers: PropTypes.func.isRequired,
+  geoJsonData: PropTypes.object,
+  onOutOfBounds: PropTypes.func,
+  onLocationSelected: PropTypes.func,
+  readOnly: PropTypes.bool,
+  allReports: PropTypes.array,
+  onReportMarkerClick: PropTypes.func,
+  highlightedReportId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  selectedLocation: PropTypes.shape({
+    lat: PropTypes.number,
+    lng: PropTypes.number,
+    title: PropTypes.string
+  })
+};
 
 export default function TurinMap({ onLocationSelected, selectedLocation, readOnly = false, allReports = [], onReportMarkerClick, highlightedReportId, shouldZoomToSelection = false }) {
   // Turin coordinates
