@@ -4,12 +4,13 @@ const path = require("node:path");
 
 // utilizzeremo degli spy sul modulo reale fs
 
+// Mock middleware functions moved to outer scope
+function mockArrayMiddleware(req, res, next) { next?.(); }
+function mockSingleMiddleware(req, res, next) { next?.(); }
+
 // mock di multer (due mapping: 'multer' e la possibile risoluzione in server/node_modules)
 jest.mock("multer", () => {
   const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
-  
-  function mockArrayMiddleware(req, res, next) { next?.(); }
-  function mockSingleMiddleware(req, res, next) { next?.(); }
   
   const mockMulter = (opts) => {
     shared.lastOptions = opts;
