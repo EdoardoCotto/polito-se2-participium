@@ -1,6 +1,7 @@
 // components/CitizenPage.jsx
 import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge, InputGroup, Carousel } from 'react-bootstrap';
 import { useState, useEffect, useMemo} from 'react';
+import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
 
@@ -237,11 +238,11 @@ export default function CitizenPage({ user }) {
   
   // Get unique categories and statuses
   const availableCategories = useMemo(() => {
-    return [...new Set(allReports.map(r => r.category))].sort();
+    return [...new Set(allReports.map(r => r.category))].sort((a, b) => a.localeCompare(b));
   }, [allReports]);
   
   const availableStatuses = useMemo(() => {
-    return [...new Set(allReports.map(r => r.status))].sort();
+    return [...new Set(allReports.map(r => r.status))].sort((a, b) => a.localeCompare(b));
   }, [allReports]);
 
   // Get category icon
@@ -653,7 +654,15 @@ export default function CitizenPage({ user }) {
                                 <div 
                                   className="d-flex align-items-center flex-grow-1"
                                   style={{ cursor: 'pointer' }}
+                                  role="button"
+                                  tabIndex={0}
                                   onClick={() => handlePhotoClick(photo)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      handlePhotoClick(photo);
+                                    }
+                                  }}
                                 >
                                   <i className="bi bi-file-earmark-image me-2 text-primary"></i>
                                   <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
@@ -786,7 +795,7 @@ export default function CitizenPage({ user }) {
                         ) : (
                           <>
                             <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-send'} me-2`}></i>
-                            Submit {isAnonymous ? 'Anonymous' : ''} Report
+                            {isAnonymous ? 'Submit Anonymous Report' : 'Submit Report'}
                           </>
                         )}
                       </Button>
@@ -988,3 +997,12 @@ export default function CitizenPage({ user }) {
     </div>
   );
 }
+
+CitizenPage.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    name: PropTypes.string,
+    role: PropTypes.string,
+  }),
+};

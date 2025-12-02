@@ -213,7 +213,7 @@ export default function MapPage() {
                 <span>Users Management</span>
               </h3>
               <div className="text-white-50" style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1rem)' }}>
-                <i className="bi bi-person-badge me-1"></i>
+                <i className="bi bi-person-badge me-1"></i>{' '}
                 {users.length} {users.length === 1 ? 'User' : 'Users'}
               </div>
             </div>
@@ -227,7 +227,7 @@ export default function MapPage() {
           }}>
             {usersError && (
               <Alert variant="danger" dismissible onClose={() => setUsersError('')} className="m-3">
-                <i className="bi bi-exclamation-triangle me-2"></i>
+                <i className="bi bi-exclamation-triangle me-2"></i>{' '}
                 {usersError}
               </Alert>
             )}
@@ -241,7 +241,7 @@ export default function MapPage() {
               </div>
             ) : users.length === 0 ? (
               <Alert variant="info" className="d-flex align-items-center m-3">
-                <i className="bi bi-info-circle me-2"></i>
+                <i className="bi bi-info-circle me-2"></i>{' '}
                 No users found
               </Alert>
             ) : (
@@ -315,8 +315,8 @@ export default function MapPage() {
                           fontWeight: '500',
                           color: '#212529',
                           borderBottom: '1px solid #e9ecef'
-                        }}>
-                          <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>
+                        }}                        >
+                          <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>{' '}
                           {user.name}
                         </td>
                         <td style={{ 
@@ -337,7 +337,7 @@ export default function MapPage() {
                           color: '#495057',
                           borderBottom: '1px solid #e9ecef'
                         }}>
-                          <i className="bi bi-envelope me-2" style={{ color: '#6c757d' }}></i>
+                          <i className="bi bi-envelope me-2" style={{ color: '#6c757d' }}></i>{' '}
                           {user.email}
                         </td>
                         <td style={{ 
@@ -382,7 +382,7 @@ export default function MapPage() {
                               textOverflow: 'ellipsis',
                               flex: 1
                             }}>
-                              <i className="bi bi-shield-check me-2"></i>
+                              <i className="bi bi-shield-check me-2"></i>{' '}
                               {getRoleLabel(user.type) || 'Assign Role'}
                             </span>
                             <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
@@ -416,13 +416,13 @@ export default function MapPage() {
           <Modal.Body className="p-4">
             {showSuccess && (
               <Alert variant="success" className="d-flex align-items-center">
-                <i className="bi bi-check-circle-fill me-2"></i>
+                <i className="bi bi-check-circle-fill me-2"></i>{' '}
                 Registration successful!
               </Alert>
             )}
             {apiError && (
               <Alert variant="danger" onClose={() => setApiError('')} dismissible>
-                <i className="bi bi-exclamation-triangle me-2"></i>
+                <i className="bi bi-exclamation-triangle me-2"></i>{' '}
                 {typeof apiError === 'string' ? apiError : apiError?.message ?? String(apiError)}
               </Alert>
             )}
@@ -590,25 +590,34 @@ export default function MapPage() {
                 borderLeft: '4px solid #5e7bb3'
               }}>
                 <h6 className="mb-2" style={{ color: '#495057', fontWeight: '600' }}>
-                  <i className="bi bi-person-circle me-2"></i>
+                  <i className="bi bi-person-circle me-2"></i>{' '}
                   {selectedUser.name} {selectedUser.surname}
                 </h6>
                 <small className="text-muted">
-                  <i className="bi bi-envelope me-1"></i>
+                  <i className="bi bi-envelope me-1"></i>{' '}
                   {selectedUser.email}
                 </small>
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-semibold" style={{ color: '#495057' }}>
+                <div className="form-label fw-semibold" style={{ color: '#495057' }}>
                   <i className="bi bi-tag-fill me-2"></i>
                   Select New Role
-                </label>
-                <div className="d-flex flex-column gap-2">
+                </div>
+                <div className="d-flex flex-column gap-2" role="radiogroup" aria-label="Select New Role">
                   {availableRoles.map((role) => (
                     <div
                       key={role}
+                      role="radio"
+                      aria-checked={selectedRole === role}
+                      tabIndex={0}
                       onClick={() => setSelectedRole(role)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedRole(role);
+                        }
+                      }}
                       className="p-3"
                       style={{
                         backgroundColor: selectedRole === role ? '#5e7bb3' : '#ffffff',
@@ -630,6 +639,21 @@ export default function MapPage() {
                         if (selectedRole !== role) {
                           e.currentTarget.style.backgroundColor = '#ffffff';
                           e.currentTarget.style.borderColor = '#e0e6ed';
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (selectedRole !== role) {
+                          e.currentTarget.style.backgroundColor = '#f8f9ff';
+                          e.currentTarget.style.borderColor = '#5e7bb3';
+                          e.currentTarget.style.outline = '2px solid #5e7bb3';
+                          e.currentTarget.style.outlineOffset = '2px';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (selectedRole !== role) {
+                          e.currentTarget.style.backgroundColor = '#ffffff';
+                          e.currentTarget.style.borderColor = '#e0e6ed';
+                          e.currentTarget.style.outline = 'none';
                         }
                       }}
                     >
