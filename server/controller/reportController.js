@@ -5,13 +5,14 @@ const reportRepository = require('../repository/reportRepository');
 const AppError = require('../errors/AppError');
 const path = require('node:path');
 
-const buildPhotoUrls = (photos = [], req) => {
-  if (!Array.isArray(photos) || !req) {
+const buildPhotoUrls = (photos, req = null) => {
+  const safePhotos = Array.isArray(photos) ? photos : [];
+  if (!safePhotos.length || !req) {
     return [];
   }
 
   const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return photos
+  return safePhotos
     .map((photoPath) => (photoPath || '').trim())
     .filter((photoPath) => photoPath.length > 0)
     .map((photoPath) => {
