@@ -3,7 +3,7 @@
 
 const reportRepository = require('../repository/reportRepository');
 const AppError = require('../errors/AppError');
-const path = require('path');
+const path = require('node:path');
 
 const buildPhotoUrls = (photos = [], req) => {
   if (!Array.isArray(photos) || !req) {
