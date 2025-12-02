@@ -226,7 +226,10 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
                 </h6>
                 {report.category && (
                   <div className="report-map-popup-category">
-                    <span className="report-map-popup-icon">🏷</span>
+                    <span className="report-map-popup-icon">
+                      {/* Label/tag icon as HTML entity to avoid encoding issues */}
+                      &#127991;
+                    </span>
                     {report.category}
                   </div>
                 )}
@@ -390,10 +393,32 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
     fillOpacity: 0.1
   };
   
+  // Style for the GeoJSON loading error banner
+  const geoJsonErrorStyle = {
+    position: 'absolute',
+    top: '10px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 1000,
+    background: '#fff3cd',
+    padding: '0.5rem 1rem',
+    borderRadius: '0.25rem',
+    border: '1px solid #ffc107'
+  };
+  
   
   if (isLoading) {
     return (
-      <div style={{ height: '100%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
+      <div
+        style={{
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#f8f9fa'
+        }}
+      >
         <p>Loading map...</p>
       </div>
     );
@@ -421,8 +446,12 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
         >
           <>
             <strong>Warning:</strong>{' '}
-            <span className="d-none d-sm-inline">Markers can only be placed within Turin city boundaries</span>
-            <span className="d-inline d-sm-none">Must be within city boundaries</span>
+            <span className="d-none d-sm-inline">
+              Markers can only be placed within Turin city boundaries
+            </span>
+            <span className="d-inline d-sm-none">
+              Must be within city boundaries
+            </span>
           </>
         </Alert>
       )}
@@ -457,17 +486,7 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
         )}
         
         {geoJsonError && (
-          <div style={{
-            position: 'absolute',
-            top: '10px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 1000,
-            background: '#fff3cd',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.25rem',
-            border: '1px solid #ffc107'
-          }}>
+          <div style={geoJsonErrorStyle}>
             <small>Could not load city boundaries</small>
           </div>
         )}
