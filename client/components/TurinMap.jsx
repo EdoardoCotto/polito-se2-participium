@@ -184,17 +184,17 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
           disableClusteringAtZoom={18}
           iconCreateFunction={(cluster) => {
             const count = cluster.getChildCount();
-            let className = 'marker-cluster-small';
+            let sizeClass = 'marker-cluster-small';
 
             if (count >= 10) {
-              className = 'marker-cluster-large';
+              sizeClass = 'marker-cluster-large';
             } else if (count >= 5) {
-              className = 'marker-cluster-medium';
+              sizeClass = 'marker-cluster-medium';
             }
 
             return L.divIcon({
-              html: `<div><span>${count}</span></div>`,
-              className: `marker-cluster ${className}`,
+              html: '<div><span>' + count + '</span></div>',
+              className: 'marker-cluster ' + sizeClass,
               iconSize: L.point(40, 40)
             });
           }}
