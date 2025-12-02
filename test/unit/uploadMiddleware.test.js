@@ -6,7 +6,7 @@ const path = require("node:path");
 
 // mock di multer (due mapping: 'multer' e la possibile risoluzione in server/node_modules)
 jest.mock("multer", () => {
-  const shared = global.__multerState__ || (global.__multerState__ = {});
+  const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
   const mockMulter = (opts) => {
     shared.lastOptions = opts;
     const instance = {
@@ -43,10 +43,10 @@ let firstUploadInstance;
 jest.isolateModules(() => {
   uploadMiddleware = require("../../server/middlewares/uploadMiddleware");
   // Capture the diskStorage configuration objects from the initial module load
-  initialStorageConfig = global.__multerState__?.diskStorageConfigs?.[0];
-  initialProfileStorageConfig = global.__multerState__?.diskStorageConfigs?.[1];
+  initialStorageConfig = globalThis.__multerState__?.diskStorageConfigs?.[0];
+  initialProfileStorageConfig = globalThis.__multerState__?.diskStorageConfigs?.[1];
   // Capture the first multer instance (used for upload)
-  firstUploadInstance = global.__multerState__?.instances?.[0];
+  firstUploadInstance = globalThis.__multerState__?.instances?.[0];
 });
 
 describe("uploadMiddleware", () => {
@@ -97,7 +97,7 @@ describe("uploadMiddleware", () => {
   it("should configure multer with proper limits and array field", () => {
     expect(uploadMiddleware).toBeDefined();
 
-    const opts = global.__multerState__?.lastOptions;
+    const opts = globalThis.__multerState__?.lastOptions;
     expect(opts).toBeDefined();
     expect(opts.limits.fileSize).toBe(1024 * 1024 * 5);
     expect(typeof opts.fileFilter).toBe("function");
@@ -108,7 +108,7 @@ describe("uploadMiddleware", () => {
     let fileFilter;
 
     beforeEach(() => {
-      fileFilter = global.__multerState__?.lastOptions?.fileFilter;
+      fileFilter = globalThis.__multerState__?.lastOptions?.fileFilter;
     });
 
     it("should accept image files", () => {
@@ -153,7 +153,7 @@ describe("uploadMiddleware", () => {
   describe("profile storage configuration (updateProfile)", () => {
     let profileStorageConfig;
     beforeEach(() => {
-      profileStorageConfig = initialProfileStorageConfig || global.__multerState__?.diskStorageConfig;
+      profileStorageConfig = initialProfileStorageConfig || globalThis.__multerState__?.diskStorageConfig;
     });
 
     it("should set correct profile destination folder", () => {
@@ -206,7 +206,7 @@ describe("uploadMiddleware", () => {
     it("should configure array field 'photos' with max 3 files", () => {
       // Access the first created multer instance (upload) and its array() calls
       expect(firstUploadInstance).toBeDefined();
-      const args = global.__multerState__?.lastArrayArgs;
+      const args = globalThis.__multerState__?.lastArrayArgs;
       expect(args).toEqual(["photos", 3]);
     });
   });
