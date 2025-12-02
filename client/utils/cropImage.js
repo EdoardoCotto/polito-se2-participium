@@ -55,7 +55,7 @@ const createImage = (src) =>
   new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
+    image.addEventListener('error', (error) => reject(new Error(`Failed to load image: ${error.message || 'Unknown error'}`)));
     image.src = src;
   });
 

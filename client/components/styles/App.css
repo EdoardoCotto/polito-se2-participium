@@ -2223,7 +2223,6 @@
 /* Search Input Group Enhancement */
 .report-search-input + .btn {
   border-radius: 0 10px 10px 0;
-  border-left: none;
   transition: all 0.3s ease;
   border: 2px solid #e0e6ed;
   border-left: none;

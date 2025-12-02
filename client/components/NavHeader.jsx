@@ -566,14 +566,15 @@ function NavHeader(props) {
               </div>
               <div className="crop-controls mt-3">
                 <Form.Label className="d-block mb-2">
-                  <i className="bi bi-zoom-in me-2"></i>Zoom
+                  <i className="bi bi-zoom-in me-2"></i>
+                  Zoom
                 </Form.Label>
                 <Form.Range
                   value={zoom}
                   min={1}
                   max={3}
                   step={0.1}
-                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  onChange={(e) => setZoom(Number.parseFloat(e.target.value))}
                   className="crop-zoom-slider"
                 />
               </div>
