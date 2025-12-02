@@ -184,6 +184,65 @@ exports.findMunicipalityUsers = () => {
   });
 };
 
+/**
+ * Helper: Check if a field should be updated
+ * Returns true if the field should be updated, false if it should be skipped
+ */
+function shouldUpdateField(newValue, currentValue) {
+  // Skip if both are null (no change needed)
+  return !(newValue === null && currentValue === null);
+}
+
+/**
+ * Helper: Build update fields and values from updateData
+ */
+function buildUpdateFields(updateData, currentUser) {
+  const fields = [];
+  const values = [];
+
+  if (updateData.telegram_nickname !== undefined) {
+    if (shouldUpdateField(updateData.telegram_nickname, currentUser.telegram_nickname)) {
+      fields.push('telegram_nickname = ?');
+      values.push(updateData.telegram_nickname);
+    }
+  }
+
+  if (updateData.personal_photo_path !== undefined) {
+    if (shouldUpdateField(updateData.personal_photo_path, currentUser.personal_photo_path)) {
+      fields.push('personal_photo_path = ?');
+      values.push(updateData.personal_photo_path);
+    }
+  }
+
+  if (updateData.mail_notifications !== undefined) {
+    if (shouldUpdateField(updateData.mail_notifications, currentUser.mail_notifications)) {
+      fields.push('mail_notifications = ?');
+      values.push(updateData.mail_notifications);
+    }
+  }
+
+  return { fields, values };
+}
+
+/**
+ * Helper: Build result object with only updated fields
+ */
+function buildResultObject(userId, updateData, currentUser) {
+  const result = { id: userId };
+
+  if (updateData.telegram_nickname !== undefined && shouldUpdateField(updateData.telegram_nickname, currentUser.telegram_nickname)) {
+    result.telegram_nickname = updateData.telegram_nickname;
+  }
+  if (updateData.personal_photo_path !== undefined && shouldUpdateField(updateData.personal_photo_path, currentUser.personal_photo_path)) {
+    result.personal_photo_path = updateData.personal_photo_path;
+  }
+  if (updateData.mail_notifications !== undefined && shouldUpdateField(updateData.mail_notifications, currentUser.mail_notifications)) {
+    result.mail_notifications = updateData.mail_notifications;
+  }
+
+  return result;
+}
+
 exports.updateUserProfile = (userId, updateData) => {
   return new Promise((resolve, reject) => {
     // Prima recupera i dati attuali dell'utente
@@ -201,38 +260,7 @@ exports.updateUserProfile = (userId, updateData) => {
       }
 
       // Costruisci dinamicamente la query in base ai campi
-      const fields = [];
-      const values = [];
-
-      // Per telegram_nickname: accetta null solo se prima c'era un valore
-      if (updateData.telegram_nickname !== undefined) {
-        if (updateData.telegram_nickname === null && currentUser.telegram_nickname === null) {
-          // Non fare nulla: era già null
-        } else {
-          fields.push('telegram_nickname = ?');
-          values.push(updateData.telegram_nickname);
-        }
-      }
-
-      // Per personal_photo_path: accetta null solo se prima c'era un valore
-      if (updateData.personal_photo_path !== undefined) {
-        if (updateData.personal_photo_path === null && currentUser.personal_photo_path === null) {
-          // Non fare nulla: era già null
-        } else {
-          fields.push('personal_photo_path = ?');
-          values.push(updateData.personal_photo_path);
-        }
-      }
-
-      // Per mail_notifications: accetta null solo se prima c'era un valore
-      if (updateData.mail_notifications !== undefined) {
-        if (updateData.mail_notifications === null && currentUser.mail_notifications === null) {
-          // Non fare nulla: era già null
-        } else {
-          fields.push('mail_notifications = ?');
-          values.push(updateData.mail_notifications);
-        }
-      }
+      const { fields, values } = buildUpdateFields(updateData, currentUser);
 
       // Se non ci sono campi da aggiornare, ritorna senza fare nulla
       if (fields.length === 0) {
@@ -254,17 +282,7 @@ exports.updateUserProfile = (userId, updateData) => {
         }
         
         // Restituisci solo i campi effettivamente aggiornati
-        const result = { id: userId };
-        if (updateData.telegram_nickname !== undefined && !(updateData.telegram_nickname === null && currentUser.telegram_nickname === null)) {
-          result.telegram_nickname = updateData.telegram_nickname;
-        }
-        if (updateData.personal_photo_path !== undefined && !(updateData.personal_photo_path === null && currentUser.personal_photo_path === null)) {
-          result.personal_photo_path = updateData.personal_photo_path;
-        }
-        if (updateData.mail_notifications !== undefined && !(updateData.mail_notifications === null && currentUser.mail_notifications === null)) {
-          result.mail_notifications = updateData.mail_notifications;
-        }
-        
+        const result = buildResultObject(userId, updateData, currentUser);
         resolve(result);
       });
     });
