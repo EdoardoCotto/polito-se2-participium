@@ -28,13 +28,13 @@ jest.mock('../../server/controller/reportController', () => ({
   getApprovedReports: (_req, res) => res.json([{ id: 10 }]),
   getCitizenReports: (_req, res) => res.json([{ id: 20 }]),
   getAssignedReports: (_req, res) => res.json([{ id: 30 }]),
-  getReportById: (req, res) => res.json({ id: parseInt(req.params.id, 10) }),
+  getReportById: (req, res) => res.json({ id: Number.parseInt(req.params.id, 10) }),
   reviewReport: (req, res) => {
     const { status } = req.body || {};
     if (!status) {
       return res.status(400).json({ error: 'Status is required' });
     }
-    return res.json({ id: parseInt(req.params.id, 10), status });
+    return res.json({ id: Number.parseInt(req.params.id, 10), status });
   }
 }));
 
