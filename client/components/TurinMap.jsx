@@ -201,6 +201,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
           {allReports.map((report) => {
             if (!report.latitude || !report.longitude) return null;
             const isHighlighted = report.id === highlightedReportId;
+            const hasPhotos = Array.isArray(report.photoUrls) && report.photoUrls.length;
         
             // Nascondi il marker del cluster se è evidenziato (viene mostrato come marker ingrandito singolo)
             if (isHighlighted) return null;
@@ -253,12 +254,12 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
                     <span className="report-map-popup-icon">📅</span>
                     {new Date(report.created_at).toLocaleDateString()}
                   </span>
-                  {report.photoUrls && report.photoUrls.length > 0 && (
+                  {hasPhotos ? (
                     <span className="report-map-popup-footer-photos">
                       <span className="report-map-popup-icon">🖼</span>
                       {report.photoUrls.length}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </Popup>
@@ -418,8 +419,11 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
             textAlign: 'center'
           }}
         >
-          <strong>Warning:</strong> <span className="d-none d-sm-inline">Markers can only be placed within Turin city boundaries</span>
-          <span className="d-inline d-sm-none">Must be within city boundaries</span>
+          <>
+            <strong>Warning:</strong>{' '}
+            <span className="d-none d-sm-inline">Markers can only be placed within Turin city boundaries</span>
+            <span className="d-inline d-sm-none">Must be within city boundaries</span>
+          </>
         </Alert>
       )}
 
