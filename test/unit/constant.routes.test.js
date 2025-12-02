@@ -1,4 +1,4 @@
-const express = require('../../server/node_modules/express');
+const express = require('express');
 const request = require('supertest');
 const categories = require('../../server/constants/reportCategories');
 const constantRoutes = require('../../server/routes/constantRoutes');
