@@ -1,6 +1,6 @@
 "use strict";
 
-const path = require("path");
+const path = require("node:path");
 
 // utilizzeremo degli spy sul modulo reale fs
 
@@ -33,35 +33,7 @@ jest.mock("multer", () => {
   return mockMulter;
 });
 
-jest.mock("../../server/node_modules/multer", () => {
-  const shared = global.__multerState__ || (global.__multerState__ = {});
-  const mockMulter = (opts) => {
-    shared.lastOptions = opts;
-    const instance = {
-      array: (field, max) => {
-        shared.lastArrayArgs = [field, max];
-        const fn = function mockArrayMiddleware(req, res, next) { next && next(); };
-        return fn;
-      },
-      single: () => {
-        const fn = function mockSingleMiddleware(req, res, next) { next && next(); };
-        return fn;
-      },
-    };
-    if (!shared.instances) shared.instances = [];
-    shared.instances.push(instance);
-    return instance;
-  };
-  mockMulter.diskStorage = (config) => {
-    if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
-    shared.diskStorageConfigs.push(config);
-    shared.diskStorageConfig = config;
-    return config;
-  };
-  return mockMulter;
-});
-
-const fs = require("fs");
+const fs = require("node:fs");
 
 // carica il middleware in un modulo isolato per garantire l'uso dei mock
 let uploadMiddleware;
