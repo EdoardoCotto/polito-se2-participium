@@ -22,7 +22,7 @@ const withDao = (overrides = {}) => {
     .spyOn(sqlite, "Database")
     .mockImplementation(function (_path, cb) {
       if (ctorError) throw ctorError;
-      cb && cb(null);
+      cb?.(null);
       return mockDb;
     });
 
