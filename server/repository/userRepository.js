@@ -112,7 +112,7 @@ exports.assignUserRole = async (adminId, targetUserId, newType) => {
  */
 exports.getMunicipalityUsers = async (adminId) => {
     const admin = await userDao.getUserById(adminId);
-    if (!admin || admin.type !== 'admin') {
+    if (admin?.type !== 'admin') {
         throw new UnauthorizedError('You are not an admin');
     }
     const users = await userDao.findMunicipalityUsers();
