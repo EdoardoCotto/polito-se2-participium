@@ -45,7 +45,7 @@ jest.mock('../../server/middlewares/uploadMiddleware.js', () => {
   const storage = multer.memoryStorage();
 
   const fileFilter = (req, file, cb) => {
-    if (file.mimetype && file.mimetype.startsWith('image/')) {
+    if (file.mimetype?.startsWith('image/')) {
       cb(null, true);
     } else {
       const err = new Error('Invalid file type, only images are allowed!');
