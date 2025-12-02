@@ -1,5 +1,6 @@
 import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
 import MapErrorBoundary from './MapErrorBoundary';
 import API from '../API/API';
@@ -362,14 +363,14 @@ export default function TechnicalOfficeStaffMember({ user }) {
                             <div className="mb-0">
                               <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
                                 <i className="bi bi-hand-index me-1"></i>
-                                Click to show on map
+                                {' '}Click to show on map
                               </small>
                             </div>
                           ) : (
                             <div className="mb-0">
                               <small className="text-primary" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
                                 <i className="bi bi-check-circle me-1"></i>
-                                Selected - Click again to deselect
+                                {' '}Selected - Click again to deselect
                               </small>
                             </div>
                           )}
@@ -405,7 +406,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
               }}>
                 <img 
                   src={selectedPhotos[0]} 
-                  alt="Report photo"
+                  alt={photoModalTitle || 'Report attachment'}
                   style={{ 
                     maxWidth: '100%', 
                     maxHeight: '80vh',
@@ -431,7 +432,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                     }}>
                       <img
                         src={photo}
-                        alt={`Report photo ${index + 1}`}
+                        alt={photoModalTitle ? `${photoModalTitle} – attachment ${index + 1}` : `Report attachment ${index + 1}`}
                         style={{ 
                           maxWidth: '100%', 
                           maxHeight: '100%',
@@ -472,3 +473,12 @@ export default function TechnicalOfficeStaffMember({ user }) {
     </div>
   );
 }
+
+TechnicalOfficeStaffMember.propTypes = {
+  user: PropTypes.shape({
+    name: PropTypes.string,
+    surname: PropTypes.string,
+    type: PropTypes.string,
+  }),
+};
+

@@ -28,6 +28,7 @@ DefaultLayout.propTypes = {
   onShowLogin: PropTypes.func,
   handleLogout: PropTypes.func,
   onProfileUpdate: PropTypes.func,
+  message: PropTypes.any,
 };
 
 export default DefaultLayout;

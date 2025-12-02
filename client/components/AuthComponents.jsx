@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Alert, Modal} from 'react-bootstrap';
 import { Link, useNavigate} from 'react-router-dom';
+import PropTypes from "prop-types";
 // Modal di Login
 function LoginModal(props) {
   const [username, setUsername] = useState('');
@@ -159,6 +160,15 @@ function LoginModal(props) {
         </Modal>
     );
 }
+
+LoginModal.propTypes = {
+  show: PropTypes.bool.isRequired,
+  onHide: PropTypes.func,
+  handleLogin: PropTypes.func,
+  setMessage: PropTypes.func,
+  user: PropTypes.object,
+};
+
 function LogoutButton(props) {
   return (
     <Button 
@@ -171,4 +181,9 @@ function LogoutButton(props) {
     </Button>
   );
 }
+
+LogoutButton.propTypes = {
+  handleLogout: PropTypes.func,
+};
+
 export { LogoutButton, LoginModal };
