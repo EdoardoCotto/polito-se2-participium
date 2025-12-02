@@ -2,6 +2,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Button, Navbar, Image, Nav, Modal, Form, Alert } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { LogoutButton } from './AuthComponents';
 import API from '../API/API';
 import Cropper from 'react-easy-crop';
@@ -269,7 +270,7 @@ function NavHeader(props) {
             className="navbar-brand-logo-partner me-3 d-none d-md-block"
           />
           
-          {/* Città di Torino Logo - Hidden on mobile */}
+          {/* Citta di Torino Logo - Hidden on mobile */}
           <Image
             src="http://localhost:3001/static/torino-clean.png"
             alt="Città di Torino"
@@ -461,7 +462,8 @@ function NavHeader(props) {
                   {/* User Info Display */}
                   <div className="profile-account-info">
                     <h6 className="mb-3 profile-account-title">
-                      <i className="bi bi-person-vcard me-2"></i>Account Information
+                      <i className="bi bi-person-vcard me-2"></i>
+                      Account Information
                     </h6>
                     <div className="row g-3">
                       <div className="col-12 col-md-6">
@@ -608,5 +610,22 @@ function NavHeader(props) {
     </>
   );
 }
+NavHeader.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    name: PropTypes.string,
+    surname: PropTypes.string,
+    email: PropTypes.string,
+    type: PropTypes.string,
+    personal_photo_path: PropTypes.string,
+    telegram_nickname: PropTypes.string,
+    mail_notifications: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+  }),
+  loggedIn: PropTypes.bool,
+  handleLogout: PropTypes.func,
+  onShowLogin: PropTypes.func,
+  onProfileUpdate: PropTypes.func,
+};
 
 export default NavHeader;

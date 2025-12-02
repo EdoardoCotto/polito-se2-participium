@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { Alert } from 'react-bootstrap';
+import PropTypes from 'prop-types';
 
 class MapErrorBoundary extends Component {
   constructor(props) {
@@ -35,6 +36,10 @@ class MapErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+MapErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default MapErrorBoundary;
 
