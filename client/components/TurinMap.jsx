@@ -155,7 +155,6 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
         </Marker>
       ))}
 
-      {/* Marker di selezione singolo - SOLO in modalità view quando c'è selectedLocation */}
       {readOnly && selectedLocation?.lat && selectedLocation?.lng && (
         <Marker
           position={[selectedLocation.lat, selectedLocation.lng]}
@@ -220,79 +219,43 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
             }}
           >
           <Popup className="report-map-popup">
-              <div style={{ minWidth: '220px', maxWidth: '300px' }}>
-                <h6 style={{ marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1rem', color: '#212529' }}>
+              <div className="report-map-popup-content">
+                <h6 className="report-map-popup-title">
                   {report.title}
                 </h6>
                 {report.category && (
-                  <div style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#6c757d',
-                    marginBottom: '0.25rem',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
-                    <i className="bi bi-tag me-1 text-primary"></i>
+                  <div className="report-map-popup-category">
+                    <span className="report-map-popup-icon">🏷</span>
                     {report.category}
                   </div>
                 )}
                 {report.status && (
-                  <div style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#6c757d',
-                    marginBottom: '0.5rem',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
-                    <i className="bi bi-info-circle me-1 text-info"></i>
+                  <div className="report-map-popup-status">
+                    <span className="report-map-popup-icon">ℹ️</span>
                     Status: <strong style={{ marginLeft: '0.25rem' }}>{report.status}</strong>
                   </div>
                 )}
                 {report.user && (
-                  <div style={{ 
-                    fontSize: '0.85rem', 
-                    color: '#6c757d',
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginBottom: '0.5rem',
-                    paddingBottom: '0.5rem',
-                    borderBottom: '1px solid #dee2e6'
-                  }}>
-                    <i className="bi bi-person-circle me-2 text-primary"></i>
+                  <div className="report-map-popup-user">
+                    <span className="report-map-popup-icon">👤</span>
                     <span>{report.user.username || report.user.name || 'Anonymous'}</span>
                   </div>
                 )}
                 {report.description && (
-                  <div style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#495057',
-                    marginTop: '0.5rem',
-                    paddingTop: '0.5rem',
-                    borderTop: '1px solid #dee2e6',
-                    lineHeight: '1.4'
-                  }}>
+                  <div className="report-map-popup-description">
                     {report.description.length > 100 
                       ? `${report.description.substring(0, 100)}...` 
                       : report.description}
                   </div>
                 )}
-                <div style={{ 
-                  marginTop: '0.5rem',
-                  paddingTop: '0.5rem',
-                  borderTop: '1px solid #dee2e6',
-                  fontSize: '0.75rem',
-                  color: '#6c757d',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
+                <div className="report-map-popup-footer">
                   <span>
-                    <i className="bi bi-calendar me-1"></i>
+                    <span className="report-map-popup-icon">📅</span>
                     {new Date(report.created_at).toLocaleDateString()}
                   </span>
                   {report.photoUrls && report.photoUrls.length > 0 && (
-                    <span style={{ color: '#0d6efd' }}>
-                      <i className="bi bi-image me-1"></i>
+                    <span className="report-map-popup-footer-photos">
+                      <span className="report-map-popup-icon">🖼</span>
                       {report.photoUrls.length}
                     </span>
                   )}

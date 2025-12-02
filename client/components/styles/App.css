@@ -2625,7 +2625,72 @@
 .report-map-popup .leaflet-popup-content {
   margin: 0;
   padding: 1rem;
+}
+
+.report-map-popup-content {
   min-width: 220px;
+  max-width: 300px;
+}
+
+.report-map-popup-title {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #212529;
+}
+
+.report-map-popup-category {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.report-map-popup-status {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.report-map-popup-user {
+  font-size: 0.85rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.report-map-popup-description {
+  font-size: 0.8rem;
+  color: #495057;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #dee2e6;
+  line-height: 1.4;
+}
+
+.report-map-popup-footer {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #dee2e6;
+  font-size: 0.75rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-map-popup-footer-photos {
+  color: #0d6efd;
+}
+
+.report-map-popup-icon {
+  margin-right: 0.25rem;
 }
 
 .report-map-popup .leaflet-popup-tip {
