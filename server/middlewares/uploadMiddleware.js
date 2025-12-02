@@ -1,8 +1,8 @@
 "use strict";
 
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 
 // Definisci la cartella di destinazione per gli upload
 // usiamo path.join per creare un percorso assoluto partendo dalla root del progetto

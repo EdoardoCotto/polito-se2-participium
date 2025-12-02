@@ -4,7 +4,7 @@ const session = require('express-session');
 const passport = require('./utils/passport');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 const { swaggerUi, swaggerSpec, swaggerUiOptions } = require('./swagger');
-const path = require('path');
+const path = require('node:path');
 const {isMunicipal_public_relations_officer, isAdmin} = require("./middlewares/authMiddleware");
 
 const sessionRoutes = require('./routes/sessionRoutes');
