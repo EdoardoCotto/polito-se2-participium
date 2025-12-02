@@ -12,11 +12,11 @@ jest.mock("multer", () => {
     const instance = {
       array: (field, max) => {
         shared.lastArrayArgs = [field, max];
-        const fn = function mockArrayMiddleware(req, res, next) { next && next(); };
+        const fn = function mockArrayMiddleware(req, res, next) { next?.(); };
         return fn;
       },
       single: () => {
-        const fn = function mockSingleMiddleware(req, res, next) { next && next(); };
+        const fn = function mockSingleMiddleware(req, res, next) { next?.(); };
         return fn;
       },
     };
@@ -153,7 +153,7 @@ describe("uploadMiddleware", () => {
   describe("profile storage configuration (updateProfile)", () => {
     let profileStorageConfig;
     beforeEach(() => {
-      profileStorageConfig = initialProfileStorageConfig || mockMulter.diskStorageConfig;
+      profileStorageConfig = initialProfileStorageConfig || global.__multerState__?.diskStorageConfig;
     });
 
     it("should set correct profile destination folder", () => {
