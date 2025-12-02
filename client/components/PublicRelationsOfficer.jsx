@@ -173,11 +173,21 @@ export default function PublicRelationsOfficer({ user }) {
       
       setReviewSuccess(`Report successfully ${reviewAction}!`);
       
-      // Refresh the pending reports list
+      // Close modal first, then refresh and clear state
       setTimeout(() => {
-        fetchPendingReports();
-        handleCloseModal();
-        setHighlightedLocation(null); // Clear highlighted marker
+        setShowModal(false); // Close modal
+        setTimeout(() => {
+          // Reset all state after modal is closed
+          setSelectedReport(null);
+          setReviewAction('');
+          setTechnicalOffice('');
+          setExplanation('');
+          setReviewError('');
+          setReviewSuccess('');
+          setHighlightedLocation(null);
+          // Refresh the pending reports list
+          fetchPendingReports();
+        }, 300); // Wait for modal close animation
       }, 1500);
       
     } catch (err) {
@@ -251,7 +261,7 @@ export default function PublicRelationsOfficer({ user }) {
             <Card className="shadow-lg flex-grow-1" style={{ 
               borderRadius: 'clamp(0.5rem, 2vw, 1rem)', 
               border: 'none',
-              minHeight: '31.25rem'
+              minHeight: '40rem'
             }}>
               <Card.Header style={{ 
                 backgroundColor: '#5e7bb3', 
@@ -284,7 +294,8 @@ export default function PublicRelationsOfficer({ user }) {
           <Col lg={6} className="d-flex flex-column">
             <Card className="shadow-lg flex-grow-1 pending-reports-container" style={{ 
               borderRadius: 'clamp(0.5rem, 2vw, 1rem)', 
-              border: 'none'
+              border: 'none',
+              minHeight: '40rem'
             }}>
               <Card.Header className="pending-reports-header" style={{ 
                 color: 'white', 
@@ -336,17 +347,17 @@ export default function PublicRelationsOfficer({ user }) {
                         <Card.Body className="p-3">
                           {/* Report Header */}
                           <div className="d-flex justify-content-between align-items-start mb-2">
-                            <h6 className="pending-report-title mb-0" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
+                            <h6 className="pending-report-title mb-0" style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)', fontWeight: '600' }}>
                               {report.title}
                             </h6>
-                            <Badge className="pending-status-badge" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                            <Badge className="pending-status-badge" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
                               Pending
                             </Badge>
                           </div>
 
                           {/* Category */}
                           <div className="mb-2">
-                            <Badge className="pending-category-badge" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                            <Badge className="pending-category-badge" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
                               <i className="bi bi-tag me-1"></i>
                               {report.category}
                             </Badge>
@@ -354,11 +365,12 @@ export default function PublicRelationsOfficer({ user }) {
 
                           {/* Description */}
                           <p className="pending-report-description mb-2" style={{ 
-                            fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                            fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            lineHeight: '1.5'
                           }}>
                             {report.description || 'No description provided'}
                           </p>
@@ -366,7 +378,7 @@ export default function PublicRelationsOfficer({ user }) {
                           {/* Location */}
                           <div className="pending-report-info">
                             <i className="bi bi-geo-alt"></i>
-                            <small>
+                            <small style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
                               {report.latitude?.toFixed(5)}, {report.longitude?.toFixed(5)}
                             </small>
                           </div>
@@ -374,11 +386,11 @@ export default function PublicRelationsOfficer({ user }) {
                           {/* Submitted By & Date */}
                           <div className="pending-report-info">
                             <i className="bi bi-person"></i>
-                            <small>{report.user?.username || 'Anonymous'}</small>
+                            <small style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>{report.user?.username || 'Anonymous'}</small>
                           </div>
                           <div className="pending-report-info mb-2">
                             <i className="bi bi-calendar"></i>
-                            <small>{formatDate(report.created_at)}</small>
+                            <small style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>{formatDate(report.created_at)}</small>
                           </div>
 
                            {/* Photos Badge - Clickable to open photos modal */}
@@ -386,7 +398,7 @@ export default function PublicRelationsOfficer({ user }) {
                             <div className="mb-3">
                               <Badge 
                                 className="pending-report-photo-badge"
-                                style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}
+                                style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}
                                 onClick={(e) => handleOpenPhotos(report, e)}
                               >
                                 <i className="bi bi-image me-1"></i>
@@ -396,7 +408,7 @@ export default function PublicRelationsOfficer({ user }) {
                             </div>
                           )}
                           {/* Click hint */}
-                          <div className={`pending-report-hint ${highlightedLocation?.reportId === report.id ? 'selected' : ''}`}>
+                          <div className={`pending-report-hint ${highlightedLocation?.reportId === report.id ? 'selected' : ''}`} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
                             <i className={`bi ${highlightedLocation?.reportId === report.id ? 'bi-check-circle' : 'bi-hand-index'}`}></i>
                             <span>
                               {highlightedLocation?.reportId === report.id 
@@ -413,7 +425,7 @@ export default function PublicRelationsOfficer({ user }) {
                                 e.stopPropagation();
                                 handleReviewClick(report, 'accepted');
                               }}
-                              style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}
+                              style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}
                             >
                               <i className="bi bi-check-circle me-1"></i>
                               Accept
@@ -425,7 +437,7 @@ export default function PublicRelationsOfficer({ user }) {
                                 e.stopPropagation();
                                 handleReviewClick(report, 'rejected');
                               }}
-                              style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}
+                              style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}
                             >
                               <i className="bi bi-x-circle me-1"></i>
                               Reject
@@ -537,20 +549,20 @@ export default function PublicRelationsOfficer({ user }) {
       {/* Review Modal */}
       <Modal show={showModal} onHide={handleCloseModal} centered size="lg" className="review-report-modal">
         <Modal.Header closeButton className={`review-modal-header ${reviewAction === 'accepted' ? 'accept-header' : 'reject-header'}`}>
-          <Modal.Title className="review-modal-title">
+          <Modal.Title className="review-modal-title" style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
             <i className={`bi ${reviewAction === 'accepted' ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
             {reviewAction === 'accepted' ? 'Accept Report' : 'Reject Report'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="review-modal-body p-4">
           {reviewError && (
-            <Alert variant="danger" dismissible onClose={() => setReviewError('')}>
+            <Alert variant="danger" dismissible onClose={() => setReviewError('')} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
               <i className="bi bi-exclamation-triangle me-2"></i>
               {reviewError}
             </Alert>
           )}
           {reviewSuccess && (
-            <Alert variant="success">
+            <Alert variant="success" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
               <i className="bi bi-check-circle me-2"></i>
               {reviewSuccess}
             </Alert>
@@ -560,15 +572,15 @@ export default function PublicRelationsOfficer({ user }) {
               {/* Report Details */}
               <Card className="review-report-card mb-3">
                 <Card.Body className="p-3">
-                  <h6 className="review-report-title fw-bold mb-2">
+                  <h6 className="review-report-title fw-bold mb-2" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}>
                     {selectedReport.title}
                   </h6>
-                  <p className="review-report-description text-muted mb-2">
+                  <p className="review-report-description text-muted mb-2" style={{ fontSize: 'clamp(0.9rem, 2vw, 1.05rem)' }}>
                     {selectedReport.description || 'No description provided'}
                   </p>
                   <div className="review-report-meta">
-                    <Badge bg="secondary" className="review-category-badge me-2">{selectedReport.category}</Badge>
-                    <small className="text-muted">
+                    <Badge bg="secondary" className="review-category-badge me-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>{selectedReport.category}</Badge>
+                    <small className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                       <i className="bi bi-person me-1"></i>
                       {selectedReport.user?.username || 'Anonymous'}
                     </small>
@@ -578,7 +590,7 @@ export default function PublicRelationsOfficer({ user }) {
               {/* Accept: Technical Office Selection */}
               {reviewAction === 'accepted' && (
                 <Form.Group className="review-form-group mb-3">
-                  <Form.Label className="review-form-label fw-semibold">
+                  <Form.Label className="review-form-label fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
                     <i className="bi bi-building me-2"></i>
                     Assign to Technical Office *
                   </Form.Label>
@@ -586,6 +598,7 @@ export default function PublicRelationsOfficer({ user }) {
                     value={technicalOffice}
                     onChange={(e) => setTechnicalOffice(e.target.value)}
                     className="review-form-select"
+                    style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}
                   >
                     <option value="">Select a technical office...</option>
                     {technicalOffices.map((office) => (
@@ -594,7 +607,7 @@ export default function PublicRelationsOfficer({ user }) {
                       </option>
                     ))}
                   </Form.Select>
-                  <Form.Text className="review-form-help text-muted">
+                  <Form.Text className="review-form-help text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     Select the appropriate technical office to handle this report
                   </Form.Text>
                 </Form.Group>
@@ -602,7 +615,7 @@ export default function PublicRelationsOfficer({ user }) {
                {/* Reject: Explanation */}
               {reviewAction === 'rejected' && (
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                  <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
                     <i className="bi bi-chat-left-text me-2"></i>
                     Explanation for Rejection *
                   </Form.Label>
@@ -612,9 +625,9 @@ export default function PublicRelationsOfficer({ user }) {
                     value={explanation}
                     onChange={(e) => setExplanation(e.target.value)}
                     placeholder="Provide a clear explanation for why this report is being rejected..."
-                    style={{ borderRadius: '0.5rem', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
+                    style={{ borderRadius: '0.5rem', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}
                   />
-                  <Form.Text className="text-muted" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
+                  <Form.Text className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                     This explanation will be sent to the citizen who submitted the report
                   </Form.Text>
                 </Form.Group>
@@ -628,6 +641,7 @@ export default function PublicRelationsOfficer({ user }) {
             onClick={handleCloseModal}
             disabled={submitting}
             className="review-modal-btn-cancel"
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}
           >
             Cancel
           </Button>
@@ -636,6 +650,7 @@ export default function PublicRelationsOfficer({ user }) {
             onClick={handleSubmitReview}
             disabled={submitting}
             className={`review-modal-btn-confirm ${reviewAction === 'accepted' ? 'accept-btn' : 'reject-btn'}`}
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}
           >
             {submitting ? (
               <>
