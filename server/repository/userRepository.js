@@ -8,32 +8,22 @@ const AppError = require('../errors/AppError')
 
 
 exports.getUserById = async (userId) => {
-    try {
-        const user = await userDao.getUserById(userId);
-        if (!user) {
-            throw new NotFoundError('User not found')
-        }
-        return user
+    const user = await userDao.getUserById(userId);
+    if (!user) {
+        throw new NotFoundError('User not found')
     }
-    catch (err) {
-        throw err;
-    }
+    return user
 }
 
 exports.getUser = async (username, password) => {
-    try {
-        if (!username || !password) {
-            throw new BadRequestError('All fields are required')
-        }
-        const user = await userDao.getUser(username, password);
-        if (!user) {
-            throw new NotFoundError('Username or password incorrect');
-        }
-        return user;
+    if (!username || !password) {
+        throw new BadRequestError('All fields are required')
     }
-    catch (err) {
-        throw err;
+    const user = await userDao.getUser(username, password);
+    if (!user) {
+        throw new NotFoundError('Username or password incorrect');
     }
+    return user;
 };
 
 exports.createUser = async (user) => {
@@ -60,32 +50,27 @@ exports.createUser = async (user) => {
 
 
 exports.createUserIfAdmin = async (adminId, userToInsert) => {
-    try {
-        const admin = await userDao.getUserById(adminId);
-        if (!admin) {
-            throw new NotFoundError('Admin not found')
-        }
-        if (admin.type != 'admin') {
-            throw new UnauthorizedError('You are not an admin')
-        }
-        if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password) {
-            throw new BadRequestError('All fields are required');
-        }
-        const existingUser = await userDao.getUserByUsername(userToInsert.username)
-        const existingEmail = await userDao.getUserByEmail(userToInsert.email)
-        if (existingUser) {
-            throw new ConflictError('Username already exists');
-        }
-        if (existingEmail) {
-            throw new ConflictError('Email already exists');
-        }
-        const userToCreate = { ...userToInsert, type: 'municipality_user' };
-        const result = await userDao.createUser(userToCreate);
-        return result;
+    const admin = await userDao.getUserById(adminId);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
     }
-    catch (err) {
-        throw err;
+    if (admin.type != 'admin') {
+        throw new UnauthorizedError('You are not an admin')
     }
+    if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password) {
+        throw new BadRequestError('All fields are required');
+    }
+    const existingUser = await userDao.getUserByUsername(userToInsert.username)
+    const existingEmail = await userDao.getUserByEmail(userToInsert.email)
+    if (existingUser) {
+        throw new ConflictError('Username already exists');
+    }
+    if (existingEmail) {
+        throw new ConflictError('Email already exists');
+    }
+    const userToCreate = { ...userToInsert, type: 'municipality_user' };
+    const result = await userDao.createUser(userToCreate);
+    return result;
 }
 
 /**
@@ -96,32 +81,28 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
  * @returns {Promise<{id:number, type:string}>}
  */
 exports.assignUserRole = async (adminId, targetUserId, newType) => {
-    try {
-        const admin = await userDao.getUserById(adminId);
-        if (!admin) {
-            throw new NotFoundError('Admin not found')
-        }
-        if (admin.type != 'admin') {
-            throw new UnauthorizedError('You are not an admin')
-        }
-        if (!newType) {
-            throw new BadRequestError('Role is required');
-        }
-        if (!ALLOWED_ROLES.includes(newType)) {
-            throw new BadRequestError('Invalid role');
-        }
-        const target = await userDao.getUserById(targetUserId);
-        if (!target) {
-            throw new NotFoundError('User not found');
-        }
-        const updated = await userDao.updateUserTypeById(targetUserId, newType);
-        if (!updated) {
-            throw new NotFoundError('User not found');
-        }
-        return updated;
-    } catch (err) {
-        throw err;
+    const admin = await userDao.getUserById(adminId);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
     }
+    if (admin.type != 'admin') {
+        throw new UnauthorizedError('You are not an admin')
+    }
+    if (!newType) {
+        throw new BadRequestError('Role is required');
+    }
+    if (!ALLOWED_ROLES.includes(newType)) {
+        throw new BadRequestError('Invalid role');
+    }
+    const target = await userDao.getUserById(targetUserId);
+    if (!target) {
+        throw new NotFoundError('User not found');
+    }
+    const updated = await userDao.updateUserTypeById(targetUserId, newType);
+    if (!updated) {
+        throw new NotFoundError('User not found');
+    }
+    return updated;
 }
 
 

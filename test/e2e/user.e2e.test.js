@@ -98,7 +98,7 @@ describe('User API End-to-End Tests', () => {
   test('Citizen is forbidden on admin-only endpoints (403)', async () => {
     const cU = `cit_forbidden_${Date.now()}`;
     const targetU = `target_${Date.now()}`;
-    const createdCitizen = await userDao.createUser({
+    await userDao.createUser({
       username: cU,
       email: `${cU}@example.com`,
       name: 'Cit',
