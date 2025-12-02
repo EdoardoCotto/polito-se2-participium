@@ -175,28 +175,27 @@ module.exports = {
 
 // Run if called directly
 if (require.main === module) {
-    const args = new Set(process.argv.slice(2));
-    
-    if (args.has('--reset')) {
-        resetDatabase()
-            .then(() => process.exit(0))
-            .catch((err) => {
+    (async () => {
+        const args = new Set(process.argv.slice(2));
+        
+        try {
+            if (args.has('--reset')) {
+                await resetDatabase();
+            } else if (args.has('--verify')) {
+                await verifyDatabase();
+            } else {
+                await initializeDatabase();
+            }
+            process.exit(0);
+        } catch (err) {
+            if (args.has('--reset')) {
                 console.error('Failed to reset database:', err);
-                process.exit(1);
-            });
-    } else if (args.has('--verify')) {
-        verifyDatabase()
-            .then(() => process.exit(0))
-            .catch((err) => {
+            } else if (args.has('--verify')) {
                 console.error('Failed to verify database:', err);
-                process.exit(1);
-            });
-    } else {
-        initializeDatabase()
-            .then(() => process.exit(0))
-            .catch((err) => {
+            } else {
                 console.error('Failed to initialize database:', err);
-                process.exit(1);
-            });
-    }
+            }
+            process.exit(1);
+        }
+    })();
 }
