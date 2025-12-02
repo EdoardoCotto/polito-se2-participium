@@ -1,18 +1,23 @@
 "use strict";
 
+// Helper to get sqlite3 module, trying local path first, then falling back to global
+const getSqlite3Module = () => {
+  try {
+    // eslint-disable-next-line global-require
+    return require("../../server/node_modules/sqlite3");
+  } catch {
+    // Fallback to global sqlite3 if local path doesn't exist
+    // eslint-disable-next-line global-require
+    return require("sqlite3");
+  }
+};
+
 // Helper to load DAO with a spy-mocked sqlite3 Database that the DAO will use
 const withDao = (overrides = {}) => {
   const { ctorError, runImpl, getImpl, allImpl } = overrides;
   jest.resetModules();
   // Get the sqlite3 instance that server DAO will resolve
-  let sqlite;
-  try {
-    // eslint-disable-next-line global-require
-    sqlite = require("../../server/node_modules/sqlite3");
-  } catch (e) {
-    // eslint-disable-next-line global-require
-    sqlite = require("sqlite3");
-  }
+  const sqlite = getSqlite3Module();
   const mockDb = { run: jest.fn(), get: jest.fn(), all: jest.fn() };
   if (runImpl) mockDb.run.mockImplementation(runImpl);
   if (getImpl) mockDb.get.mockImplementation(getImpl);
@@ -83,14 +88,7 @@ describe("reportDao", () => {
 
   test("should throw when DB connection fails", () => {
     jest.resetModules();
-    let sqlite;
-    try {
-      // eslint-disable-next-line global-require
-      sqlite = require("../../server/node_modules/sqlite3");
-    } catch (e) {
-      // eslint-disable-next-line global-require
-      sqlite = require("sqlite3");
-    }
+    const sqlite = getSqlite3Module();
     jest
       .spyOn(sqlite, "Database")
       .mockImplementation((_p, _cb) => {
