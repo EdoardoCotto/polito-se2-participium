@@ -53,7 +53,7 @@ exports.assignUserRole = async (req, res) => {
     }
 
     const updated = await userRepository.assignUserRole(req.user.id, targetUserId, type);
-    return res.status(200).json(updated); // { id, type }
+    return res.status(200).json(updated);
   } catch (err) {
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });
