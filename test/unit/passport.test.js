@@ -22,6 +22,13 @@ describe('utils/passport configuration', () => {
     return mock;
   };
 
+  const createPassportLocalMock = () => ({
+    Strategy: function Strategy(verify) {
+      this.name = 'local';
+      this._verify = verify;
+    },
+  });
+
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
@@ -30,12 +37,7 @@ describe('utils/passport configuration', () => {
     jest.isolateModules(() => {
       jest.doMock('passport', () => createPassportMock(), { virtual: true });
 
-      jest.doMock('passport-local', () => ({
-        Strategy: function Strategy(verify) {
-          this.name = 'local';
-          this._verify = verify;
-        },
-      }), { virtual: true });
+      jest.doMock('passport-local', () => createPassportLocalMock(), { virtual: true });
 
       jest.doMock('../../server/dao/userDao', () => ({
         getUser: jest.fn(),
