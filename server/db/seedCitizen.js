@@ -44,7 +44,7 @@ const reports = [
     description: 'The park was damaged and some lights are not working.',
     category: 'Public Lighting',
     latitude: 45.05380,
-    longitude: 7.68350,
+    longitude: 7.6835,
     image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'citizen'
