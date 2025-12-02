@@ -431,13 +431,29 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
             textAlign: 'center'
           }}
         >
-          <strong>Warning:</strong>{' '}
-          <span className="d-none d-sm-inline">
-            Markers can only be placed within Turin city boundaries
-          </span>
-          <span className="d-inline d-sm-none">
-            Must be within city boundaries
-          </span>
+          <strong>Warning:</strong> Markers can only be placed within Turin city boundaries
+        </Alert>
+      )}
+
+      {/* GeoJSON error banner */}
+      {geoJsonError && (
+        <Alert 
+          variant="danger" 
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            margin: 0,
+            boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.2)',
+            fontSize: 'clamp(0.75rem, 2vw, 0.9rem)',
+            padding: 'clamp(0.5rem, 1.5vw, 0.75rem)',
+            maxWidth: '90%',
+            textAlign: 'center'
+          }}
+        >
+          Could not load city boundaries
         </Alert>
       )}
 
@@ -470,11 +486,6 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
           />
         )}
         
-        {geoJsonError && (
-          <div className="geo-json-error-banner">
-            <small>Could not load city boundaries</small>
-          </div>
-        )}
         <LocationMarker 
           markers={markers} 
           setMarkers={setMarkers} 
