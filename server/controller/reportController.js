@@ -34,10 +34,10 @@ const parseBoundingBox = (query = {}) => {
   }
 
   const parsed = {
-    north: parseFloat(north),
-    south: parseFloat(south),
-    east: parseFloat(east),
-    west: parseFloat(west),
+    north: Number.parseFloat(north),
+    south: Number.parseFloat(south),
+    east: Number.parseFloat(east),
+    west: Number.parseFloat(west),
   };
 
   const hasInvalidNumber = Object.values(parsed).some((value) => !Number.isFinite(value));
@@ -77,8 +77,8 @@ exports.createReport = async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const lat = parseFloat(latitude);
-    const lon = parseFloat(longitude);
+    const lat = Number.parseFloat(latitude);
+    const lon = Number.parseFloat(longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       return res.status(400).json({ error: 'Invalid latitude/longitude' });
     }
