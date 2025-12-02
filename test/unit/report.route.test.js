@@ -19,7 +19,7 @@ jest.mock('../../server/controller/reportController', () => ({
       return res.status(400).json({ error: 'At least one photo is required' });
     }
     const { latitude, longitude } = req.body || {};
-    if (isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
+    if (Number.isNaN(parseFloat(latitude)) || Number.isNaN(parseFloat(longitude))) {
       return res.status(400).json({ error: 'Invalid latitude/longitude' });
     }
     return res.status(201).json({ id: 1, photos });
