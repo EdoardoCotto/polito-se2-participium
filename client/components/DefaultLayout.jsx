@@ -1,4 +1,4 @@
-import {Alert, Row} from "react-bootstrap";
+import {Row} from "react-bootstrap";
 import PropTypes from "prop-types";
 import NavHeader from "./NavHeader";
 import Footer from "./Footer";

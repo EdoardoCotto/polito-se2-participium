@@ -113,8 +113,8 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   padding: 0.5rem 1rem;
   border: 2px solid rgba(94, 123, 179, 0.3);
-  color: #5e7bb3;
-  background: rgba(94, 123, 179, 0.05);
+  color: #3d5c8f;
+  background: rgba(94, 123, 179, 0.08);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  background: rgba(94, 123, 179, 0.05);
+  background: rgba(94, 123, 179, 0.08);
   border-radius: 12px;
   border: 1px solid rgba(94, 123, 179, 0.2);
   transition: all 0.3s ease;
@@ -256,8 +256,8 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   transition: all 0.3s ease;
   border: 2px solid rgba(220, 53, 69, 0.3);
-  color: #dc3545;
-  background: rgba(220, 53, 69, 0.05);
+  color: #bd2130;
+  background: rgba(220, 53, 69, 0.08);
 }
 
 .logout-button:hover {
@@ -858,6 +858,7 @@
   background: #e9ecef;
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .crop-zoom-slider::-webkit-slider-thumb {
