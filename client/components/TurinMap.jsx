@@ -10,7 +10,7 @@ import './styles/cluster.css';
 import './styles/App.css';
 
 // Fix for default marker icons in react-leaflet
-if (typeof window !== 'undefined') {
+if (typeof globalThis.window !== 'undefined') {
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -97,7 +97,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
   useEffect(() => {
     // Remove all layers that are not TileLayer or GeoJSON
     map.eachLayer((layer) => {
-      if (layer instanceof L.Marker && !markers.find(m => m.position[0] === layer.getLatLng().lat && m.position[1] === layer.getLatLng().lng)) {
+      if (layer instanceof L.Marker && !markers.some(m => m.position[0] === layer.getLatLng().lat && m.position[1] === layer.getLatLng().lng)) {
         map.removeLayer(layer);
       }
     });
@@ -263,6 +263,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
                     <span className="report-map-popup-icon">📅</span>
                     {new Date(report.created_at).toLocaleDateString()}
                   </span>
+
                   {hasPhotos ? (
                     <span className="report-map-popup-footer-photos">
                       <span className="report-map-popup-icon">

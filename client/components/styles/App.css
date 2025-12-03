@@ -113,8 +113,8 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   padding: 0.5rem 1rem;
   border: 2px solid rgba(94, 123, 179, 0.3);
-  color: #2d4a73;
-  background: rgba(94, 123, 179, 0.18);
+  color: #1e3a5f;
+  background: rgba(94, 123, 179, 0.25);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -256,16 +256,8 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   transition: all 0.3s ease;
   border: 2px solid rgba(220, 53, 69, 0.3);
-  color: #8b1a26;
-  background: rgba(220, 53, 69, 0.15);
-}
-
-.logout-button:hover {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-  color: white;
-  border-color: #dc3545;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  color: #721c24;
+  background: rgba(220, 53, 69, 0.2);
 }
 
 /* Profile Modal Improvements */
@@ -997,7 +989,7 @@
     padding: 1.25rem 1.5rem;
   }
   
-  .profile-modal-body {
+  .profile-modal_body {
     padding: 1.5rem;
   }
   
@@ -1141,10 +1133,10 @@
 }
 
 .card-description {
-  color: #2d3748;
+  color: #1a202c;
   font-size: 0.875rem;
   line-height: 1.5;
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.12) 0%, rgba(23, 162, 184, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.15) 0%, rgba(23, 162, 184, 0.12) 100%);
   padding: 0.75rem 1rem;
   border-radius: 10px;
   border-left: 3px solid #17a2b8;
@@ -1194,8 +1186,8 @@
 
 .btn-outline-primary.action-button {
   border: 2px solid #0d6efd;
-  color: #0a58ca;
-  background: rgba(13, 110, 253, 0.08);
+  color: #084298;
+  background: rgba(13, 110, 253, 0.12);
 }
 
 .btn-outline-primary.action-button:hover {
@@ -1207,8 +1199,8 @@
 
 .btn-outline-secondary.action-button {
   border: 2px solid #6c757d;
-  color: #495057;
-  background: rgba(108, 117, 125, 0.08);
+  color: #3d4246;
+  background: rgba(108, 117, 125, 0.12);
 }
 
 .btn-outline-secondary.action-button:hover {
@@ -2334,7 +2326,7 @@
   
   .report-search-input,
   .report-filter-select {
-    font-size: 0.85rem;
+    font-size:  0.85rem;
     padding: 0.5rem 0.75rem;
   }
   
@@ -3516,25 +3508,5 @@
   align-items: center;
   justify-content: center;
   background: #f8f9fa;
-}
-
-/* Responsive Login Modal */
-@media (max-width: 576px) {
-  .login-modal-body {
-    padding: 1.5rem;
-  }
-  
-  .login-modal-title {
-    font-size: 1.5rem;
-  }
-  
-  .login-modal-icon {
-    font-size: 1.75rem;
-    margin-right: 0.75rem;
-  }
-  
-  .login-form-input {
-    padding: 0.75rem 1rem;
-  }
 }
 
