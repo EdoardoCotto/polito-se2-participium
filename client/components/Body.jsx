@@ -1,4 +1,4 @@
-import { Image, Row, Button, Card} from "react-bootstrap";
+import {Card} from "react-bootstrap";
 function Body(props) {
     return (
         <main className="body">

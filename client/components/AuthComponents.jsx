@@ -70,8 +70,8 @@ function LoginModal(props) {
             <Modal.Body className="login-modal-body">
                 {isPending && (
                     <Alert variant="info" className="login-alert login-alert-info d-flex align-items-center mb-3">
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <strong>Authenticating...</strong>
+                        <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        <output><strong>Authenticating...</strong></output>
                     </Alert>
                 )}
                 {error && (
@@ -119,7 +119,7 @@ function LoginModal(props) {
                     >
                         {isPending ? (
                             <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...
+                                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><output>Signing in...</output>
                             </>
                         ) : (
                             <>
@@ -161,7 +161,6 @@ LoginModal.propTypes = {
   onHide: PropTypes.func,
   handleLogin: PropTypes.func,
   setMessage: PropTypes.func,
-  user: PropTypes.object,
 };
 
 function LogoutButton(props) {

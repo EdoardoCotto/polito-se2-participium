@@ -431,7 +431,9 @@ const getApprovedReports = async (options = {}) => {
   if (west !== undefined) queryParams.append('west', String(west));
   
   const queryString = queryParams.toString();
-  const url = `${SERVER_URL}/reports/approved${queryString ? `?${queryString}` : ''}`;
+  const url = queryString 
+    ? `${SERVER_URL}/reports/approved?${queryString}` 
+    : `${SERVER_URL}/reports/approved`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -468,7 +470,9 @@ const getCitizenReports = async (options = {}) => {
   if (west !== undefined) queryParams.append('west', String(west));
   
   const queryString = queryParams.toString();
-  const url = `${SERVER_URL}/reports/citizen${queryString ? `?${queryString}` : ''}`;
+  const url = queryString 
+    ? `${SERVER_URL}/reports/citizen?${queryString}` 
+    : `${SERVER_URL}/reports/citizen`;
   
   const response = await fetch(url, {
     method: 'GET',

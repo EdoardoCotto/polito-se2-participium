@@ -30,7 +30,7 @@ function App() {
       setUser(user);
       
       // Auto-redirect based on user type if on home page
-      const currentPath = window.location.pathname;
+      const currentPath = globalThis.location.pathname;
       if (currentPath === '/') {
         if (user?.type === 'admin') {
           navigate('/admin');
@@ -41,7 +41,7 @@ function App() {
           navigate('/municipality');
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // User not authenticated, this is expected on first load
       setLoggedIn(false);
       setUser(null);
