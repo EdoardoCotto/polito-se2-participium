@@ -41,8 +41,9 @@ function App() {
           navigate('/municipality');
         }
       }
-    } catch (_error) {
+    } catch (error) {
       // User not authenticated, this is expected on first load
+      console.debug('Auth check failed:', error.message || error);
       setLoggedIn(false);
       setUser(null);
     }

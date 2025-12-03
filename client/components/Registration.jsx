@@ -245,8 +245,7 @@ export default function RegistrationPage() {
                     {errors.password}
                   </Form.Control.Feedback>
                   <Form.Text className="register-help-text text-muted">
-                    <i className="bi bi-info-circle me-1"></i>
-                    Password must be at least 8 characters long
+                    <i className="bi bi-info-circle me-1"></i>Password must be at least 8 characters long
                   </Form.Text>
                 </Form.Group>
 
@@ -277,13 +276,11 @@ export default function RegistrationPage() {
                   >
                     {isSubmitting ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Creating your account...
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating your account...
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-person-plus-fill me-2"></i>
-                        Create Account
+                        <i className="bi bi-person-plus-fill me-2"></i><output>Create Account</output>
                       </>
                     )}
                   </Button>
@@ -294,8 +291,7 @@ export default function RegistrationPage() {
                     onClick={() => navigate('/')}
                     className="register-back-btn"
                   >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Back to Login
+                    <i className="bi bi-arrow-left me-2"></i>Back to Login
                   </Button>
                 </div>
               </Form>
