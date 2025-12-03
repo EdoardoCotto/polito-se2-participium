@@ -300,7 +300,7 @@ export default function CitizenPage({ user }) {
                     <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
                       {filteredReports.length === allReports.length 
                         ? allReports.length 
-                        : `${filteredReports.length}/${allReports.length}`} report{filteredReports.length !== 1 ? 's' : ''}
+                        : `${filteredReports.length}/${allReports.length}`} report{filteredReports.length === 1 ? '' : 's'}
                     </span>
                   )}
                 </Card.Title>
@@ -645,25 +645,19 @@ export default function CitizenPage({ user }) {
                                 className="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
                                 style={{ border: '1px solid #dee2e6' }}
                               >
-                                <div 
-                                  className="d-flex align-items-center flex-grow-1"
+                                <button
+                                  type="button"
+                                  className="d-flex align-items-center flex-grow-1 btn btn-link text-decoration-none p-0"
                                   style={{ cursor: 'pointer' }}
-                                  role="button"
-                                  tabIndex={0}
                                   onClick={() => handlePhotoClick(photo)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                      e.preventDefault();
-                                      handlePhotoClick(photo);
-                                    }
-                                  }}
+                                  aria-label={`View photo ${photo.name}`}
                                 >
                                   <i className="bi bi-file-earmark-image me-2 text-primary"></i>
                                   <span className="text-truncate" style={{ maxWidth: '12.5rem' }}>
                                     {photo.name}
                                   </span>
                                   <i className="bi bi-eye ms-2 text-muted small"></i>
-                                </div>
+                                </button>
                                 <Button
                                   variant="link"
                                   size="sm"
@@ -923,18 +917,10 @@ export default function CitizenPage({ user }) {
       </Modal>
 
       {/* Report Photos Modal */}
-      <Modal show={showReportPhotosModal} onHide={() => {
-        setShowReportPhotosModal(false);
-        setSelectedReportPhotos([]);
-      }} size="lg" centered className="report-photos-modal">
-        <Modal.Header closeButton className="report-photos-header">
-          <Modal.Title>
-            <i className="bi bi-images me-2"></i>Report Photos
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0">
-          {selectedReportPhotos.length > 0 ? (
-            selectedReportPhotos.length === 1 ? (
+      {(() => {
+        const reportPhotosContent = selectedReportPhotos.length > 0
+          ? (selectedReportPhotos.length === 1
+            ? (
               <div className="report-photo-single-container">
                 <img 
                   src={selectedReportPhotos[0]} 
@@ -946,9 +932,10 @@ export default function CitizenPage({ user }) {
                   }}
                 />
               </div>
-            ) : (
+            )
+            : (
               <Carousel interval={null} className="report-photos-carousel">
-                {selectedReportPhotos.map((photo) => (
+                {selectedReportPhotos.map((photo, index) => (
                   <Carousel.Item key={photo}>
                     <div className="report-photo-container">
                       <img
@@ -967,23 +954,37 @@ export default function CitizenPage({ user }) {
                   </Carousel.Item>
                 ))}
               </Carousel>
-            )
-          ) : (
+            ))
+          : (
             <div className="text-center py-5">
               <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
               <p className="mt-3 text-muted">No photos available</p>
             </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer className="report-photos-footer">
-          <Button variant="secondary" onClick={() => {
+          );
+        return (
+          <Modal show={showReportPhotosModal} onHide={() => {
             setShowReportPhotosModal(false);
             setSelectedReportPhotos([]);
-          }}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+          }} size="lg" centered className="report-photos-modal">
+            <Modal.Header closeButton className="report-photos-header">
+              <Modal.Title>
+                <i className="bi bi-images me-2"></i>Report Photos
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-0">
+              {reportPhotosContent}
+            </Modal.Body>
+            <Modal.Footer className="report-photos-footer">
+              <Button variant="secondary" onClick={() => {
+                setShowReportPhotosModal(false);
+                setSelectedReportPhotos([]);
+              }}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }
