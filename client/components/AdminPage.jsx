@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button, Modal, Form, Row, Col, Alert, Card, Table } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import API from '../API/API.js';
 
 export default function MapPage() {
-  const navigate = useNavigate();
-
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -69,6 +66,177 @@ export default function MapPage() {
   // Helper function to get display label for a role
   const getRoleLabel = (role) => {
     return roleMetadata[role]?.label || role;
+  };
+
+  const renderUsersContent = () => {
+    if (isLoadingUsers) {
+      return (
+        <div className="text-center p-5">
+          <output>
+            <div className="spinner-border" style={{ color: '#5e7bb3', width: '3rem', height: '3rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </output>
+          <p className="mt-3 text-muted">Loading users...</p>
+        </div>
+      );
+    }
+
+    if (users.length === 0) {
+      return (
+        <Alert variant="info" className="d-flex align-items-center m-3">
+          <i className="bi bi-info-circle me-2"></i>{' '}
+          No users found
+        </Alert>
+      );
+    }
+
+    return (
+      <div className="table-responsive" style={{ overflowX: 'auto', overflowY: 'visible' }}>
+        <Table hover className="mb-0" style={{ minWidth: '700px', borderCollapse: 'collapse' }}>
+          <thead style={{ 
+            backgroundColor: '#f8f9fa',
+            borderBottom: '2px solid #dee2e6'
+          }}>
+            <tr>
+              <th style={{ 
+                fontWeight: '600', 
+                padding: '1rem', 
+                minWidth: '120px',
+                fontSize: '0.95rem',
+                color: '#495057',
+                borderBottom: '2px solid #dee2e6',
+                borderTop: 'none'
+              }}>
+                <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Name
+              </th>
+              <th style={{ 
+                fontWeight: '600', 
+                padding: '1rem', 
+                minWidth: '120px',
+                fontSize: '0.95rem',
+                color: '#495057',
+                borderBottom: '2px solid #dee2e6',
+                borderTop: 'none'
+              }}>
+                <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Surname
+              </th>
+              <th style={{ 
+                fontWeight: '600', 
+                padding: '1rem', 
+                minWidth: '180px',
+                fontSize: '0.95rem',
+                color: '#495057',
+                borderBottom: '2px solid #dee2e6',
+                borderTop: 'none'
+              }}>
+                <i className="bi bi-envelope-fill me-2" style={{ color: '#5e7bb3' }}></i>Email
+              </th>
+              <th style={{ 
+                fontWeight: '600', 
+                padding: '1rem', 
+                minWidth: '220px',
+                fontSize: '0.95rem',
+                color: '#495057',
+                borderBottom: '2px solid #dee2e6',
+                borderTop: 'none'
+              }}>
+                <i className="bi bi-shield-check me-2" style={{ color: '#5e7bb3' }}></i>Role
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user, index) => (
+              <tr key={user.id} style={{ 
+                backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafbfc',
+                transition: 'all 0.2s ease'
+              }}>
+                <td style={{ 
+                  padding: '1rem', 
+                  verticalAlign: 'middle', 
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#212529',
+                  borderBottom: '1px solid #e9ecef'
+                }}                        >
+                  <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>{' '}
+                  {user.name}
+                </td>
+                <td style={{ 
+                  padding: '1rem', 
+                  verticalAlign: 'middle', 
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#212529',
+                  borderBottom: '1px solid #e9ecef'
+                }}>
+                  {user.surname}
+                </td>
+                <td style={{ 
+                  padding: '1rem', 
+                  verticalAlign: 'middle', 
+                  fontSize: '0.9rem', 
+                  wordBreak: 'break-word',
+                  color: '#495057',
+                  borderBottom: '1px solid #e9ecef'
+                }}>
+                  <i className="bi bi-envelope me-2" style={{ color: '#6c757d' }}></i>{' '}
+                  {user.email}
+                </td>
+                <td style={{ 
+                  padding: '1rem', 
+                  verticalAlign: 'middle',
+                  borderBottom: '1px solid #e9ecef'
+                }}>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleOpenRoleModal(user)}
+                    className="d-flex align-items-center justify-content-between"
+                    style={{
+                      width: '100%',
+                      minWidth: '180px',
+                      maxWidth: '280px',
+                      fontSize: '0.875rem',
+                      borderRadius: '20px',
+                      fontWeight: '500',
+                      borderColor: '#5e7bb3',
+                      borderWidth: '1.5px',
+                      color: '#5e7bb3',
+                      backgroundColor: '#f8f9ff',
+                      padding: '0.5rem 1rem',
+                      transition: 'all 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#5e7bb3';
+                      e.currentTarget.style.color = '#ffffff';
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f8f9ff';
+                      e.currentTarget.style.color = '#5e7bb3';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    <span style={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      flex: 1
+                    }}>
+                      <i className="bi bi-shield-check me-2"></i>{' '}
+                      {getRoleLabel(user.type) || 'Assign Role'}
+                    </span>
+                    <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+    );
   };
 
   const handleOpenRoleModal = (user) => {
@@ -160,7 +328,6 @@ export default function MapPage() {
   };
 
   return (
-    <>
       <div className="app-root d-flex flex-column min-vh-100">
       <div className="position-relative w-100">
         {/* top-right button - responsive positioning */}
@@ -232,164 +399,7 @@ export default function MapPage() {
               </Alert>
             )}
 
-            {isLoadingUsers ? (
-              <div className="text-center p-5">
-                <div className="spinner-border" role="status" style={{ color: '#5e7bb3', width: '3rem', height: '3rem' }}>
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                <p className="mt-3 text-muted">Loading users...</p>
-              </div>
-            ) : users.length === 0 ? (
-              <Alert variant="info" className="d-flex align-items-center m-3">
-                <i className="bi bi-info-circle me-2"></i>{' '}
-                No users found
-              </Alert>
-            ) : (
-              <div className="table-responsive" style={{ overflowX: 'auto', overflowY: 'visible' }}>
-                <Table hover className="mb-0" style={{ minWidth: '700px', borderCollapse: 'collapse' }}>
-                  <thead style={{ 
-                    backgroundColor: '#f8f9fa',
-                    borderBottom: '2px solid #dee2e6'
-                  }}>
-                    <tr>
-                      <th style={{ 
-                        fontWeight: '600', 
-                        padding: '1rem', 
-                        minWidth: '120px',
-                        fontSize: '0.95rem',
-                        color: '#495057',
-                        borderBottom: '2px solid #dee2e6',
-                        borderTop: 'none'
-                      }}>
-                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Name
-                      </th>
-                      <th style={{ 
-                        fontWeight: '600', 
-                        padding: '1rem', 
-                        minWidth: '120px',
-                        fontSize: '0.95rem',
-                        color: '#495057',
-                        borderBottom: '2px solid #dee2e6',
-                        borderTop: 'none'
-                      }}>
-                        <i className="bi bi-person-fill me-2" style={{ color: '#5e7bb3' }}></i>Surname
-                      </th>
-                      <th style={{ 
-                        fontWeight: '600', 
-                        padding: '1rem', 
-                        minWidth: '180px',
-                        fontSize: '0.95rem',
-                        color: '#495057',
-                        borderBottom: '2px solid #dee2e6',
-                        borderTop: 'none'
-                      }}>
-                        <i className="bi bi-envelope-fill me-2" style={{ color: '#5e7bb3' }}></i>Email
-                      </th>
-                      <th style={{ 
-                        fontWeight: '600', 
-                        padding: '1rem', 
-                        minWidth: '220px',
-                        fontSize: '0.95rem',
-                        color: '#495057',
-                        borderBottom: '2px solid #dee2e6',
-                        borderTop: 'none'
-                      }}>
-                        <i className="bi bi-shield-check me-2" style={{ color: '#5e7bb3' }}></i>Role
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user, index) => (
-                      <tr key={user.id} style={{ 
-                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafbfc',
-                        transition: 'all 0.2s ease'
-                      }}>
-                        <td style={{ 
-                          padding: '1rem', 
-                          verticalAlign: 'middle', 
-                          fontSize: '0.9rem',
-                          fontWeight: '500',
-                          color: '#212529',
-                          borderBottom: '1px solid #e9ecef'
-                        }}                        >
-                          <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>{' '}
-                          {user.name}
-                        </td>
-                        <td style={{ 
-                          padding: '1rem', 
-                          verticalAlign: 'middle', 
-                          fontSize: '0.9rem',
-                          fontWeight: '500',
-                          color: '#212529',
-                          borderBottom: '1px solid #e9ecef'
-                        }}>
-                          {user.surname}
-                        </td>
-                        <td style={{ 
-                          padding: '1rem', 
-                          verticalAlign: 'middle', 
-                          fontSize: '0.9rem', 
-                          wordBreak: 'break-word',
-                          color: '#495057',
-                          borderBottom: '1px solid #e9ecef'
-                        }}>
-                          <i className="bi bi-envelope me-2" style={{ color: '#6c757d' }}></i>{' '}
-                          {user.email}
-                        </td>
-                        <td style={{ 
-                          padding: '1rem', 
-                          verticalAlign: 'middle',
-                          borderBottom: '1px solid #e9ecef'
-                        }}>
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => handleOpenRoleModal(user)}
-                            className="d-flex align-items-center justify-content-between"
-                            style={{
-                              width: '100%',
-                              minWidth: '180px',
-                              maxWidth: '280px',
-                              fontSize: '0.875rem',
-                              borderRadius: '20px',
-                              fontWeight: '500',
-                              borderColor: '#5e7bb3',
-                              borderWidth: '1.5px',
-                              color: '#5e7bb3',
-                              backgroundColor: '#f8f9ff',
-                              padding: '0.5rem 1rem',
-                              transition: 'all 0.2s ease',
-                              textAlign: 'left'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#5e7bb3';
-                              e.currentTarget.style.color = '#ffffff';
-                              e.currentTarget.style.transform = 'scale(1.02)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f8f9ff';
-                              e.currentTarget.style.color = '#5e7bb3';
-                              e.currentTarget.style.transform = 'scale(1)';
-                            }}
-                          >
-                            <span style={{ 
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              flex: 1
-                            }}>
-                              <i className="bi bi-shield-check me-2"></i>{' '}
-                              {getRoleLabel(user.type) || 'Assign Role'}
-                            </span>
-                            <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            )}
+            {renderUsersContent()}
           </Card.Body>
         </Card>
       </div>
@@ -548,9 +558,9 @@ export default function MapPage() {
               }}
             >
               {isSubmitting ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating...
-                </>
+                <output>
+                  <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Creating...
+                </output>
               ) : (
                 <>
                   <i className="bi bi-person-plus-fill me-2"></i>Create User
@@ -594,20 +604,10 @@ export default function MapPage() {
                 <div className="form-label fw-semibold" style={{ color: '#495057' }}>
                   <i className="bi bi-tag-fill me-2"></i>Select New Role
                 </div>
-                <div className="d-flex flex-column gap-2" role="radiogroup" aria-label="Select New Role">
+                <div className="d-flex flex-column gap-2">
                   {availableRoles.map((role) => (
-                    <div
+                    <label
                       key={role}
-                      role="radio"
-                      aria-checked={selectedRole === role}
-                      tabIndex={0}
-                      onClick={() => setSelectedRole(role)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setSelectedRole(role);
-                        }
-                      }}
                       className="p-3"
                       style={{
                         backgroundColor: selectedRole === role ? '#5e7bb3' : '#ffffff',
@@ -617,7 +617,8 @@ export default function MapPage() {
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         fontWeight: selectedRole === role ? '600' : '400',
-                        boxShadow: selectedRole === role ? '0 4px 12px rgba(94, 123, 179, 0.2)' : 'none'
+                        boxShadow: selectedRole === role ? '0 4px 12px rgba(94, 123, 179, 0.2)' : 'none',
+                        display: 'block'
                       }}
                       onMouseEnter={(e) => {
                         if (selectedRole !== role) {
@@ -647,6 +648,19 @@ export default function MapPage() {
                         }
                       }}
                     >
+                      <input
+                        type="radio"
+                        name="userRole"
+                        value={role}
+                        checked={selectedRole === role}
+                        onChange={() => setSelectedRole(role)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          width: 0,
+                          height: 0
+                        }}
+                      />
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex align-items-center">
                           <i className={`bi bi-${selectedRole === role ? 'check-circle-fill' : 'circle'} me-3`} 
@@ -659,7 +673,7 @@ export default function MapPage() {
                           <i className="bi bi-check2" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}></i>
                         )}
                       </div>
-                    </div>
+                    </label>
                   ))}
                 </div>
               </div>
@@ -696,6 +710,5 @@ export default function MapPage() {
         </Modal.Footer>
       </Modal>
       </div>
-    </>
   );
 }

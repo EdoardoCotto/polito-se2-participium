@@ -255,30 +255,33 @@ export default function TechnicalOfficeStaffMember({ user }) {
                 {/* Reports List */}
                 {!loading && !error && assignedReports.length > 0 && (
                   <div className="d-flex flex-column gap-3">
-                    {assignedReports.map((report) => (
-                      <Card 
-                        key={report.id} 
-                        className={`shadow-sm ${highlightedLocation?.reportId === report.id ? 'border-primary' : ''}`}
-                        style={{ 
-                          border: highlightedLocation?.reportId === report.id ? '0.125rem solid #0d6efd' : '0.0625rem solid #e0e0e0',
-                          borderRadius: '0.75rem',
-                          transition: 'all 0.2s',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => handleReportClick(report)}
-                        onMouseEnter={(e) => {
-                          if (highlightedLocation?.reportId !== report.id) {
-                            e.currentTarget.style.transform = 'translateY(-0.125rem)';
-                            e.currentTarget.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (highlightedLocation?.reportId !== report.id) {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '';
-                          }
-                        }}
-                      >
+                    {assignedReports.map((report) => {
+                      const isSelected = highlightedLocation?.reportId === report.id;
+                      
+                      return (
+                        <Card 
+                          key={report.id} 
+                          className={`shadow-sm ${isSelected ? 'border-primary' : ''}`}
+                          style={{ 
+                            border: isSelected ? '0.125rem solid #0d6efd' : '0.0625rem solid #e0e0e0',
+                            borderRadius: '0.75rem',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => handleReportClick(report)}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.transform = 'translateY(-0.125rem)';
+                              e.currentTarget.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '';
+                            }
+                          }}
+                        >
                         <Card.Body className="p-3">
                           {/* Report Header */}
                           <div className="d-flex justify-content-between align-items-start mb-2">
@@ -351,31 +354,32 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                 }}
                               >
                                 <i className="bi bi-image me-1"></i>
-                                {countPhotos(report)} photo{countPhotos(report) !== 1 ? 's' : ''}
+                                {countPhotos(report)} photo{countPhotos(report) === 1 ? '' : 's'}
                                 <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '0.7em' }}></i>
                               </Badge>
                             </div>
                           )}
 
                           {/* Click hints */}
-                          {highlightedLocation?.reportId !== report.id ? (
-                            <div className="mb-0">
-                              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
-                                <i className="bi bi-hand-index me-1"></i>
-                                {' '}Click to show on map
-                              </small>
-                            </div>
-                          ) : (
+                          {isSelected ? (
                             <div className="mb-0">
                               <small className="text-primary" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
                                 <i className="bi bi-check-circle me-1"></i>
                                 {' '}Selected - Click again to deselect
                               </small>
                             </div>
+                          ) : (
+                            <div className="mb-0">
+                              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)', fontStyle: 'italic' }}>
+                                <i className="bi bi-hand-index me-1"></i>
+                                {' '}Click to show on map
+                              </small>
+                            </div>
                           )}
                         </Card.Body>
                       </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Card.Body>
@@ -420,7 +424,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
             ) : (
               <Carousel interval={null} style={{ backgroundColor: '#000' }}>
                 {selectedPhotos.map((photo, index) => (
-                  <Carousel.Item key={index}>
+                  <Carousel.Item key={photo}>
                     <div style={{ 
                       width: '100%', 
                       height: '31.25rem',

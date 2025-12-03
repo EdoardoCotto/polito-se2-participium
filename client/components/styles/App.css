@@ -113,7 +113,7 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   padding: 0.5rem 1rem;
   border: 2px solid rgba(94, 123, 179, 0.3);
-  color: #3d5c8f;
+  color: #2d4a73;
   background: rgba(94, 123, 179, 0.08);
   transition: all 0.3s ease;
   display: flex;
@@ -138,9 +138,9 @@
 }
 
 .profile-button:hover {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: white;
-  border-color: #5e7bb3;
+  border-color: #3d5a8f;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(94, 123, 179, 0.3);
 }
@@ -195,7 +195,7 @@
 
 /* Login Button Styles */
 .login-button {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   border: none;
   border-radius: 12px;
   padding: 0.6rem 1.5rem;
@@ -256,7 +256,7 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   transition: all 0.3s ease;
   border: 2px solid rgba(220, 53, 69, 0.3);
-  color: #bd2130;
+  color: #8b1a26;
   background: rgba(220, 53, 69, 0.08);
 }
 
@@ -270,7 +270,7 @@
 
 /* Profile Modal Improvements */
 .profile-modal-header {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 50%, #3d5c8f 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 50%, #1e3a5f 100%);
   color: white;
   border-bottom: none;
   padding: 1.75rem 2rem;
@@ -809,7 +809,7 @@
 }
 
 .crop-modal-header {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: white;
   border-bottom: none;
   padding: 1.5rem 2rem;
@@ -1141,7 +1141,7 @@
 }
 
 .card-description {
-  color: #495057;
+  color: #2d3748;
   font-size: 0.875rem;
   line-height: 1.5;
   background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(23, 162, 184, 0.03) 100%);
@@ -1194,7 +1194,7 @@
 
 .btn-outline-primary.action-button {
   border: 2px solid #0d6efd;
-  color: #0d6efd;
+  color: #0a58ca;
   background: rgba(13, 110, 253, 0.02);
 }
 
@@ -1207,7 +1207,7 @@
 
 .btn-outline-secondary.action-button {
   border: 2px solid #6c757d;
-  color: #6c757d;
+  color: #495057;
   background: rgba(108, 117, 125, 0.02);
 }
 
@@ -1602,9 +1602,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1e3a5f;
   text-decoration: none;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
@@ -1627,8 +1627,8 @@
 }
 
 .social-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e3a5f;
   transform: translateY(-3px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.4);
@@ -2162,15 +2162,15 @@
 }
 
 .report-list-item .badge.bg-success {
-  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+  background: linear-gradient(135deg, #1e7e34 0%, #155724 100%) !important;
   color: white;
-  border-color: #28a745;
+  border-color: #1e7e34;
 }
 
 .report-list-item .badge.bg-info {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  background: linear-gradient(135deg, #117a8b 0%, #0e6674 100%) !important;
   color: white;
-  border-color: #17a2b8;
+  border-color: #117a8b;
 }
 
 .report-list-item .badge.bg-primary {
@@ -2231,8 +2231,8 @@
 
 .report-search-input + .btn:hover {
   background-color: #f8f9fa;
-  border-color: #5e7bb3;
-  color: #5e7bb3;
+  border-color: #3d5a8f;
+  color: #3d5a8f;
 }
 
 /* Filter Alert Enhancement */
@@ -2282,7 +2282,7 @@
   border: 2px solid #e0e6ed;
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: #6c757d;
+  color: #495057;
   transition: all 0.3s ease;
 }
 
@@ -2376,7 +2376,7 @@
 }
 
 .report-detail-header {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: white;
   border-bottom: none;
   padding: 1.5rem 2rem;
@@ -2563,7 +2563,7 @@
 }
 
 .report-photos-header {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: white;
   border-bottom: none;
   padding: 1.25rem 2rem;
@@ -2775,7 +2775,7 @@
 }
 
 .login-modal-header {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: white;
   border-bottom: none;
   padding: 1.75rem;
@@ -3090,7 +3090,7 @@
 }
 
 .pending-report-btn-accept {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  background: linear-gradient(135deg, #1e7e34 0%, #138f67 100%) !important;
   border: none !important;
   color: white !important;
   font-weight: 600;
@@ -3132,7 +3132,7 @@
 }
 
 .pending-report-photo-badge {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  background: linear-gradient(135deg, #117a8b 0%, #0e6674 100%) !important;
   color: white !important;
   font-weight: 500;
   padding: 0.35rem 0.75rem;
@@ -3365,7 +3365,7 @@
 }
 
 .review-modal-btn-confirm.accept-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  background: linear-gradient(135deg, #1e7e34 0%, #138f67 100%) !important;
   color: white !important;
   box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
 }
@@ -3474,9 +3474,9 @@
 }
 
 .login-register-btn:hover {
-  background: linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%);
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
   color: #ffffff;
-  border-color: #5e7bb3;
+  border-color: #3d5a8f;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(94, 123, 179, 0.25);
 }

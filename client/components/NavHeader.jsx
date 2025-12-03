@@ -1,7 +1,7 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Button, Navbar, Image, Nav, Modal, Form, Alert } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { LogoutButton } from './AuthComponents';
 import API from '../API/API';
@@ -320,8 +320,7 @@ function NavHeader(props) {
                 onClick={props.onShowLogin}
                 className="login-button d-flex align-items-center my-2 my-lg-0"
               >
-                <i className="bi bi-box-arrow-in-right me-2"></i>
-                Login
+                <i className="bi bi-box-arrow-in-right me-2"></i>Login
               </Button>
             )
           )}
@@ -332,8 +331,7 @@ function NavHeader(props) {
       <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="lg" className="profile-modal">
         <Modal.Header closeButton className="profile-modal-header">
           <Modal.Title className="profile-modal-title">
-            <i className="bi bi-person-circle"></i>
-            Profile Settings
+            <i className="bi bi-person-circle"></i>Profile Settings
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="profile-modal-body">
@@ -383,8 +381,7 @@ function NavHeader(props) {
                           variant="outline-primary"
                           className="profile-upload-button w-100"
                         >
-                          <i className="bi bi-upload me-2"></i>
-                          Upload Photo
+                          <i className="bi bi-upload me-2"></i>Upload Photo
                         </Button>
                       </label>
                       {personal_photoPreview && personal_photoPreview !== "http://localhost:3001/static/user.png" && (
@@ -393,14 +390,12 @@ function NavHeader(props) {
                           onClick={handleRemovepersonal_photo}
                           className="profile-upload-button w-100"
                         >
-                          <i className="bi bi-trash me-2"></i>
-                          Remove Photo
+                          <i className="bi bi-trash me-2"></i>Remove Photo
                         </Button>
                       )}
                     </div>
                     <small className="text-muted mt-3 text-center">
-                      <i className="bi bi-info-circle me-1"></i>
-                      Max 5MB - JPG, PNG, GIF
+                      <i className="bi bi-info-circle me-1"></i>Max 5MB - JPG, PNG, GIF
                     </small>
                   </div>
                 </div>
@@ -422,8 +417,7 @@ function NavHeader(props) {
                       className="profile-form-input"
                     />
                     <Form.Text className="text-muted">
-                      <i className="bi bi-info-circle me-1"></i>
-                      Link your Telegram to receive notifications (optional)
+                      <i className="bi bi-info-circle me-1"></i>Link your Telegram to receive notifications (optional)
                     </Form.Text>
                   </Form.Group>
 
@@ -462,8 +456,7 @@ function NavHeader(props) {
                   {/* User Info Display */}
                   <div className="profile-account-info">
                     <h6 className="mb-3 profile-account-title">
-                      <i className="bi bi-person-vcard me-2"></i>
-                      Account Information
+                      <i className="bi bi-person-vcard me-2"></i>Account Information
                     </h6>
                     <div className="row g-3">
                       <div className="col-12 col-md-6">
@@ -512,14 +505,13 @@ function NavHeader(props) {
             className="profile-modal-save-btn"
           >
             {saving ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <output>
+                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                 Saving...
-              </>
+              </output>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>
-                Save Changes
+                <i className="bi bi-check-circle me-2"></i>Save Changes
               </>
             )}
           </Button>
@@ -536,8 +528,7 @@ function NavHeader(props) {
       >
         <Modal.Header closeButton className="crop-modal-header">
           <Modal.Title className="crop-modal-title">
-            <i className="bi bi-scissors me-2"></i>
-            Crop Your Photo
+            <i className="bi bi-scissors me-2"></i>Crop Your Photo
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="crop-modal-body">
@@ -566,8 +557,7 @@ function NavHeader(props) {
               </div>
               <div className="crop-controls mt-3">
                 <Form.Label className="d-block mb-2">
-                  <i className="bi bi-zoom-in me-2"></i>
-                  Zoom
+                  <i className="bi bi-zoom-in me-2"></i>Zoom
                 </Form.Label>
                 <Form.Range
                   value={zoom}
@@ -595,14 +585,13 @@ function NavHeader(props) {
             disabled={cropping || !croppedAreaPixels}
           >
             {cropping ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <output>
+                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                 Cropping...
-              </>
+              </output>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>
-                Apply Crop
+                <i className="bi bi-check-circle me-2"></i>Apply Crop
               </>
             )}
           </Button>

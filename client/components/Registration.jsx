@@ -276,7 +276,7 @@ export default function RegistrationPage() {
                   >
                     {isSubmitting ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating your account...
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><output>Creating your account...</output>
                       </>
                     ) : (
                       <>
