@@ -41,77 +41,67 @@ function NavHeader(props) {
     return "http://localhost:3001/static/user.png";
   };
 
+  // Helper function to calculate mail notifications value
+  const getMailNotificationsValue = (mailNotifications) => {
+    return mailNotifications === false || mailNotifications === 0 
+      ? false 
+      : Boolean(mailNotifications !== null && mailNotifications !== undefined);
+  };
+
+  // Helper function to set photo preview
+  const setPhotoPreview = (photoPath) => {
+    if (photoPath) {
+      setpersonal_photoPreview(`http://localhost:3001${photoPath}`);
+    } else {
+      setpersonal_photoPreview(null);
+    }
+  };
+
+  // Helper function to load user data into form
+  const loadUserDataIntoForm = (userData) => {
+    if (!userData) return;
+    
+    console.log('Setting telegram_nickname to:', userData.telegram_nickname || '');
+    console.log('Setting mail_notifications to:', userData.mail_notifications);
+    console.log('mail_notifications type:', typeof userData.mail_notifications);
+    console.log('Setting photo path to:', userData.personal_photo_path);
+    
+    settelegram_nickname(userData.telegram_nickname || '');
+    const mailNotifValue = getMailNotificationsValue(userData.mail_notifications);
+    setmail_notifications(mailNotifValue);
+    console.log('Final mail_notifications value:', mailNotifValue);
+    setPhotoPreview(userData.personal_photo_path);
+  };
+
+  // Helper function to reset form state
+  const resetFormState = () => {
+    setpersonal_photo(null);
+    setSaveError('');
+    setSaveSuccess('');
+    setShowProfileModal(true);
+  };
+
   // Handle profile modal open - Load fresh data from database
   const handleOpenProfile = async () => {
     try {
       console.log('Opening profile modal...');
       console.log('Current props.user:', props.user);
       
-      // Fetch latest user data from database
       const latestUser = await API.getCurrentUser();
       console.log('Latest user from API:', latestUser);
       
-      if (latestUser) {
-        // Update local states with database values
-        console.log('Setting telegram_nickname to:', latestUser.telegram_nickname || '');
-        console.log('Setting mail_notifications to:', latestUser.mail_notifications);
-        console.log('mail_notifications type:', typeof latestUser.mail_notifications);
-        console.log('Setting photo path to:', latestUser.personal_photo_path);
-        
-        settelegram_nickname(latestUser.telegram_nickname || '');
-        // Handle mail_notifications: could be boolean, 0/1, or null/undefined
-        // If it's explicitly false or 0, set to false; otherwise true
-        const mailNotifValue = latestUser.mail_notifications === false || latestUser.mail_notifications === 0 
-          ? false 
-          : Boolean(latestUser.mail_notifications !== null && latestUser.mail_notifications !== undefined);
-        setmail_notifications(mailNotifValue);
-        console.log('Final mail_notifications value:', mailNotifValue);
-        
-        if (latestUser.personal_photo_path) {
-          setpersonal_photoPreview(`http://localhost:3001${latestUser.personal_photo_path}`);
-        } else {
-          setpersonal_photoPreview(null);
-        }
-      } else {
+      const userData = latestUser || props.user;
+      if (!latestUser) {
         console.log('No latestUser, falling back to props.user');
-        // Fallback to props.user if API call fails
-        settelegram_nickname(props.user?.telegram_nickname || '');
-        const mailNotifValue = props.user?.mail_notifications === false || props.user?.mail_notifications === 0 
-          ? false 
-          : Boolean(props.user?.mail_notifications !== null && props.user?.mail_notifications !== undefined);
-        setmail_notifications(mailNotifValue);
-        
-        if (props.user?.personal_photo_path) {
-          setpersonal_photoPreview(`http://localhost:3001${props.user.personal_photo_path}`);
-        } else {
-          setpersonal_photoPreview(null);
-        }
       }
       
-      setpersonal_photo(null); // Reset file input
-      setSaveError('');
-      setSaveSuccess('');
-      setShowProfileModal(true);
+      loadUserDataIntoForm(userData);
+      resetFormState();
       
     } catch (err) {
       console.error('Error loading profile data:', err);
-      // Fallback to props.user
-      settelegram_nickname(props.user?.telegram_nickname || '');
-      const mailNotifValue = props.user?.mail_notifications === false || props.user?.mail_notifications === 0 
-        ? false 
-        : Boolean(props.user?.mail_notifications !== null && props.user?.mail_notifications !== undefined);
-      setmail_notifications(mailNotifValue);
-      
-      if (props.user?.personal_photo_path) {
-        setpersonal_photoPreview(`http://localhost:3001${props.user.personal_photo_path}`);
-      } else {
-        setpersonal_photoPreview(null);
-      }
-      
-      setpersonal_photo(null);
-      setSaveError('');
-      setSaveSuccess('');
-      setShowProfileModal(true);
+      loadUserDataIntoForm(props.user);
+      resetFormState();
     }
   };
 

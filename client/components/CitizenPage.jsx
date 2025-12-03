@@ -331,6 +331,77 @@ export default function CitizenPage({ user }) {
     }
   };
 
+  // Helper functions to reduce cognitive complexity
+  const getMapTitle = () => {
+    return viewMode === 'create' ? 'Select a location on the map' : 'Reports Map View';
+  };
+
+  const getMapTitleMobile = () => {
+    return viewMode === 'create' ? 'Select Location' : 'Map View';
+  };
+
+  const getReportCountBadge = () => {
+    if (viewMode !== 'view' || allReports.length === 0) return null;
+    
+    const count = filteredReports.length === allReports.length 
+      ? allReports.length 
+      : `${filteredReports.length}/${allReports.length}`;
+    const label = filteredReports.length === 1 ? 'report' : 'reports';
+    
+    return `${count} ${label}`;
+  };
+
+  const getLocationStatusStyles = () => {
+    return {
+      className: `p-2 p-md-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`,
+      style: { borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }
+    };
+  };
+
+  const getAnonymousModeStyles = () => {
+    return {
+      backgroundColor: isAnonymous ? '#fff3cd' : '#e8f0ff',
+      border: `1px solid ${isAnonymous ? '#ffc107' : '#5e7bb3'}`,
+      transition: 'all 0.3s ease'
+    };
+  };
+
+  const getAnonymousIconStyles = () => {
+    return {
+      className: `bi ${isAnonymous ? 'bi-incognito' : 'bi-person-badge'} me-2`,
+      style: { fontSize: '1.5rem', color: isAnonymous ? '#856404' : '#5e7bb3' }
+    };
+  };
+
+  const getAnonymousModeText = () => {
+    return {
+      title: isAnonymous ? 'Anonymous Report' : 'Public Report',
+      subtitle: isAnonymous ? 'Your identity will not be shown' : 'Your username will be visible'
+    };
+  };
+
+  const getSubmitButtonContent = () => {
+    if (submitting) {
+      return (
+        <>
+          <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          <output>Submitting...</output>
+        </>
+      );
+    }
+    
+    return (
+      <>
+        <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-send'} me-2`}></i>
+        {isAnonymous ? 'Submit Anonymous Report' : 'Submit Report'}
+      </>
+    );
+  };
+
+  const getViewModeIcon = () => {
+    return viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye';
+  };
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
       <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
@@ -341,17 +412,11 @@ export default function CitizenPage({ user }) {
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                 <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                   <i className="bi bi-pin-map me-2"></i>
-                   <span className="d-none d-sm-inline">
-                    {viewMode === 'create' ? 'Select a location on the map' : 'Reports Map View'}
-                  </span>
-                  <span className="d-inline d-sm-none">
-                    {viewMode === 'create' ? 'Select Location' : 'Map View'}
-                  </span>
-                  {viewMode === 'view' && allReports.length > 0 && (
+                  <span className="d-none d-sm-inline">{getMapTitle()}</span>
+                  <span className="d-inline d-sm-none">{getMapTitleMobile()}</span>
+                  {getReportCountBadge() && (
                     <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      {filteredReports.length === allReports.length 
-                        ? allReports.length 
-                        : `${filteredReports.length}/${allReports.length}`} report{filteredReports.length === 1 ? '' : 's'}
+                      {getReportCountBadge()}
                     </span>
                   )}
                 </Card.Title>
@@ -392,7 +457,7 @@ export default function CitizenPage({ user }) {
                     }}
                   >
                     <span className="d-flex align-items-center">
-                      <i className={`bi ${viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye'} me-2`}></i>
+                      <i className={`bi ${getViewModeIcon()} me-2`}></i>
                       {getViewModeText()}
                     </span>
                   </Dropdown.Toggle>
@@ -756,10 +821,7 @@ export default function CitizenPage({ user }) {
                         <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
                           <i className="bi bi-geo-alt me-2"></i>Location
                         </Form.Label>
-                        <div 
-                          className={`p-2 p-md-3 rounded ${selectedLocation ? 'bg-light border border-success' : 'bg-light border border-secondary'}`}
-                          style={{ borderRadius: '8px', fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}
-                        >
+                        <div {...getLocationStatusStyles()}>
                           {selectedLocation ? (
                             <div className="text-success">
                               <i className="bi bi-check-circle-fill me-2"></i>
@@ -780,23 +842,16 @@ export default function CitizenPage({ user }) {
                     </Form>
 
                     {/* Anonymous Mode Toggle - Spostato in fondo */}
-                    <div className="mb-3 p-3 rounded" style={{ 
-                      backgroundColor: isAnonymous ? '#fff3cd' : '#e8f0ff',
-                      border: `1px solid ${isAnonymous ? '#ffc107' : '#5e7bb3'}`,
-                      transition: 'all 0.3s ease'
-                    }}>
+                    <div className="mb-3 p-3 rounded" style={getAnonymousModeStyles()}>
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex align-items-center">
-                          <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-person-badge'} me-2`} 
-                             style={{ fontSize: '1.5rem', color: isAnonymous ? '#856404' : '#5e7bb3' }}></i>
+                          <i {...getAnonymousIconStyles()}></i>
                           <div>
                             <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                              {isAnonymous ? 'Anonymous Report' : 'Public Report'}
+                              {getAnonymousModeText().title}
                             </strong>
                             <div style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }} className="text-muted">
-                              {isAnonymous 
-                                ? 'Your identity will not be shown' 
-                                : 'Your username will be visible'}
+                              {getAnonymousModeText().subtitle}
                             </div>
                           </div>
                         </div>
@@ -825,16 +880,7 @@ export default function CitizenPage({ user }) {
                           padding: 'clamp(0.5rem, 2vw, 0.75rem)'
                         }}
                       >
-                        {submitting ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><output>Submitting...</output>
-                          </>
-                        ) : (
-                          <>
-                            <i className={`bi ${isAnonymous ? 'bi-incognito' : 'bi-send'} me-2`}></i>
-                            {isAnonymous ? 'Submit Anonymous Report' : 'Submit Report'}
-                          </>
-                        )}
+                        {getSubmitButtonContent()}
                       </Button>
                     </div>
                   </>
