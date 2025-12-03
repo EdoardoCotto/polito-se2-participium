@@ -243,6 +243,57 @@ export default function CitizenPage({ user }) {
     return [...new Set(allReports.map(r => r.status))].sort((a, b) => a.localeCompare(b));
   }, [allReports]);
 
+  // Memoized content for Report Photos Modal to avoid nested ternaries and noisy inline logic
+  const reportPhotosContent = useMemo(() => {
+    if (selectedReportPhotos.length === 0) {
+      return (
+        <div className="text-center py-5">
+          <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
+          <p className="mt-3 text-muted">No photos available</p>
+        </div>
+      );
+    }
+
+    if (selectedReportPhotos.length === 1) {
+      return (
+        <div className="report-photo-single-container">
+          <img
+            src={selectedReportPhotos[0]}
+            alt="Report visual detail"
+            className="report-photo-single-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <Carousel interval={null} className="report-photos-carousel">
+        {selectedReportPhotos.map((photo, index) => (
+          <Carousel.Item key={photo}>
+            <div className="report-photo-container">
+              <img
+                src={photo}
+                alt={`Report visual detail ${index + 1}`}
+                className="report-photo-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+            <Carousel.Caption className="report-photo-caption">
+              <p>Photo {index + 1} of {selectedReportPhotos.length}</p>
+            </Carousel.Caption>
+          </Carousel.Item>
+        ))}
+      </Carousel>
+    );
+  }, [selectedReportPhotos]);
+
   // Get category icon
   const getCategoryIcon = (category) => {
     const icons = {
@@ -917,74 +968,36 @@ export default function CitizenPage({ user }) {
       </Modal>
 
       {/* Report Photos Modal */}
-      {(() => {
-        const reportPhotosContent = selectedReportPhotos.length > 0
-          ? (selectedReportPhotos.length === 1
-            ? (
-              <div className="report-photo-single-container">
-                <img 
-                  src={selectedReportPhotos[0]} 
-                  alt="Report visual detail"
-                  className="report-photo-single-image"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
-                  }}
-                />
-              </div>
-            )
-            : (
-              <Carousel interval={null} className="report-photos-carousel">
-                {selectedReportPhotos.map((photo, index) => (
-                  <Carousel.Item key={photo}>
-                    <div className="report-photo-container">
-                      <img
-                        src={photo}
-                        alt={`Report visual detail ${index + 1}`}
-                        className="report-photo-image"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
-                        }}
-                      />
-                    </div>
-                    <Carousel.Caption className="report-photo-caption">
-                      <p>Photo {index + 1} of {selectedReportPhotos.length}</p>
-                    </Carousel.Caption>
-                  </Carousel.Item>
-                ))}
-              </Carousel>
-            ))
-          : (
-            <div className="text-center py-5">
-              <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
-              <p className="mt-3 text-muted">No photos available</p>
-            </div>
-          );
-        return (
-          <Modal show={showReportPhotosModal} onHide={() => {
-            setShowReportPhotosModal(false);
-            setSelectedReportPhotos([]);
-          }} size="lg" centered className="report-photos-modal">
-            <Modal.Header closeButton className="report-photos-header">
-              <Modal.Title>
-                <i className="bi bi-images me-2"></i>Report Photos
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-0">
-              {reportPhotosContent}
-            </Modal.Body>
-            <Modal.Footer className="report-photos-footer">
-              <Button variant="secondary" onClick={() => {
-                setShowReportPhotosModal(false);
-                setSelectedReportPhotos([]);
-              }}>
-                Close
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        );
-      })()}
+      <Modal
+        show={showReportPhotosModal}
+        onHide={() => {
+          setShowReportPhotosModal(false);
+          setSelectedReportPhotos([]);
+        }}
+        size="lg"
+        centered
+        className="report-photos-modal"
+      >
+        <Modal.Header closeButton className="report-photos-header">
+          <Modal.Title>
+            <i className="bi bi-images me-2"></i>Report Photos
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {reportPhotosContent}
+        </Modal.Body>
+        <Modal.Footer className="report-photos-footer">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowReportPhotosModal(false);
+              setSelectedReportPhotos([]);
+            }}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
