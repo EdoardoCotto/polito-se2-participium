@@ -284,7 +284,7 @@ function NavHeader(props) {
                     className="profile-avatar me-2"
                     roundedCircle
                   />
-                  <span className="d-none d-md-inline">{props.user.username}</span>
+                  <span className = "d-none d-md-inline">{props.user.username}</span>
                   <i
                     className="bi bi-chevron-down ms-2"
                     style={{ fontSize: '0.8em' }}
