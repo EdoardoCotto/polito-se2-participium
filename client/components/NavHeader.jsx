@@ -323,7 +323,8 @@ function NavHeader(props) {
                 onClick={props.onShowLogin}
                 className="login-button d-flex align-items-center my-2 my-lg-0"
               >
-                <i className="bi bi-box-arrow-in-right me-2"></i>Login
+                <i className="bi bi-box-arrow-in-right me-2"></i>
+                <span>Login</span>
               </Button>
             )
           )}
@@ -358,7 +359,8 @@ function NavHeader(props) {
               <div className="col-12 col-lg-4">
                 <div className="profile-image-section">
                   <Form.Label className="fw-semibold d-block mb-3 profile-image-label">
-                    <i className="bi bi-image me-2"></i>Profile Picture
+                    <i className="bi bi-image me-2"></i>
+                    <span>Profile Picture</span>
                   </Form.Label>
                   <div className="d-flex flex-column align-items-center">
                     <div className="profile-image-container mb-3">
@@ -385,7 +387,8 @@ function NavHeader(props) {
                           variant="outline-primary"
                           className="profile-upload-button w-100"
                         >
-                          <i className="bi bi-upload me-2"></i>Upload Photo
+                          <i className="bi bi-upload me-2"></i>
+                          <span>Upload Photo</span>
                         </Button>
                       </label>
                       {personal_photoPreview && personal_photoPreview !== "http://localhost:3001/static/user.png" && (
@@ -394,12 +397,14 @@ function NavHeader(props) {
                           onClick={handleRemovepersonal_photo}
                           className="profile-upload-button w-100"
                         >
-                          <i className="bi bi-trash me-2"></i>Remove Photo
+                          <i className="bi bi-trash me-2"></i>
+                          <span>Remove Photo</span>
                         </Button>
                       )}
                     </div>
                     <small className="text-muted mt-3 text-center">
-                      <i className="bi bi-info-circle me-1"></i>Max 5MB - JPG, PNG, GIF
+                      <i className="bi bi-info-circle me-1"></i>
+                      <span>Max 5MB - JPG, PNG, GIF</span>
                     </small>
                   </div>
                 </div>
@@ -411,7 +416,8 @@ function NavHeader(props) {
                   {/* Telegram Username */}
                   <Form.Group className="mb-4">
                     <Form.Label className="fw-semibold profile-form-label">
-                      <i className="bi bi-telegram me-2 text-primary"></i>Telegram Username
+                      <i className="bi bi-telegram me-2 text-primary"></i>
+                      <span>Telegram Username</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -504,7 +510,7 @@ function NavHeader(props) {
             onClick={() => setShowProfileModal(false)}
             className="profile-modal-cancel-btn"
           >
-            Cancel
+            <span>Cancel</span>
           </Button>
           <Button 
             variant="primary" 
@@ -515,11 +521,12 @@ function NavHeader(props) {
             {saving ? (
               <output>
                 <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                Saving...
+                <span>Saving...</span>
               </output>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>Save Changes
+                <i className="bi bi-check-circle me-2"></i>
+                <span>Save Changes</span>
               </>
             )}
           </Button>
@@ -536,7 +543,8 @@ function NavHeader(props) {
       >
         <Modal.Header closeButton className="crop-modal-header">
           <Modal.Title className="crop-modal-title">
-            <i className="bi bi-scissors me-2"></i>Crop Your Photo
+            <i className="bi bi-scissors me-2"></i>
+            <span>Crop Your Photo</span>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="crop-modal-body">
@@ -595,11 +603,12 @@ function NavHeader(props) {
             {cropping ? (
               <output>
                 <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                Cropping...
+                <span>Cropping...</span>
               </output>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>Apply Crop
+                <i className="bi bi-check-circle me-2"></i>
+                <span>Apply Crop</span>
               </>
             )}
           </Button>
