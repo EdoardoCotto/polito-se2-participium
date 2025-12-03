@@ -116,26 +116,44 @@ exports.getUserByEmail = (email) => {
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string }>}
  */
 exports.createUser = ({ username, email, name, surname, password, type = 'citizen' }) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Hash password with salt
-      const saltRounds = 10;
-      const salt = await bcrypt.genSalt(saltRounds);
-      const hash = await bcrypt.hash(password, salt);
 
-      const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)`;
-      db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
-        if (insertErr) {
-          console.error('Error inserting user:', insertErr);
-          reject(insertErr);
-          return;
-        }
-        resolve({ id: this.lastID, username, email, name, surname, type });
-      });
-    } catch (e) {
-      reject(e);
-    }
+  // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
+  return new Promise((resolve, reject) => { 
+
+    // 2. Avviamo una Funzione Anonima Auto-Eseguita Asincrona (IIFE)
+    // Questo crea un contesto 'async' valido per 'await'
+    (async () => {
+      try {
+
+        // Uso di await qui DENTRO è ora consentito!
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hash = await bcrypt.hash(password, salt);
+
+        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+        // db.run usa una callback, quindi non serve await
+        db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
+          if (insertErr) {
+            console.error('Error inserting user:', insertErr);
+            reject(insertErr); // Chiamiamo reject dalla Promise esterna
+            return;
+          }
+
+          resolve({ id: this.lastID, username, email, name, surname, type }); // Chiamiamo resolve dalla Promise esterna
+        });
+
+      } catch (e) {
+        // Qualsiasi errore da await (bcrypt) viene catturato e rigetta la Promise esterna
+        reject(e);
+      }
+    })(); // La funzione viene eseguita immediatamente
+
+    // NOTA: il blocco try-catch esterno non è più necessario
+    // in quanto tutte le operazioni asincrone e sincrone sono gestite
+    // all'interno dell'IIFE
+    
   });
 };
 
