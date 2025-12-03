@@ -6,7 +6,7 @@ import TurinMap from './TurinMap';
 import API from '../API/API.js';
 
 export default function CitizenPage({ user }) {
-  const [selectedLocation, setSelectedLocation] = useState(null); // {lat, lng}
+  const [selectedLocation, setSelectedLocation] = useState(null); 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -19,8 +19,6 @@ export default function CitizenPage({ user }) {
   const [submitOk, setSubmitOk] = useState('');
 
   const [categories, setCategories] = useState([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [categoriesError, setCategoriesError] = useState('');
 
    // View mode state - 'create' or 'view'
   const [viewMode, setViewMode] = useState('create');
@@ -46,9 +44,9 @@ export default function CitizenPage({ user }) {
         const data = await API.getCategories();
         setCategories(Array.isArray(data) ? data : []);
       } catch (error) {
-        setCategoriesError(error.message);
+        console.error('Error fetching categories:', error);
       } finally {
-        setIsLoadingCategories(false);
+        // no-op
       }
     };
 
@@ -300,9 +298,9 @@ export default function CitizenPage({ user }) {
                   </span>
                   {viewMode === 'view' && allReports.length > 0 && (
                     <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      {filteredReports.length !== allReports.length 
-                        ? `${filteredReports.length}/${allReports.length}` 
-                        : allReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+                      {filteredReports.length === allReports.length 
+                        ? allReports.length 
+                        : `${filteredReports.length}/${allReports.length}`} report{filteredReports.length !== 1 ? 's' : ''}
                     </span>
                   )}
                 </Card.Title>
@@ -641,9 +639,9 @@ export default function CitizenPage({ user }) {
                         {/* Lista foto caricate */}
                         {photos.length > 0 && (
                           <div className="mb-2">
-                            {photos.map((photo, index) => (
+                            {photos.map((photo) => (
                               <div 
-                                key={index} 
+                                key={`${photo.name}-${photo.preview}`} 
                                 className="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
                                 style={{ border: '1px solid #dee2e6' }}
                               >
@@ -670,7 +668,7 @@ export default function CitizenPage({ user }) {
                                   variant="link"
                                   size="sm"
                                   className="text-danger p-0"
-                                  onClick={() => handleRemovePhoto(index)}
+                                  onClick={() => handleRemovePhoto(photos.findIndex(p => p.preview === photo.preview))}
                                 >
                                   <i className="bi bi-trash"></i>
                                 </Button>
@@ -890,8 +888,8 @@ export default function CitizenPage({ user }) {
                     <i className="bi bi-images me-2"></i>Photos ({selectedReportDetail.photoUrls.length})
                   </h6>
                   <Carousel interval={null} className="report-photo-carousel">
-                    {selectedReportDetail.photoUrls.map((photoUrl, index) => (
-                      <Carousel.Item key={index}>
+                    {selectedReportDetail.photoUrls.map((photoUrl) => (
+                      <Carousel.Item key={photoUrl}>
                         <div className="report-photo-container">
                           <img
                             src={photoUrl}
@@ -950,8 +948,8 @@ export default function CitizenPage({ user }) {
               </div>
             ) : (
               <Carousel interval={null} className="report-photos-carousel">
-                {selectedReportPhotos.map((photo, index) => (
-                  <Carousel.Item key={index}>
+                {selectedReportPhotos.map((photo) => (
+                  <Carousel.Item key={photo}>
                     <div className="report-photo-container">
                       <img
                         src={photo}
