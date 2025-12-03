@@ -1,5 +1,5 @@
 import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel } from 'react-bootstrap';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
 import MapErrorBoundary from './MapErrorBoundary';
@@ -130,6 +130,85 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const hasPhotos = (report) => {
     return report.photoUrls && report.photoUrls.length > 0;
   };
+
+  // Precompute modal body content to avoid nested ternary in JSX
+  const photosModalContent = useMemo(() => {
+    if (selectedPhotos.length === 0) {
+      return (
+        <div className="text-center py-5">
+          <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
+          <p className="mt-3 text-muted">No photos available</p>
+        </div>
+      );
+    }
+
+    if (selectedPhotos.length === 1) {
+      return (
+        <div style={{ 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: '#000',
+          minHeight: '25rem'
+        }}>
+          <img 
+            src={selectedPhotos[0]} 
+            alt={photoModalTitle || 'Report attachment'}
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '80vh',
+              objectFit: 'contain'
+            }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <Carousel interval={null} style={{ backgroundColor: '#000' }}>
+        {selectedPhotos.map((photo, index) => (
+          <Carousel.Item key={photo}>
+            <div style={{ 
+              width: '100%', 
+              height: '31.25rem',
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              backgroundColor: '#000'
+            }}>
+              <img
+                src={photo}
+                alt={photoModalTitle ? `${photoModalTitle} – attachment ${index + 1}` : `Report attachment ${index + 1}`}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%',
+                  objectFit: 'contain'
+                }}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+            <Carousel.Caption style={{ 
+              backgroundColor: 'rgba(0,0,0,0.7)', 
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem'
+            }}>
+              <p style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', margin: 0 }}>
+                Photo {index + 1} of {selectedPhotos.length}
+              </p>
+            </Carousel.Caption>
+          </Carousel.Item>
+        ))}
+      </Carousel>
+    );
+  }, [selectedPhotos, photoModalTitle]);
 
   return (
     <div className="app-root d-flex flex-column min-vh-100">
@@ -397,75 +476,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          {selectedPhotos.length > 0 ? (
-            selectedPhotos.length === 1 ? (
-              <div style={{ 
-                width: '100%', 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center',
-                backgroundColor: '#000',
-                minHeight: '25rem'
-              }}>
-                <img 
-                  src={selectedPhotos[0]} 
-                  alt={photoModalTitle || 'Report attachment'}
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '80vh',
-                    objectFit: 'contain'
-                  }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
-                  }}
-                />
-              </div>
-            ) : (
-              <Carousel interval={null} style={{ backgroundColor: '#000' }}>
-                {selectedPhotos.map((photo, index) => (
-                  <Carousel.Item key={photo}>
-                    <div style={{ 
-                      width: '100%', 
-                      height: '31.25rem',
-                      display: 'flex', 
-                      justifyContent: 'center', 
-                      alignItems: 'center',
-                      backgroundColor: '#000'
-                    }}>
-                      <img
-                        src={photo}
-                        alt={photoModalTitle ? `${photoModalTitle} – attachment ${index + 1}` : `Report attachment ${index + 1}`}
-                        style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: '100%',
-                          objectFit: 'contain'
-                        }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
-                        }}
-                      />
-                    </div>
-                    <Carousel.Caption style={{ 
-                      backgroundColor: 'rgba(0,0,0,0.7)', 
-                      borderRadius: '0.5rem',
-                      padding: '0.5rem 1rem'
-                    }}>
-                      <p style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', margin: 0 }}>
-                        Photo {index + 1} of {selectedPhotos.length}
-                      </p>
-                    </Carousel.Caption>
-                  </Carousel.Item>
-                ))}
-              </Carousel>
-            )
-          ) : (
-            <div className="text-center py-5">
-              <i className="bi bi-image" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
-              <p className="mt-3 text-muted">No photos available</p>
-            </div>
-          )}
+          {photosModalContent}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClosePhotosModal} style={{ borderRadius: '0.5rem' }}>
