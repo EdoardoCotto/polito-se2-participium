@@ -295,7 +295,10 @@ function NavHeader(props) {
                     roundedCircle
                   />
                   <span className="d-none d-md-inline">{props.user.username}</span>
-                  <i className="bi bi-chevron-down ms-2" style={{ fontSize: '0.8em' }}></i>
+                  <i
+                    className="bi bi-chevron-down ms-2"
+                    style={{ fontSize: '0.8em' }}
+                  ></i>
                 </Button>
               )}
 
@@ -331,20 +334,21 @@ function NavHeader(props) {
       <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)} centered size="lg" className="profile-modal">
         <Modal.Header closeButton className="profile-modal-header">
           <Modal.Title className="profile-modal-title">
-            <i className="bi bi-person-circle"></i>Profile Settings
+            <i className="bi bi-person-circle"></i>
+            <span>Profile Settings</span>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="profile-modal-body">
           {saveError && (
             <Alert variant="danger" dismissible onClose={() => setSaveError('')}>
               <i className="bi bi-exclamation-triangle me-2"></i>
-              {saveError}
+              <span>{saveError}</span>
             </Alert>
           )}
           {saveSuccess && (
             <Alert variant="success">
               <i className="bi bi-check-circle me-2"></i>
-              {saveSuccess}
+              <span>{saveSuccess}</span>
             </Alert>
           )}
 
@@ -417,7 +421,8 @@ function NavHeader(props) {
                       className="profile-form-input"
                     />
                     <Form.Text className="text-muted">
-                      <i className="bi bi-info-circle me-1"></i>Link your Telegram to receive notifications (optional)
+                      <i className="bi bi-info-circle me-1"></i>
+                      <span>Link your Telegram to receive notifications (optional)</span>
                     </Form.Text>
                   </Form.Group>
 
@@ -433,12 +438,14 @@ function NavHeader(props) {
                           ></i>
                           <div>
                             <strong className="profile-notification-title">
-                              Email Notifications
+                              <span>Email Notifications</span>
                             </strong>
                             <div className="text-muted profile-notification-subtitle">
-                              {mail_notifications 
-                                ? 'You will receive email updates' 
-                                : 'Email notifications are disabled'}
+                              <span>
+                                {mail_notifications 
+                                  ? 'You will receive email updates' 
+                                  : 'Email notifications are disabled'}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -456,7 +463,8 @@ function NavHeader(props) {
                   {/* User Info Display */}
                   <div className="profile-account-info">
                     <h6 className="mb-3 profile-account-title">
-                      <i className="bi bi-person-vcard me-2"></i>Account Information
+                      <i className="bi bi-person-vcard me-2"></i>
+                      <span>Account Information</span>
                     </h6>
                     <div className="row g-3">
                       <div className="col-12 col-md-6">
