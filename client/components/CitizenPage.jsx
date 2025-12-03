@@ -378,10 +378,10 @@ export default function CitizenPage({ user }) {
                 {/* Show loading state when fetching reports */}
                 {viewMode === 'view' && loadingReports && (
                   <div className="text-center py-5 report-loading-state">
-                    <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+                    <div className="spinner-border text-primary mb-3" aria-hidden="true" style={{ width: '3rem', height: '3rem' }}>
                       <span className="visually-hidden">Loading reports...</span>
                     </div>
-                    <p className="mt-3 text-muted fw-semibold">Loading reports...</p>
+                    <output className="mt-3 text-muted fw-semibold d-block">Loading reports...</output>
                   </div>
                 )}
 
@@ -784,7 +784,7 @@ export default function CitizenPage({ user }) {
                       >
                         {submitting ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...
+                            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><output>Submitting...</output>
                           </>
                         ) : (
                           <>
