@@ -183,7 +183,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
             }}>
               <img
                 src={photo}
-                alt={photoModalTitle ? `${photoModalTitle} – attachment ${index + 1}` : `Report attachment ${index + 1}`}
+                alt={photoModalTitle ? `${photoModalTitle} - attachment ${index + 1}` : `Report attachment ${index + 1}`}
                 style={{ 
                   maxWidth: '100%', 
                   maxHeight: '100%',
@@ -415,9 +415,9 @@ export default function TechnicalOfficeStaffMember({ user }) {
                           {/* Photos Badge */}
                           {hasPhotos(report) && (
                             <div className="mb-3">
-                              <Badge 
-                                bg="info" 
-                                style={{ 
+                              <Badge
+                                bg="info"
+                                style={{
                                   fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
                                   cursor: 'pointer',
                                   transition: 'all 0.2s'
@@ -433,8 +433,13 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                 }}
                               >
                                 <i className="bi bi-image me-1"></i>
-                                {countPhotos(report)} photo{countPhotos(report) === 1 ? '' : 's'}
-                                <i className="bi bi-box-arrow-up-right ms-1" style={{ fontSize: '0.7em' }}></i>
+                                <span>
+                                  {countPhotos(report)} photo{countPhotos(report) === 1 ? '' : 's'}
+                                </span>
+                                <i
+                                  className="bi bi-box-arrow-up-right ms-1"
+                                  style={{ fontSize: '0.7em' }}
+                                ></i>
                               </Badge>
                             </div>
                           )}
