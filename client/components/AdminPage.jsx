@@ -3,6 +3,19 @@ import { Button, Modal, Form, Row, Col, Alert, Card, Table } from 'react-bootstr
 import API from '../API/API.js';
 
 export default function MapPage() {
+  // Validation error messages
+  const VALIDATION_MESSAGES = {
+    FIRST_NAME_REQUIRED: 'The first name is required',
+    LAST_NAME_REQUIRED: 'The last name is required',
+    USERNAME_REQUIRED: 'The username is required',
+    EMAIL_REQUIRED: 'The email is required',
+    EMAIL_INVALID: 'Please enter a valid email',
+    PASSWORD_REQUIRED: 'The password is required',
+    PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters',
+    CONFIRM_PASSWORD_REQUIRED: 'Please confirm the password',
+    PASSWORDS_MISMATCH: 'Passwords do not match'
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -275,15 +288,15 @@ export default function MapPage() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.firstName.trim()) newErrors.firstName = 'The first name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'The last name is required';
-    if (!formData.userName.trim()) newErrors.userName = 'The username is required';
-    if (!formData.email.trim()) newErrors.email = 'The email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email';
-    if (!formData.password) newErrors.password = 'The password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm the password';
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!formData.firstName.trim()) newErrors.firstName = VALIDATION_MESSAGES.FIRST_NAME_REQUIRED;
+    if (!formData.lastName.trim()) newErrors.lastName = VALIDATION_MESSAGES.LAST_NAME_REQUIRED;
+    if (!formData.userName.trim()) newErrors.userName = VALIDATION_MESSAGES.USERNAME_REQUIRED;
+    if (!formData.email.trim()) newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
+    if (!formData.password) newErrors.password = VALIDATION_MESSAGES.PASSWORD_REQUIRED;
+    else if (formData.password.length < 8) newErrors.password = VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH;
+    if (!formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED;
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.PASSWORDS_MISMATCH;
     return newErrors;
   };
 
