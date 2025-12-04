@@ -286,8 +286,7 @@ async function createReport({ title, description, category, latitude, longitude,
   formData.append('category', category);
   formData.append('latitude', String(latitude));
   formData.append('longitude', String(longitude));
-  /*formData.append('anonymous', 'false');*/
-  files.forEach((f) => formData.append('photos', f)); // 👈 stessa chiave ripetuta
+  files.forEach((f) => formData.append('photos', f)); 
 
   const response = await fetch(`${SERVER_URL}/reports`, {
     method: 'POST',
