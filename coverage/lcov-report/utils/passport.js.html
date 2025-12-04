@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">43.75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">43.75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -104,26 +104,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
@@ -135,27 +135,27 @@ const userDao = require('../dao/userDao');
 &nbsp;
 // Definizione della strategia di login
 passport.use(new LocalStrategy(
-<span class="fstat-no" title="function not covered" >  fu</span>nction (username, password, done) {
-<span class="cstat-no" title="statement not covered" >    userDao.getUser(username, password)</span>
-      .then(<span class="fstat-no" title="function not covered" >us</span>er =&gt; {
-<span class="cstat-no" title="statement not covered" >        if (!user)</span>
-<span class="cstat-no" title="statement not covered" >          return done(null, false, { message: 'Invalid username or password' });</span>
-<span class="cstat-no" title="statement not covered" >        return done(null, user);</span>
+  function (username, password, done) {
+    userDao.getUser(username, password)
+      .then(user =&gt; {
+        if (!user)
+          return done(null, false, { message: 'Invalid username or password' });
+        return done(null, user);
       })
-      .catch(<span class="fstat-no" title="function not covered" >er</span>r =&gt; <span class="cstat-no" title="statement not covered" >done(err))</span>;
+      .catch(err =&gt; done(err));
   })
 );
 &nbsp;
 // Serializzazione: salva l'id utente nella sessione
-passport.serializeUser(<span class="fstat-no" title="function not covered" >(u</span>ser, done) =&gt; {
-<span class="cstat-no" title="statement not covered" >  done(null, user.id);</span>
+passport.serializeUser((user, done) =&gt; {
+  done(null, user.id);
 });
 &nbsp;
 // Deserializzazione: ricostruisce l'oggetto utente dalla sessione
-passport.deserializeUser(<span class="fstat-no" title="function not covered" >(i</span>d, done) =&gt; {
-<span class="cstat-no" title="statement not covered" >  userDao.getUserById(id)</span>
-    .then(<span class="fstat-no" title="function not covered" >us</span>er =&gt; <span class="cstat-no" title="statement not covered" >done(null, user))</span>
-    .catch(<span class="fstat-no" title="function not covered" >er</span>r =&gt; <span class="cstat-no" title="statement not covered" >done(err, null))</span>;
+passport.deserializeUser((id, done) =&gt; {
+  userDao.getUserById(id)
+    .then(user =&gt; done(null, user))
+    .catch(err =&gt; done(err, null));
 });
 &nbsp;
 module.exports = passport;
@@ -166,7 +166,7 @@ module.exports = passport;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-04T11:51:27.235Z
+                at 2025-12-04T13:06:53.862Z
             </div>
         <script src="../prettify.js"></script>
         <script>

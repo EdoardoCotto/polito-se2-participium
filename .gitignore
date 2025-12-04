@@ -1,5 +1,6 @@
 # Node modules
 node_modules/
+coverage/
 client/node_modules/
 server/node_modules/
 test/node_modules/
@@ -52,5 +53,4 @@ tmp/test.db
 server/static/uploads
 server/static/avatars
 
-coverage/*
 

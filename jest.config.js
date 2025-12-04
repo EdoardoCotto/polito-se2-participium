@@ -16,4 +16,7 @@ module.exports = {
     '!server/swagger.js',
   ],
   resetModules: true,
+  moduleNameMapper: {
+    '^sqlite3$': '<rootDir>/__mock__/sqlite3.js',
+  },
 };
