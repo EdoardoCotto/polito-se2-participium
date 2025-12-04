@@ -93,6 +93,7 @@ describe("reportRepository.createReport", () => {
   });
 
   test("throws if dao returns null", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
     reportDao.createReport.mockResolvedValue(null);
 
     await expect(reportRepository.createReport(validData, false)).rejects.toThrow(
@@ -251,6 +252,7 @@ describe("reportRepository.createReport", () => {
   });
 
   test("dao throws propagates error (catch path)", async () => {
+    jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
     reportDao.createReport.mockRejectedValue(new Error("DB fail"));
     await expect(reportRepository.createReport(validData, false)).rejects.toThrow(/DB fail/);
   });
