@@ -1,43 +1,37 @@
 "use strict";
 
-// Helper to get sqlite3 module
-// Node's module resolution will automatically find sqlite3 in node_modules
-const getSqlite3Module = () => {
-  // eslint-disable-next-line global-require
-  return require("sqlite3");
-};
+// Global sqlite3 mock bound to a per-test current mockDb
+let mockCurrentMockDb = null;
+let mockCurrentCtorBehavior = null; // optional override to simulate constructor failures
+jest.mock("sqlite3", () => ({
+  Database: function (_path, cb) {
+    if (typeof mockCurrentCtorBehavior === "function") {
+      return mockCurrentCtorBehavior(cb);
+    }
+    if (typeof cb === "function") cb(null);
+    return mockCurrentMockDb;
+  },
+}));
 
-// Helper to load DAO with a spy-mocked sqlite3 Database that the DAO will use
+// Helper to load DAO bound to a fresh mocked sqlite3 for each test
 const withDao = (overrides = {}) => {
-  const { ctorError, runImpl, getImpl, allImpl } = overrides;
-  jest.resetModules();
-  // Get the sqlite3 instance that server DAO will resolve
-  const sqlite = getSqlite3Module();
+  const { runImpl, getImpl, allImpl } = overrides;
   const mockDb = { run: jest.fn(), get: jest.fn(), all: jest.fn() };
   if (runImpl) mockDb.run.mockImplementation(runImpl);
   if (getImpl) mockDb.get.mockImplementation(getImpl);
   if (allImpl) mockDb.all.mockImplementation(allImpl);
 
-  const ctorSpy = jest
-    .spyOn(sqlite, "Database")
-    .mockImplementation(function (_path, cb) {
-      if (ctorError) throw ctorError;
-      cb?.(null);
-      return mockDb;
-    });
+  jest.resetModules();
+  mockCurrentMockDb = mockDb;
+  mockCurrentCtorBehavior = null;
+  // eslint-disable-next-line global-require
+  const dao = require("../../server/dao/reportDao");
 
-  let dao;
-  jest.isolateModules(() => {
-    // eslint-disable-next-line global-require
-    dao = require("../../server/dao/reportDao");
-  });
-
-  return { dao, mockDb, restore: () => ctorSpy.mockRestore() };
+  return { dao, mockDb, restore: () => {} };
 };
 
 describe("reportDao", () => {
   afterEach(() => {
-    jest.resetModules();
     jest.restoreAllMocks();
     jest.clearAllMocks();
   });
@@ -46,7 +40,7 @@ describe("reportDao", () => {
     const insertErr = new Error("Insert fail");
     const { dao, mockDb, restore } = withDao({ runImpl: (_s, _p, cb) => cb.call({}, insertErr) });
     await expect(
-      dao.createReport({ userId: 1, latitude: 0, longitude: 0, title: "t", description: "d", category: "info", photos: ["p1.jpg"] })
+      dao.createReport({ userId: 1, latitude: 0, longitude: 0, title: "t", description: "d", category: "Other", photos: ["p1.jpg"] })
     ).rejects.toThrow("Insert fail");
     expect(mockDb.run).toHaveBeenCalled();
     restore();
@@ -58,7 +52,7 @@ describe("reportDao", () => {
       getImpl: (_s, _p, cb) => cb(new Error("Select fail")),
     });
     await expect(
-      dao.createReport({ userId: 2, latitude: 1, longitude: 2, title: "x", description: "y", category: "info", photos: ["a.jpg"] })
+      dao.createReport({ userId: 2, latitude: 1, longitude: 2, title: "x", description: "y", category: "Other", photos: ["a.jpg"] })
     ).rejects.toThrow("Select fail");
     expect(mockDb.run).toHaveBeenCalled();
     expect(mockDb.get).toHaveBeenCalled();
@@ -75,27 +69,23 @@ describe("reportDao", () => {
     });
     const fakeReport = { id: 77, image_path1: "p1.jpg", image_path2: "p2.jpg", image_path3: "p3.jpg" };
     mockDb.get.mockImplementation((_sql, _params, cb) => cb(null, fakeReport));
-    const result = await dao.createReport({ userId: 9, latitude: 4, longitude: 5, title: "photos", description: "desc", category: "info", photos: ["p1.jpg", "p2.jpg", "p3.jpg"] });
+    const result = await dao.createReport({ userId: 9, latitude: 4, longitude: 5, title: "photos", description: "desc", category: "Other", photos: ["p1.jpg", "p2.jpg", "p3.jpg"] });
     expect(result.image_path2).toBe("p2.jpg");
     expect(result.image_path3).toBe("p3.jpg");
     restore();
   });
 
   test("should throw when DB connection fails", () => {
-    jest.resetModules();
-    const sqlite = getSqlite3Module();
-    jest
-      .spyOn(sqlite, "Database")
-      .mockImplementation((_p, _cb) => {
-        throw new Error("DB Connection Fail");
-      });
-
+    mockCurrentCtorBehavior = (cb) => { throw new Error("DB Connection Fail"); };
     expect(() => {
-      jest.isolateModules(() => {
-        // eslint-disable-next-line global-require
-        require("../../server/dao/reportDao");
-      });
+      delete require.cache[require.resolve("../../server/dao/reportDao")];
+      // eslint-disable-next-line global-require
+      require("../../server/dao/reportDao");
     }).toThrow(/DB Connection Fail/);
+    mockCurrentCtorBehavior = null;
+    delete require.cache[require.resolve("../../server/dao/reportDao")];
+    // eslint-disable-next-line global-require
+    require("../../server/dao/reportDao");
   });
 
   test("getReportById() should return a report", async () => {
@@ -140,7 +130,7 @@ describe("reportDao", () => {
     mockDb.run.mockImplementation(function (_sql, _params, cb) { cb.call({ lastID: 42 }, null); });
     const fakeReport = { id: 42, userId: 7, title: "Hello", description: "World", category: "info", image_path1: "a.jpg", image_path2: null, image_path3: null, status: "pending" };
     mockDb.get.mockImplementation((_sql, _params, cb) => cb(null, fakeReport));
-    const result = await dao.createReport({ userId: 7, latitude: 1.1, longitude: 1.2, title: "Hello", description: "World", category: "info", photos: ["a.jpg"] });
+    const result = await dao.createReport({ userId: 7, latitude: 1.1, longitude: 1.2, title: "Hello", description: "World", category: "Other", photos: ["a.jpg"] });
     expect(mockDb.run).toHaveBeenCalled();
     expect(mockDb.get).toHaveBeenCalled();
     expect(result).toEqual(fakeReport);
@@ -155,7 +145,7 @@ describe("reportDao", () => {
     });
     const fake = { id: 101 };
     mockDb.get.mockImplementation((_s, _p, cb) => cb(null, fake));
-    const res = await dao.createReport({ latitude: 0, longitude: 0, title: "t", description: "d", category: "info", photos: ["p.jpg"] });
+    const res = await dao.createReport({ latitude: 0, longitude: 0, title: "t", description: "d", category: "Other", photos: ["p.jpg"] });
     expect(res).toEqual(fake);
     restore();
   });
@@ -170,7 +160,7 @@ describe("reportDao", () => {
     });
     const fake = { id: 202 };
     mockDb.get.mockImplementation((_s, _p, cb) => cb(null, fake));
-    const res = await dao.createReport({ userId: 1, latitude: 0, longitude: 0, title: "t", description: "d", category: "info", photos: ["p1.jpg", "p2.jpg"] });
+    const res = await dao.createReport({ userId: 1, latitude: 0, longitude: 0, title: "t", description: "d", category: "Other", photos: ["p1.jpg", "p2.jpg"] });
     expect(res).toEqual(fake);
     restore();
   });
