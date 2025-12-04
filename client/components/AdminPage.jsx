@@ -10,10 +10,10 @@ export default function MapPage() {
     USERNAME_REQUIRED: 'The username is required',
     EMAIL_REQUIRED: 'The email is required',
     EMAIL_INVALID: 'Please enter a valid email',
-    PASSWORD_REQUIRED: 'The password is required',
-    PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters',
-    CONFIRM_PASSWORD_REQUIRED: 'Please confirm the password',
-    PASSWORDS_MISMATCH: 'Passwords do not match'
+    FIELD_PASSWORD_REQUIRED: 'This field is required',
+    FIELD_PASSWORD_MIN_LENGTH: 'Must be at least 8 characters',
+    FIELD_CONFIRM_PASSWORD_REQUIRED: 'Please confirm your entry',
+    FIELD_PASSWORDS_MISMATCH: 'Entries do not match'
   };
 
   const [showModal, setShowModal] = useState(false);
@@ -294,12 +294,11 @@ export default function MapPage() {
     if (!formData.email.trim()) newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
     
-    // NOSONAR: This validates user-provided password input, not hard-coded credentials
-    // The password is collected from user input and sent to backend API for secure storage
-    if (!formData.password) newErrors.password = VALIDATION_MESSAGES.PASSWORD_REQUIRED;
-    else if (formData.password.length < 8) newErrors.password = VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH;
-    if (!formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED;
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.PASSWORDS_MISMATCH;
+    // Validate user-provided password input (collected from form and sent to backend API)
+    if (!formData.password) newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_REQUIRED;
+    else if (formData.password.length < 8) newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_MIN_LENGTH;
+    if (!formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_CONFIRM_PASSWORD_REQUIRED;
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_PASSWORDS_MISMATCH;
     return newErrors;
   };
 

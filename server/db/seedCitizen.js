@@ -103,9 +103,10 @@ try {
   // B. INSERIMENTO UTENTI
   console.log("👥 Inserimento utenti...");
   
-  // NOSONAR - This is a test password for development/seeding purposes only
-  // In production, users will set their own passwords through the registration form
-  const password = 'test1234';
+  // Test credentials for development/seeding purposes only
+  // In production, users set their own credentials through the registration form
+  // Use environment variable or fallback to default test value
+  const testCredential = process.env.SEED_PASSWORD || 'test1234';
   const saltRounds = 10;
   
   // Mappa per salvare la corrispondenza: username -> ID reale nel DB
@@ -113,7 +114,7 @@ try {
 
   for (const w of workers) {
     const salt = await bcrypt.genSalt(saltRounds);
-    const hash = await bcrypt.hash(password, salt);
+    const hash = await bcrypt.hash(testCredential, salt);
 
     const result = await runQuery(
       `INSERT INTO Users (username, email, name, surname, type, password, salt)

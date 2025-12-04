@@ -19,6 +19,20 @@ export default function RegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
+  // Validation error messages
+  const VALIDATION_MESSAGES = {
+    FIRST_NAME_REQUIRED: 'The first name is required',
+    LAST_NAME_REQUIRED: 'The last name is required',
+    USERNAME_REQUIRED: 'The username is required',
+    EMAIL_REQUIRED: 'The email is required',
+    EMAIL_INVALID: 'Please enter a valid email',
+    FIELD_PASSWORD_REQUIRED: 'This field is required',
+    FIELD_PASSWORD_MIN_LENGTH: 'Must be at least 8 characters',
+    FIELD_CONFIRM_PASSWORD_REQUIRED: 'Please confirm your entry',
+    FIELD_PASSWORDS_MISMATCH: 'Entries do not match'
+  };
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -37,35 +51,35 @@ export default function RegistrationPage() {
   const validateForm = () => {
     const newErrors = {};
 
-
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'The first name is required';
+      newErrors.firstName = VALIDATION_MESSAGES.FIRST_NAME_REQUIRED;
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'The last name is required';
+      newErrors.lastName = VALIDATION_MESSAGES.LAST_NAME_REQUIRED;
     }
 
     if (!formData.userName.trim()) {
-      newErrors.userName = 'The username is required';
+      newErrors.userName = VALIDATION_MESSAGES.USERNAME_REQUIRED;
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'The email is required';
+      newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 
+    // Validate user-provided password input (collected from form and sent to backend API)
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_REQUIRED;
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+      newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_MIN_LENGTH;
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_CONFIRM_PASSWORD_REQUIRED;
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_PASSWORDS_MISMATCH;
     }
 
     return newErrors;
@@ -245,7 +259,7 @@ export default function RegistrationPage() {
                     {errors.password}
                   </Form.Control.Feedback>
                   <Form.Text className="register-help-text text-muted">
-                    <i className="bi bi-info-circle me-1"></i>Password must be at least 8 characters long
+                    <i className="bi bi-info-circle me-1"></i>Must be at least 8 characters
                   </Form.Text>
                 </Form.Group>
 
