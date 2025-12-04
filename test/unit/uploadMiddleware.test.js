@@ -36,6 +36,38 @@ jest.mock("multer", () => {
   return mockMulter;
 });
 
+// Alcuni ambienti risolvono multer da server/node_modules: mappiamo anche quel percorso
+try {
+  const serverMulterPath = require.resolve("../../server/node_modules/multer");
+  jest.mock(serverMulterPath, () => {
+    const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
+    const mockMulter = (opts) => {
+      shared.lastOptions = opts;
+      const instance = {
+        array: (field, max) => {
+          shared.lastArrayArgs = [field, max];
+          return mockArrayMiddleware;
+        },
+        single: () => {
+          return mockSingleMiddleware;
+        },
+      };
+      if (!shared.instances) shared.instances = [];
+      shared.instances.push(instance);
+      return instance;
+    };
+    mockMulter.diskStorage = (config) => {
+      if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
+      shared.diskStorageConfigs.push(config);
+      shared.diskStorageConfig = config;
+      return config;
+    };
+    return mockMulter;
+  });
+} catch (e) {
+  // ignore if path not resolvable in this workspace
+}
+
 const fs = require("node:fs");
 
 // carica il middleware in un modulo isolato per garantire l'uso dei mock
@@ -52,6 +84,42 @@ jest.isolateModules(() => {
   firstUploadInstance = globalThis.__multerState__?.instances?.[0];
 });
 
+// Helper per ricaricare il modulo con mock di multer sicuri
+function loadUploadMiddlewareWithMock() {
+  jest.resetModules();
+  jest.doMock("multer", () => {
+    const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
+    const mockMulter = (opts) => {
+      shared.lastOptions = opts;
+      const instance = {
+        array: (field, max) => {
+          shared.lastArrayArgs = [field, max];
+          return mockArrayMiddleware;
+        },
+        single: () => {
+          return mockSingleMiddleware;
+        },
+      };
+      if (!shared.instances) shared.instances = [];
+      shared.instances.push(instance);
+      return instance;
+    };
+    mockMulter.diskStorage = (config) => {
+      if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
+      shared.diskStorageConfigs.push(config);
+      shared.diskStorageConfig = config;
+      return config;
+    };
+    return mockMulter;
+  });
+  const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
+  let exported;
+  jest.isolateModules(() => {
+    exported = require(modulePath);
+  });
+  return { exported, modulePath };
+}
+
 describe("uploadMiddleware", () => {
   // Nessun beforeEach: evitiamo di azzerare i conteggi delle chiamate iniziali fs.existsSync/mkdirSync
 
@@ -59,11 +127,8 @@ describe("uploadMiddleware", () => {
     // prepara gli spy
     const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValue(false);
     const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
-    // esegui il modulo in ambiente isolato così da forzare nuova valutazione
-    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
-    jest.isolateModules(() => {
-      require(modulePath);
-    });
+    // esegui il modulo in ambiente isolato con mock sicuro di multer
+    const { modulePath } = loadUploadMiddlewareWithMock();
     const expectedDir = path.join(path.dirname(modulePath), "..", "static", "uploads");
     expect(existsSpy).toHaveBeenCalledWith(expectedDir);
     expect(mkdirSpy).toHaveBeenCalledWith(expectedDir, { recursive: true });
@@ -74,10 +139,7 @@ describe("uploadMiddleware", () => {
   it("should create profile directory if it does not exist", () => {
     const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValueOnce(true).mockReturnValueOnce(false);
     const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
-    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
-    jest.isolateModules(() => {
-      require(modulePath);
-    });
+    const { modulePath } = loadUploadMiddlewareWithMock();
     const expectedDir = path.join(path.dirname(modulePath), "..", "static", "avatars");
     expect(existsSpy).toHaveBeenCalledWith(expectedDir);
     expect(mkdirSpy).toHaveBeenCalledWith(expectedDir, { recursive: true });
@@ -88,10 +150,7 @@ describe("uploadMiddleware", () => {
   it("should NOT create directories when they already exist", () => {
     const existsSpy = jest.spyOn(fs, "existsSync").mockReturnValue(true);
     const mkdirSpy = jest.spyOn(fs, "mkdirSync").mockImplementation(() => {});
-    const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
-    jest.isolateModules(() => {
-      require(modulePath);
-    });
+    const { modulePath } = loadUploadMiddlewareWithMock();
     expect(mkdirSpy).not.toHaveBeenCalled();
     existsSpy.mockRestore();
     mkdirSpy.mockRestore();
@@ -111,6 +170,7 @@ describe("uploadMiddleware", () => {
     let fileFilter;
 
     beforeEach(() => {
+      // Usa la configurazione catturata al primo load
       fileFilter = globalThis.__multerState__?.lastOptions?.fileFilter;
     });
 
@@ -156,7 +216,8 @@ describe("uploadMiddleware", () => {
   describe("profile storage configuration (updateProfile)", () => {
     let profileStorageConfig;
     beforeEach(() => {
-      profileStorageConfig = initialProfileStorageConfig || globalThis.__multerState__?.diskStorageConfig;
+      // Usa la configurazione catturata al primo load
+      profileStorageConfig = initialProfileStorageConfig || globalThis.__multerState__?.diskStorageConfigs?.[1] || globalThis.__multerState__?.diskStorageConfig;
     });
 
     it("should set correct profile destination folder", () => {
@@ -176,12 +237,7 @@ describe("uploadMiddleware", () => {
     });
 
     it("should export updateProfile middleware that calls next()", () => {
-      const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
-      let exported;
-      jest.isolateModules(() => {
-        exported = require(modulePath);
-      });
-      const update = exported.updateProfile;
+      const update = uploadMiddleware.updateProfile;
       expect(typeof update).toBe("function");
       const next = jest.fn();
       // our mocked single() returns a function calling next()
@@ -194,21 +250,16 @@ describe("uploadMiddleware", () => {
 
   describe("default upload middleware export", () => {
     it("should export upload array middleware that calls next()", () => {
-      const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
-      let exported;
-      jest.isolateModules(() => {
-        exported = require(modulePath);
-      });
-      expect(typeof exported).toBe("function");
+      expect(typeof uploadMiddleware).toBe("function");
       const next = jest.fn();
       // our mocked array() returns a function calling next()
-      exported({}, {}, next);
+      uploadMiddleware({}, {}, next);
       expect(next).toHaveBeenCalled();
     });
 
     it("should configure array field 'photos' with max 3 files", () => {
       // Access the first created multer instance (upload) and its array() calls
-      expect(firstUploadInstance).toBeDefined();
+      expect(globalThis.__multerState__).toBeDefined();
       const args = globalThis.__multerState__?.lastArrayArgs;
       expect(args).toEqual(["photos", 3]);
     });

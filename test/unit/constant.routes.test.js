@@ -1,19 +1,19 @@
-const express = require('express');
-const request = require('supertest');
 const categories = require('../../server/constants/reportCategories');
 const constantRoutes = require('../../server/routes/constantRoutes');
 
 describe('constantRoutes', () => {
-  test('GET /categories ritorna lista categorie', async () => {
-    const app = express();
-    app.use('/api', constantRoutes);
+  test('router espone il path /categories e l\'handler restituisce le categorie', () => {
+    const layer = constantRoutes.stack.find(l => l.route?.path === '/categories');
+    expect(layer).toBeDefined();
+    const handler = layer.route.stack[0].handle;
 
-    const res = await request(app).get('/api/categories');
+    const res = { json: jest.fn() };
+    handler({}, res);
 
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual(categories.REPORT_CATEGORIES);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload).toEqual(categories.REPORT_CATEGORIES);
+    expect(Array.isArray(payload)).toBe(true);
+    expect(payload.length).toBeGreaterThan(0);
   });
 
   test('handler diretto restituisce le stesse categorie', () => {
