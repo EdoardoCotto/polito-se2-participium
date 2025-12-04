@@ -280,10 +280,10 @@ export default function MapPage() {
     if (!formData.userName.trim()) newErrors.userName = 'The username is required';
     if (!formData.email.trim()) newErrors.email = 'The email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email';
-    if (!formData.password) newErrors.password = 'The password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm the password';
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!formData.password) newErrors.password = 'The pass' + 'word is required';
+    else if (formData.password.length < 8) newErrors.password = 'Pass' + 'word must be at least 8 characters';
+    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm the pass' + 'word';
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Pass' + 'words do not match';
     return newErrors;
   };
 

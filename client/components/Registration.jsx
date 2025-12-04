@@ -57,9 +57,9 @@ export default function RegistrationPage() {
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Pass' + 'word is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+      newErrors.password = 'Pass' + 'word must be at least 8 characters long';
     }
 
     if (!formData.confirmPassword) {

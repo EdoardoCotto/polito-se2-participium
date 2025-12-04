@@ -102,7 +102,7 @@ try {
 
   // B. INSERIMENTO UTENTI
   console.log("👥 Inserimento utenti...");
-  const password = 'test1234';
+  const password = process.env.SEED_PASSWORD || 'test1234';
   const saltRounds = 10;
   
   // Mappa per salvare la corrispondenza: username -> ID reale nel DB
