@@ -65,7 +65,7 @@ export default function RegistrationPage() {
 
     if (!formData.email.trim()) {
       newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
     }
 

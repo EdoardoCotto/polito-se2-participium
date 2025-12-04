@@ -3,6 +3,7 @@
 const multer = require('multer');
 const path = require('node:path');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 
 // Definisci la cartella di destinazione per gli upload
 // usiamo path.join per creare un percorso assoluto partendo dalla root del progetto
@@ -27,8 +28,8 @@ const storage = multer.diskStorage({
   },
   // Come nominare i file per evitare collisioni
   filename: function (req, file, cb) {
-    // Crea un nome univoco: es. 'photos-1678886400000-logo.png'
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    // Crea un nome univoco: es. 'photos-1678886400000-a3f5b9c2.png'
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     const extension = path.extname(file.originalname);
     cb(null, file.fieldname + '-' + uniqueSuffix + extension);
   }
@@ -41,8 +42,8 @@ const profileStorage = multer.diskStorage({
   },
   // Come nominare i file per evitare collisioni
   filename: function (req, file, cb) {
-    // Crea un nome univoco: es. 'profiles-1678886400000-logo.png'
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    // Crea un nome univoco: es. 'profiles-1678886400000-a3f5b9c2.png'
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     const extension = path.extname(file.originalname);
     cb(null, file.fieldname + '-' + uniqueSuffix + extension);
   }
