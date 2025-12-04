@@ -292,7 +292,7 @@ export default function MapPage() {
     if (!formData.lastName.trim()) newErrors.lastName = VALIDATION_MESSAGES.LAST_NAME_REQUIRED;
     if (!formData.userName.trim()) newErrors.userName = VALIDATION_MESSAGES.USERNAME_REQUIRED;
     if (!formData.email.trim()) newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
     
     // Validate user-provided password input (collected from form and sent to backend API)
     if (!formData.password) newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_REQUIRED;
