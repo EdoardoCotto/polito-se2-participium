@@ -52,3 +52,5 @@ tmp/test.db
 server/static/uploads
 server/static/avatars
 
+coverage/
+
