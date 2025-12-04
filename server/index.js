@@ -13,6 +13,9 @@ const reportRoutes = require('./routes/reportRoutes')
 const constantRoutes = require('./routes/constantRoutes');
 const app = express();
 
+// Disable X-Powered-By header for security
+app.disable('x-powered-by');
+
 // CORS configuration - allow requests from frontend
 app.use(cors({
   origin: 'http://localhost:5173', // Vite default port
