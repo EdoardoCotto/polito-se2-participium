@@ -102,6 +102,9 @@ try {
 
   // B. INSERIMENTO UTENTI
   console.log("👥 Inserimento utenti...");
+  
+  // NOSONAR - This is a test password for development/seeding purposes only
+  // In production, users will set their own passwords through the registration form
   const password = 'test1234';
   const saltRounds = 10;
   
