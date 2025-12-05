@@ -21,6 +21,8 @@ const ALLOWED_ROLES = [
 
   // generic legacy technical role (keep if already used somewhere)
   'technical_office_staff_member',
+
+  'external_mantainer'          // External maintainer/contractor
 ];
 
 // Optional but recommended: metadata for UI labels and future extensions.
@@ -40,6 +42,8 @@ const ROLE_METADATA = {
   environment_technician: { label: 'Environment Technician (Ambiente)' },
 
   technical_office_staff_member: { label: 'Technical Office Staff (Generic)' },
+
+  external_mantainer: { label: 'External Maintainer' }
 };
 
 const TECHNICAL_OFFICER_ROLES =[

@@ -19,7 +19,20 @@ CREATE TABLE IF NOT EXISTS Users (
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CHECK(type IN (
+    'municipal_public_relations_officer',
+    'municipal_administrator',
+    'urban_planner',
+    'building_permit_officer',
+    'building_inspector',
+    'suap_officer',
+    'public_works_engineer',
+    'mobility_traffic_engineer',
+    'environment_technician',
+    'technical_office_staff_member',
+    'external_mantainer'
+  ))
 );
 
 -- Create Reports table
@@ -65,5 +78,6 @@ CREATE TABLE IF NOT EXISTS Reports (
     'mobility_traffic_engineer',
     'environment_technician',
     'technical_office_staff_member'
+    'external_office'
   ))
 );
