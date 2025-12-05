@@ -1,5 +1,58 @@
+// Ensure real sqlite3 in E2E: bypass moduleNameMapper
+jest.resetModules();
+jest.unmock('sqlite3');
+jest.doMock('sqlite3', () => {
+  const real = jest.requireActual('sqlite3');
+  const moduleWithVerbose = typeof real.verbose === 'function' ? real : { ...real, verbose: () => real };
+  // Polyfill Database.exec if missing: run statements sequentially
+  try {
+    const TestDb = new moduleWithVerbose.Database(':memory:');
+    const hasExec = typeof TestDb.exec === 'function';
+    TestDb.close();
+    if (!hasExec) {
+      const OriginalDatabase = moduleWithVerbose.Database;
+      moduleWithVerbose.Database = function(...args) {
+        const db = new OriginalDatabase(...args);
+        if (typeof db.exec !== 'function') {
+          db.exec = (sql, cb) => {
+            const statements = String(sql)
+              .split(';')
+              .map(s => s.trim())
+              .filter(s => s.length);
+            const runSequentially = async () => {
+              for (const stmt of statements) {
+                await new Promise((res, rej) => db.run(stmt, (err) => (err ? rej(err) : res())));
+              }
+            };
+            runSequentially().then(() => cb && cb(null)).catch(err => cb && cb(err));
+          };
+        }
+        return db;
+      };
+      // preserve prototype methods
+      moduleWithVerbose.Database.prototype = OriginalDatabase.prototype;
+    }
+  } catch {}
+  return moduleWithVerbose;
+}, { virtual: true });
+// Stub fs to avoid unlink EBUSY during resetDatabase in E2E
+jest.doMock('node:fs', () => {
+  const real = jest.requireActual('node:fs');
+  return { ...real, existsSync: () => false, unlinkSync: () => {} };
+});
 const request = require('supertest');
-const { initializeDatabase } = require('../../server/db/init');
+const fs = require('node:fs');
+const path = require('node:path');
+const sqlite3Actual = require(require.resolve('sqlite3'));
+jest.setTimeout(30000);
+const DB_PATH = path.join(__dirname, '../../server/db/participium.db');
+const SCHEMA_PATH = path.join(__dirname, '../../server/db/schema.sql');
+
+async function initializeDatabase() {
+  // Use server's init to avoid duplication and ensure consistency
+  const { resetDatabase } = require('../../server/db/init');
+  await resetDatabase();
+}
 
 let app;
 let userDao;

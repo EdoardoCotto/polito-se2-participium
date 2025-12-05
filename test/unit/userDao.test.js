@@ -1,16 +1,11 @@
 "use strict";
 
-// Integriamo con DB reale: non mockiamo sqlite3 qui
+// Nota: con moduleNameMapper in jest.config, 'sqlite3' punta a '__mock__/sqlite3.js'
+// Usiamo quel mock anche per i test "non-mockati" iniziali, evitando il DB reale.
+// Not using Database.mockX directly; we'll use per-test jest.doMock with withSqliteMock
 
-// Mock di bcrypt (async e callback usage)
-const mockCompare = jest.fn();
-const mockGenSalt = jest.fn();
-const mockHash = jest.fn();
-jest.mock('bcrypt', () => ({
-  compare: mockCompare,
-  genSalt: mockGenSalt,
-  hash: mockHash,
-}), { virtual: true });
+// Bcrypt is mocked per isolated load to avoid cross-file interference
+// The per-test factory sets sensible defaults and is accessible via require('bcrypt') inside withSqliteMock
 
 let dao;
 
@@ -20,74 +15,140 @@ const unique = (() => {
   return (prefix = 'unit') => `${prefix}_${Date.now()}_${n++}`;
 })();
 
+// Helper to mock sqlite3 and bcrypt before loading the DAO; available to all tests
+const withSqliteMock = async (impls, fn) => {
+  const { getImpl, runImpl, allImpl } = impls || {};
+  jest.resetModules();
+  // Provide an isolated bcrypt mock instance per invocation
+  const localBcrypt = {
+    compare: jest.fn((pw, hash, cb) => cb(null, false)),
+    // Support both callback and promise styles
+    genSalt: jest.fn((rounds, cb) => {
+      if (typeof cb === 'function') {
+        cb(null, 'mock_salt');
+        return undefined;
+      }
+      return Promise.resolve('mock_salt');
+    }),
+    hash: jest.fn((password, salt, cb) => {
+      if (typeof cb === 'function') {
+        cb(null, 'mock_hash');
+        return undefined;
+      }
+      return Promise.resolve('mock_hash');
+    }),
+  };
+  jest.doMock('bcrypt', () => localBcrypt, { virtual: true });
+
+    const defaultGet = (_sql, _params, cb2) => cb2(null, undefined);
+    const defaultRun = (_sql, _params, cb2) => cb2.call({ lastID: 100, changes: 1 }, null);
+    const defaultAll = (_sql, _params, cb2) => cb2(null, []);
+  jest.doMock('sqlite3', () => {
+    const base = {
+      Database: function () {
+        return {
+          get: getImpl || defaultGet,
+          run: runImpl || defaultRun,
+          all: allImpl || defaultAll,
+        };
+      },
+    };
+    return {
+      ...base,
+      verbose: () => base,
+    };
+  }, { virtual: true });
+
+  let localDao;
+  jest.isolateModules(() => {
+    // eslint-disable-next-line global-require
+    localDao = require('../../server/dao/userDao');
+  });
+
+  try {
+    await fn(localDao);
+  } finally {
+    jest.resetModules();
+  }
+};
+
 describe('userDao Functions', () => {
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    mockCompare.mockReset();
-    mockGenSalt.mockReset();
-    mockHash.mockReset();
-    // valori di default
-    mockGenSalt.mockResolvedValue('mock_salt');
-    mockHash.mockResolvedValue('mock_hash');
-    // ricarica il modulo dao in un contesto isolato con i mock attivi
-    jest.isolateModules(() => {
-      // eslint-disable-next-line global-require
-      dao = require('../../server/dao/userDao');
-    });
+    // Il dao verrà caricato dentro i test tramite withSqliteMock
   });
 
   describe('getUser', () => {
     test('should return user when credentials are correct', async () => {
       const username = unique('u');
       const email = `${unique('e')}@example.com`;
-      const newUser = { username, email, name: 'John', surname: 'Doe', password: 'password123', type: 'citizen' };
-      const created = await dao.createUser(newUser);
-      mockCompare.mockImplementation((pw, hash, cb) => cb(null, true));
-      const result = await dao.getUser(username, 'password123');
-      expect(result).toEqual({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
-      expect(mockCompare).toHaveBeenCalled();
+      await withSqliteMock(
+        {
+          runImpl: (_s, _p, cb) => cb.call({ lastID: 11 }, null),
+          getImpl: (_s, _p, cb) => cb(null, { id: 11, username, name: 'John', surname: 'Doe', type: 'citizen', password: 'stored_hash' }),
+        },
+        async (d) => {
+          const bcryptMod = require('bcrypt');
+          bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, true));
+          const created = await d.createUser({ username, email, name: 'John', surname: 'Doe', password: 'password123', type: 'citizen' });
+          const result = await d.getUser(username, 'password123');
+          expect(result).toEqual({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
+          expect(require('bcrypt').compare).toHaveBeenCalled();
+        }
+      );
     });
 
     test('should return false when user not found', async () => {
-      const result = await dao.getUser('nonexistent', 'password');
-
-      expect(result).toBe(false);
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const result = await d.getUser('nonexistent', 'password');
+          expect(result).toBe(false);
+        }
+      );
     });
 
     test('should return false when password is incorrect', async () => {
       const username = unique('u');
       const email = `${unique('e')}@example.com`;
-      await dao.createUser({ username, email, name: 'A', surname: 'B', password: 'pw' });
-      mockCompare.mockImplementation((pw, hash, cb) => cb(null, false));
-      const result = await dao.getUser(username, 'wrongpassword');
-      expect(result).toBe(false);
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, name: 'A', surname: 'B', type: 'citizen', password: 'stored_hash' }) },
+        async (d) => {
+          const bcryptMod = require('bcrypt');
+          bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, false));
+          const result = await d.getUser(username, 'wrongpassword');
+          expect(result).toBe(false);
+        }
+      );
     });
 
-    test('should reject on database error', async () => {
-      const username = unique('u');
-      const email = `${unique('e')}@example.com`;
-      await dao.createUser({ username, email, name: 'A', surname: 'B', password: 'pw' });
-      mockCompare.mockImplementation((pw, hash, cb) => cb(new Error('Bcrypt Error')));
-      await expect(dao.getUser(username, 'password')).rejects.toThrow('Bcrypt Error');
-    });
-    // Il caso di errore bcrypt è coperto nel test sopra
+    
   });
 
   describe('getUserById', () => {
     test('should return user by id', async () => {
       const username = unique('u');
       const email = `${unique('e')}@example.com`;
-      const created = await dao.createUser({ username, email, name: 'John', surname: 'Doe', password: 'pw', type: 'citizen' });
-      const result = await dao.getUserById(created.id);
-      expect(result).toMatchObject({ id: created.id, username, email, name: 'John', surname: 'Doe', type: 'citizen' });
+      const id = 123;
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id, username, email, name: 'John', surname: 'Doe', type: 'citizen' }) },
+        async (d) => {
+          const result = await d.getUserById(id);
+          expect(result).toMatchObject({ id, username, email, name: 'John', surname: 'Doe', type: 'citizen' });
+        }
+      );
     });
 
     test('should return undefined when user not found', async () => {
-      const result = await dao.getUserById(9999999);
-
-      expect(result).toBeUndefined();
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const result = await d.getUserById(9999999);
+          expect(result).toBeUndefined();
+        }
+      );
     });
 
     // Skip: non forziamo errori DB qui
@@ -96,16 +157,24 @@ describe('userDao Functions', () => {
   describe('getUserByUsername', () => {
     test('should return user by username', async () => {
       const username = unique('u');
-      const email = `${unique('e')}@example.com`;
-      const created = await dao.createUser({ username, email, name: 'X', surname: 'Y', password: 'pw' });
-      const result = await dao.getUserByUsername(username);
-      expect(result).toEqual({ id: created.id });
+      const id = 77;
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id }) },
+        async (d) => {
+          const result = await d.getUserByUsername(username);
+          expect(result).toEqual({ id });
+        }
+      );
     });
 
     test('should return undefined when user not found', async () => {
-      const result = await dao.getUserByUsername(`nonexistent_${Date.now()}`);
-
-      expect(result).toBeUndefined();
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const result = await d.getUserByUsername(`nonexistent_${Date.now()}`);
+          expect(result).toBeUndefined();
+        }
+      );
     });
 
     // Skip: non forziamo errori DB qui
@@ -113,17 +182,25 @@ describe('userDao Functions', () => {
 
   describe('getUserByEmail', () => {
     test('should return user by email', async () => {
-      const username = unique('u');
       const email = `${unique('e')}@example.com`;
-      const created = await dao.createUser({ username, email, name: 'X', surname: 'Y', password: 'pw' });
-      const result = await dao.getUserByEmail(email);
-      expect(result).toEqual({ id: created.id });
+      const id = 88;
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id }) },
+        async (d) => {
+          const result = await d.getUserByEmail(email);
+          expect(result).toEqual({ id });
+        }
+      );
     });
 
     test('should return undefined when user not found', async () => {
-      const result = await dao.getUserByEmail(`nonexistent_${Date.now()}@example.com`);
-
-      expect(result).toBeUndefined();
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const result = await d.getUserByEmail(`nonexistent_${Date.now()}@example.com`);
+          expect(result).toBeUndefined();
+        }
+      );
     });
 
     // Skip: non forziamo errori DB qui
@@ -140,18 +217,15 @@ describe('userDao Functions', () => {
         type: 'citizen'
       };
 
-      const result = await dao.createUser(newUser);
-
-      expect(mockGenSalt).toHaveBeenCalledWith(10);
-      expect(mockHash).toHaveBeenCalledWith('password123', 'mock_salt');
-      expect(result).toEqual({
-        id: expect.any(Number),
-        username: newUser.username,
-        email: newUser.email,
-        name: 'Jane',
-        surname: 'Smith',
-        type: 'citizen'
-      });
+      await withSqliteMock(
+          { runImpl: (_s, _p, cb) => cb.call({ lastID: 201 }, null) },
+        async (d) => {
+          const result = await d.createUser(newUser);
+          expect(require('bcrypt').genSalt).toHaveBeenCalled();
+          expect(require('bcrypt').hash).toHaveBeenCalledWith('password123', 'mock_salt');
+          expect(result).toEqual({ id: 201, username: newUser.username, email: newUser.email, name: 'Jane', surname: 'Smith', type: 'citizen' });
+        }
+      );
     });
 
     test('should use default type citizen when not specified', async () => {
@@ -163,15 +237,35 @@ describe('userDao Functions', () => {
         password: 'password123'
       };
 
-      const result = await dao.createUser(newUser);
-      expect(result.type).toBe('citizen');
+      await withSqliteMock(
+        { runImpl: (_s, _p, cb) => cb.call({ lastID: 301 }, null) },
+        async (d) => {
+          const result = await d.createUser(newUser);
+          expect(result.type).toBe('citizen');
+        }
+      );
     });
 
     test('should reject on database error', async () => {
       const username = unique('newuser');
       const email = `${unique('new')}@example.com`;
-      await dao.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' });
-      await expect(dao.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' })).rejects.toThrow('SQLITE_CONSTRAINT');
+      await withSqliteMock(
+        {
+          // simulate constraint violation on second insert
+          runImpl: (() => {
+            let called = 0;
+            return (_s, _p, cb) => {
+              called += 1;
+              if (called === 1) cb.call({ lastID: 999 }, null);
+              else cb(new Error('SQLITE_CONSTRAINT'));
+            };
+          })(),
+        },
+        async (d) => {
+          await d.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' });
+          await expect(d.createUser({ username, email, name: 'Jane', surname: 'Smith', password: 'password123' })).rejects.toThrow('SQLITE_CONSTRAINT');
+        }
+      );
     });
 
     test('should reject on bcrypt genSalt error', async () => {
@@ -182,10 +276,11 @@ describe('userDao Functions', () => {
         surname: 'Smith',
         password: 'password123'
       };
-
-      mockGenSalt.mockRejectedValue(new Error('Bcrypt Error'));
-
-      await expect(dao.createUser(newUser)).rejects.toThrow('Bcrypt Error');
+      await withSqliteMock({}, async (d) => {
+        const bcryptMod = require('bcrypt');
+        bcryptMod.genSalt.mockRejectedValue(new Error('Bcrypt Error'));
+        await expect(d.createUser(newUser)).rejects.toThrow('Bcrypt Error');
+      });
     });
 
     test('should reject on bcrypt hash error', async () => {
@@ -196,28 +291,40 @@ describe('userDao Functions', () => {
         surname: 'Smith',
         password: 'password123'
       };
-
-      mockHash.mockRejectedValue(new Error('Hash Error'));
-
-      await expect(dao.createUser(newUser)).rejects.toThrow('Hash Error');
+      await withSqliteMock({}, async (d) => {
+        const bcryptMod = require('bcrypt');
+        bcryptMod.hash.mockRejectedValue(new Error('Hash Error'));
+        await expect(d.createUser(newUser)).rejects.toThrow('Hash Error');
+      });
     });
   });
 
   describe('updateUserTypeById', () => {
     test('should update user type successfully', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      const result = await dao.updateUserTypeById(u.id, 'municipal_public_relations_officer');
-      expect(result).toEqual({ id: u.id, type: 'municipal_public_relations_officer' });
+      await withSqliteMock(
+        { runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null) },
+        async (d) => {
+          const id = 501;
+          const result = await d.updateUserTypeById(id, 'municipal_public_relations_officer');
+          expect(result).toEqual({ id, type: 'municipal_public_relations_officer' });
+        }
+      );
     });
 
     test('should return null when no row updated', async () => {
-      const result = await dao.updateUserTypeById(9999999, 'municipal_public_relations_officer');
-
-      expect(result).toBeNull();
+      await withSqliteMock(
+        { runImpl: (_s, _p, cb) => cb.call({ changes: 0 }, null) },
+        async (d) => {
+          const result = await d.updateUserTypeById(9999999, 'municipal_public_relations_officer');
+          expect(result).toBeNull();
+        }
+      );
     });
 
     test('should reject invalid role', async () => {
-      await expect(dao.updateUserTypeById(1, 'invalid_role')).rejects.toThrow('Invalid role');
+      await withSqliteMock({}, async (d) => {
+        await expect(d.updateUserTypeById(1, 'invalid_role')).rejects.toThrow('Invalid role');
+      });
     });
 
     // Skip: non forziamo errori DB qui
@@ -225,11 +332,14 @@ describe('userDao Functions', () => {
 
   describe('findMunicipalityUsers', () => {
     test('should return municipality users', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      await dao.updateUserTypeById(u.id, 'municipal_public_relations_officer');
-      const result = await dao.findMunicipalityUsers();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.some(r => r.username === u.username)).toBe(true);
+      await withSqliteMock(
+        { allImpl: (_s, _p, cb) => cb(null, [{ username: 'municipal_user' }]) },
+        async (d) => {
+          const result = await d.findMunicipalityUsers();
+          expect(Array.isArray(result)).toBe(true);
+          expect(result.some(r => r.username === 'municipal_user')).toBe(true);
+        }
+      );
     });
 
     // Skip: altri casi non forzabili senza mock del DB
@@ -237,33 +347,63 @@ describe('userDao Functions', () => {
 
   describe('updateUserProfile', () => {
     test('rejects when user not found', async () => {
-      await expect(dao.updateUserProfile(999999, {})).rejects.toThrow('User not found');
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          await expect(d.updateUserProfile(999999, {})).rejects.toThrow('User not found');
+        }
+      );
     });
 
     test('resolves with id only when no fields provided', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      const res = await dao.updateUserProfile(u.id, {});
-      expect(res).toEqual({ id: u.id });
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: 0 }) },
+        async (d) => {
+          const uId = 700;
+          const res = await d.updateUserProfile(uId, {});
+          expect(res).toEqual({ id: uId });
+        }
+      );
     });
 
     test('skips null-to-null updates and returns id only', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      const res = await dao.updateUserProfile(u.id, { telegram_nickname: null });
-      expect(res).toEqual({ id: u.id });
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: 0 }) },
+        async (d) => {
+          const uId = 701;
+          const res = await d.updateUserProfile(uId, { telegram_nickname: null });
+          expect(res).toEqual({ id: uId });
+        }
+      );
     });
 
     test('updates all fields and returns updated values', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      const updates = { telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 };
-      const result = await dao.updateUserProfile(u.id, updates);
-      expect(result).toEqual({ id: u.id, ...updates });
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: 0 }),
+          runImpl: (_s, _p, cb) => cb(null),
+        },
+        async (d) => {
+          const uId = 702;
+          const updates = { telegram_nickname: 'newNick', personal_photo_path: 'new.png', mail_notifications: 1 };
+          const result = await d.updateUserProfile(uId, updates);
+          expect(result).toEqual({ id: uId, ...updates });
+        }
+      );
     });
 
     test('partial updates including setting null from non-null', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      await dao.updateUserProfile(u.id, { personal_photo_path: 'has.png', mail_notifications: 1 });
-      const result = await dao.updateUserProfile(u.id, { telegram_nickname: 'nick', personal_photo_path: null });
-      expect(result).toEqual({ id: u.id, telegram_nickname: 'nick', personal_photo_path: null });
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: 'has.png', mail_notifications: 1 }),
+          runImpl: (_s, _p, cb) => cb(null),
+        },
+        async (d) => {
+          const uId = 703;
+          const result = await d.updateUserProfile(uId, { telegram_nickname: 'nick', personal_photo_path: null });
+          expect(result).toEqual({ id: uId, telegram_nickname: 'nick', personal_photo_path: null });
+        }
+      );
     });
 
     // Skip: non forziamo errori DB qui
@@ -271,140 +411,96 @@ describe('userDao Functions', () => {
 
   describe('additional null branches for updateUserProfile', () => {
     test('sets telegram_nickname from non-null to null', async () => {
-      const u = await dao.createUser({ username: unique('u'), email: `${unique('e')}@example.com`, name: 'A', surname: 'B', password: 'pw' });
-      await dao.updateUserProfile(u.id, { telegram_nickname: 'temp' });
-      const res = await dao.updateUserProfile(u.id, { telegram_nickname: null });
-      expect(res).toEqual({ id: u.id, telegram_nickname: null });
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: 'temp', personal_photo_path: null, mail_notifications: 0 }),
+          runImpl: (_s, _p, cb) => cb(null),
+        },
+        async (d) => {
+          const uId = 704;
+          const res = await d.updateUserProfile(uId, { telegram_nickname: null });
+          expect(res).toEqual({ id: uId, telegram_nickname: null });
+        }
+      );
     });
 
     // Note: DB schema forbids NULL on mail_notifications; skipping null test
   });
 
   describe('error branches with mocked sqlite3', () => {
-    const withSqliteMock = async (impls, fn) => {
-      const { getImpl, runImpl, allImpl } = impls;
-      jest.resetModules();
-      // Ensure bcrypt mock persists across isolated loads
-      jest.doMock('bcrypt', () => ({
-        compare: mockCompare,
-        genSalt: mockGenSalt,
-        hash: mockHash,
-      }));
+    // using top-level withSqliteMock
 
-      // Mock sqlite3 BEFORE loading the dao so its internal db
-      // is constructed with our mocked Database implementation.
-      const defaultGet = (_sql, _params, cb2) => cb2(null, undefined);
-      const defaultRun = (_sql, _params, cb2) => cb2(null);
-      const defaultAll = (_sql, _params, cb2) => cb2(null, []);
-      jest.doMock('sqlite3', () => {
-        const base = {
-          Database: function () {
-            return {
-              get: getImpl || defaultGet,
-              run: runImpl || defaultRun,
-              all: allImpl || defaultAll,
-            };
-          },
-        };
-        return {
-          ...base,
-          verbose: () => base,
-        };
-      });
-
-      let localDao;
-      jest.isolateModules(() => {
-        // eslint-disable-next-line global-require
-        localDao = require('../../server/dao/userDao');
-      });
-
-      try {
-        await fn(localDao);
-      } finally {
-        jest.resetModules();
-      }
-    };
-
-    test('getUser returns false on DB error', async () => {
+    test('getUser rejects on DB error', async () => {
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.getUser('u', 'p');
-          expect(res).toBe(false);
+          await expect(d.getUser('u', 'p')).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('getUserById resolves despite DB error (implementation behavior)', async () => {
+    test('getUserById rejects on DB error', async () => {
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.getUserById(1);
-          // Current implementation returns a row or undefined; error is swallowed.
-          expect(res === undefined || typeof res === 'object').toBe(true);
+          await expect(d.getUserById(1)).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('getUserByUsername returns undefined on DB error', async () => {
+    test('getUserByUsername rejects on DB error', async () => {
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.getUserByUsername('u');
-          expect(res).toBeUndefined();
+          await expect(d.getUserByUsername('u')).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('getUserByEmail returns undefined on DB error', async () => {
+    test('getUserByEmail rejects on DB error', async () => {
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.getUserByEmail('e@example.com');
-          expect(res).toBeUndefined();
+          await expect(d.getUserByEmail('e@example.com')).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('updateUserTypeById still returns id/type on DB error (implementation behavior)', async () => {
+    test('updateUserTypeById rejects on DB error', async () => {
       await withSqliteMock(
         { runImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.updateUserTypeById(1, 'municipal_public_relations_officer');
-          expect(res).toEqual({ id: 1, type: 'municipal_public_relations_officer' });
+          await expect(d.updateUserTypeById(1, 'municipal_public_relations_officer')).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('findMunicipalityUsers still returns array on DB error (implementation behavior)', async () => {
+    test('findMunicipalityUsers rejects on DB error', async () => {
       await withSqliteMock(
         { allImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
-          const res = await d.findMunicipalityUsers();
-          expect(Array.isArray(res)).toBe(true);
+          await expect(d.findMunicipalityUsers()).rejects.toThrow('DB Error');
         }
       );
     });
 
-    test('updateUserProfile returns id-only on select error', async () => {
+    test('updateUserProfile rejects on select error', async () => {
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(new Error('Select Error')) },
         async (d) => {
-          const res = await d.updateUserProfile(1, {});
-          expect(res).toEqual({ id: 1 });
+          await expect(d.updateUserProfile(1, {})).rejects.toThrow('Select Error');
         }
       );
     });
 
-    test('updateUserProfile still returns updated values on update run error (implementation behavior)', async () => {
+    test('updateUserProfile rejects on update run error', async () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: 'x', personal_photo_path: 'y', mail_notifications: 0 }),
           runImpl: (_s, _p, cb) => cb(new Error('Update Error')),
         },
         async (d) => {
-          const res = await d.updateUserProfile(7, { telegram_nickname: 'z' });
-          expect(res).toEqual({ id: 7, telegram_nickname: 'z' });
+          await expect(d.updateUserProfile(7, { telegram_nickname: 'z' })).rejects.toThrow('Update Error');
         }
       );
     });

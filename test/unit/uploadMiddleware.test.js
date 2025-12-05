@@ -112,6 +112,37 @@ function loadUploadMiddlewareWithMock() {
     };
     return mockMulter;
   });
+  // Also mock possible server-local resolution of multer
+  try {
+    const serverMulterPath = require.resolve("../../server/node_modules/multer");
+    jest.doMock(serverMulterPath, () => {
+      const shared = globalThis.__multerState__ || (globalThis.__multerState__ = {});
+      const mockMulter = (opts) => {
+        shared.lastOptions = opts;
+        const instance = {
+          array: (field, max) => {
+            shared.lastArrayArgs = [field, max];
+            return mockArrayMiddleware;
+          },
+          single: () => {
+            return mockSingleMiddleware;
+          },
+        };
+        if (!shared.instances) shared.instances = [];
+        shared.instances.push(instance);
+        return instance;
+      };
+      mockMulter.diskStorage = (config) => {
+        if (!shared.diskStorageConfigs) shared.diskStorageConfigs = [];
+        shared.diskStorageConfigs.push(config);
+        shared.diskStorageConfig = config;
+        return config;
+      };
+      return mockMulter;
+    });
+  } catch (e) {
+    // ignore
+  }
   const modulePath = require.resolve("../../server/middlewares/uploadMiddleware");
   let exported;
   jest.isolateModules(() => {
@@ -157,7 +188,8 @@ describe("uploadMiddleware", () => {
   });
 
   it("should configure multer with proper limits and array field", () => {
-    expect(uploadMiddleware).toBeDefined();
+    const { exported } = loadUploadMiddlewareWithMock();
+    expect(exported).toBeDefined();
 
     const opts = globalThis.__multerState__?.lastOptions;
     expect(opts).toBeDefined();
@@ -170,7 +202,8 @@ describe("uploadMiddleware", () => {
     let fileFilter;
 
     beforeEach(() => {
-      // Usa la configurazione catturata al primo load
+      // Reload to ensure the mock captures options
+      loadUploadMiddlewareWithMock();
       fileFilter = globalThis.__multerState__?.lastOptions?.fileFilter;
     });
 
@@ -191,7 +224,9 @@ describe("uploadMiddleware", () => {
     let storageConfig;
 
     beforeEach(() => {
-      storageConfig = initialStorageConfig;
+      // Reload to ensure storage config is available on global state
+      loadUploadMiddlewareWithMock();
+      storageConfig = globalThis.__multerState__?.diskStorageConfigs?.[0];
     });
 
     it("should set correct destination folder", () => {
@@ -209,15 +244,15 @@ describe("uploadMiddleware", () => {
       storageConfig.filename(null, file, cb);
       const generatedName = cb.mock.calls[0][1];
       expect(typeof generatedName).toBe("string");
-      expect(generatedName).toMatch(/^photo-\d+-\d+\.jpg$/);
+      expect(generatedName).toMatch(/^photo-\d+-[a-f0-9]{16}\.jpg$/);
     });
   });
 
   describe("profile storage configuration (updateProfile)", () => {
     let profileStorageConfig;
     beforeEach(() => {
-      // Usa la configurazione catturata al primo load
-      profileStorageConfig = initialProfileStorageConfig || globalThis.__multerState__?.diskStorageConfigs?.[1] || globalThis.__multerState__?.diskStorageConfig;
+      loadUploadMiddlewareWithMock();
+      profileStorageConfig = globalThis.__multerState__?.diskStorageConfigs?.[1] || globalThis.__multerState__?.diskStorageConfig;
     });
 
     it("should set correct profile destination folder", () => {
@@ -233,11 +268,12 @@ describe("uploadMiddleware", () => {
       profileStorageConfig.filename(null, file, cb);
       const generatedName = cb.mock.calls[0][1];
       expect(typeof generatedName).toBe("string");
-      expect(generatedName).toMatch(/^personal_photo_path-\d+-\d+\.png$/);
+      expect(generatedName).toMatch(/^personal_photo_path-\d+-[a-f0-9]{16}\.png$/);
     });
 
     it("should export updateProfile middleware that calls next()", () => {
-      const update = uploadMiddleware.updateProfile;
+      const { exported } = loadUploadMiddlewareWithMock();
+      const update = exported.updateProfile;
       expect(typeof update).toBe("function");
       const next = jest.fn();
       // our mocked single() returns a function calling next()
@@ -250,10 +286,11 @@ describe("uploadMiddleware", () => {
 
   describe("default upload middleware export", () => {
     it("should export upload array middleware that calls next()", () => {
-      expect(typeof uploadMiddleware).toBe("function");
+      const { exported } = loadUploadMiddlewareWithMock();
+      expect(typeof exported).toBe("function");
       const next = jest.fn();
       // our mocked array() returns a function calling next()
-      uploadMiddleware({}, {}, next);
+      exported({}, {}, next);
       expect(next).toHaveBeenCalled();
     });
 
