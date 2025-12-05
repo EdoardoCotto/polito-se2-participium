@@ -1,22 +1,38 @@
-module.exports = {
+const common = {
   testEnvironment: 'node',
-  roots: ['test'],
-  testMatch: ['**/?(*.)+(test).js'],
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
   transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
+  resetModules: true,
+};
+
+module.exports = {
   collectCoverage: true,
   coverageReporters: ["text", "text-summary", "lcov", "clover"],
-  coverageDirectory: '<rootDir>/coverage', 
+  coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: [
     'server/**/*.js',
     '!server/db/**',
     '!server/index.js',
     '!server/swagger.js',
   ],
-  resetModules: true,
-  moduleNameMapper: {
-    '^sqlite3$': '<rootDir>/__mock__/sqlite3.js',
-  },
+  projects: [
+    {
+      displayName: 'unit',
+      ...common,
+      roots: ['<rootDir>/test/unit'],
+      testMatch: ['<rootDir>/test/unit/**/*.test.js'],
+      moduleNameMapper: {
+        '^sqlite3$': '<rootDir>/__mock__/sqlite3.js',
+      },
+    },
+    {
+      displayName: 'e2e',
+      ...common,
+      roots: ['<rootDir>/test/e2e'],
+      testMatch: ['<rootDir>/test/e2e/**/*.test.js'],
+      // No sqlite3 mapping here: use real sqlite3
+    },
+  ],
 };
