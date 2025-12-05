@@ -12,6 +12,7 @@ import AdminPage from "./components/AdminPage.jsx";
 import MunicipalityPage from "./components/MunicipalityPage.jsx";
 import CitizenPage from "./components/CitizenPage.jsx";
 import PublicRelationsOfficer from "./components/PublicRelationsOfficer.jsx";
+import ExternalMaintainer from "./components/ExternalMaintainers.jsx";
 import API from "./API/API.js";
 
 function App() {
@@ -36,7 +37,9 @@ function App() {
           navigate('/admin');
         } else if (user?.type === 'citizen') {
           navigate('/citizen');
-        } else if (user?.type) {
+        } else if (user?.type === 'external_maintainer') {
+          navigate('/external-maintainer');
+        }else if (user?.type) {
           // All other municipality roles
           navigate('/municipality');
         }
@@ -92,6 +95,7 @@ function App() {
        <Route path="/public-relations-officer" element={ <PublicRelationsOfficer user={user} handleLogin={handleLogin} handleLogout={handleLogout}/> } />
        <Route path="/municipality" element={ <MunicipalityPage user={user}handleLogin={handleLogin} handleLogout={handleLogout} /> } />
        <Route path="/citizen" element={ <CitizenPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
+       <Route path="/external-maintainer" element={ <ExternalMaintainer user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
        {
        <Route path="*" element={ <NotFound /> } />
        }
