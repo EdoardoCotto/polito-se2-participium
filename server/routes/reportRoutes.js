@@ -450,4 +450,76 @@ router.get('/reports/:id', isLoggedIn, reportController.getReportById);
  */
 router.put('/reports/:id/review', isLoggedIn, isMunicipal_public_relations_officer, reportController.reviewReport);
 
+/**
+ * @swagger
+ * /reports/{id}/assign-external:
+ *   put:
+ *     summary: Assign a report to an external maintainer
+ *     description: >
+ *       Allows a technical office staff member to assign a report that is assigned to them
+ *       to an external maintainer. The report must be in "assigned" status and assigned to
+ *       the requesting technical office staff member.
+ *     tags: [Reports]
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Report identifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - externalMaintainerId
+ *             properties:
+ *               externalMaintainerId:
+ *                 type: integer
+ *                 description: ID of the external maintainer to assign the report to
+ *                 example: 5
+ *     responses:
+ *       200:
+ *         description: Report successfully assigned to external maintainer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Bad request (invalid report ID, missing external maintainer ID, or report not in assigned status)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden (user is not a technical office staff member or report not assigned to them)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Report or external maintainer not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.put('/reports/:id/assign-external', isLoggedIn, isTechnicalOfficeStaff, reportController.assignReportToExternalMaintainer);
+
 module.exports = router;

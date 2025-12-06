@@ -306,3 +306,58 @@ exports.getAssignedReports = async (officerId) => {
   const rows = await reportDao.getReportsByOfficerId(officerId);
   return rows.map(mapReportRow);
 };
+
+/**
+ * Assign a report to an external maintainer
+ * @param {number} reportId
+ * @param {number} externalMaintainerId
+ * @param {number} technicalOfficeStaffId - ID of the technical office staff member making the assignment
+ * @returns {Promise<Object>}
+ */
+exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId, technicalOfficeStaffId) => {
+  if (!reportId) {
+    throw new BadRequestError('Report ID is required');
+  }
+  if (!Number.isInteger(reportId)) {
+    throw new BadRequestError('Report ID must be a valid integer');
+  }
+  if (!externalMaintainerId) {
+    throw new BadRequestError('External maintainer ID is required');
+  }
+  if (!Number.isInteger(externalMaintainerId)) {
+    throw new BadRequestError('External maintainer ID must be a valid integer');
+  }
+
+  // Verify the report exists and is assigned to the technical office staff member
+  const report = await reportDao.getReportById(reportId);
+  if (!report) {
+    throw new NotFoundError('Report not found');
+  }
+
+  // Check if report is in assigned status
+  if (report.status !== REPORT_STATUSES.ASSIGNED) {
+    throw new BadRequestError('Only assigned reports can be assigned to external maintainers');
+  }
+
+  // Verify the report is assigned to the requesting technical office staff member
+  if (report.officerId !== technicalOfficeStaffId) {
+    throw new UnauthorizedError('You can only assign reports that are assigned to you');
+  }
+
+  // Verify the external maintainer exists and is actually an external maintainer
+  const maintainer = await userDao.getUserById(externalMaintainerId);
+  if (!maintainer) {
+    throw new NotFoundError('External maintainer not found');
+  }
+  if (maintainer.type !== 'external_mantainer') {
+    throw new BadRequestError('The specified user is not an external maintainer');
+  }
+
+  // Assign the report to the external maintainer
+  const updated = await reportDao.assignReportToExternalMaintainer(reportId, externalMaintainerId);
+  if (!updated) {
+    throw new NotFoundError('Report not found');
+  }
+
+  return mapReportRow(updated);
+};

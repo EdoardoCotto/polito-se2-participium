@@ -156,3 +156,19 @@ exports.updateUserProfile = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+/**
+ * Get all external maintainers
+ * Available to technical office staff members
+ */
+exports.getExternalMaintainers = async (req, res) => {
+  try {
+    const maintainers = await userRepository.getExternalMaintainers();
+    return res.status(200).json(maintainers);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

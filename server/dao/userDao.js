@@ -203,6 +203,25 @@ exports.findMunicipalityUsers = () => {
 };
 
 /**
+ * Get all external maintainers
+ * @returns {Promise<Object[]>}
+ */
+exports.getExternalMaintainers = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, username, email, name, surname, type
+      FROM Users
+      WHERE type = 'external_mantainer'
+      ORDER BY surname ASC, name ASC, username ASC
+    `;
+    db.all(sql, [], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows || []);
+    });
+  });
+};
+
+/**
  * Helper: Check if a field should be updated
  * Returns true if the field should be updated, false if it should be skipped
  */

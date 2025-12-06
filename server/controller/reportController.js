@@ -291,3 +291,45 @@ exports.reviewReport = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+/**
+ * Assign a report to an external maintainer
+ * Body:
+ *   - externalMaintainerId: number
+ */
+exports.assignReportToExternalMaintainer = async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const reportId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(reportId)) {
+      return res.status(400).json({ error: 'Invalid report id' });
+    }
+
+    const { externalMaintainerId } = req.body || {};
+    if (!externalMaintainerId) {
+      return res.status(400).json({ error: 'External maintainer ID is required' });
+    }
+
+    const updated = await reportRepository.assignReportToExternalMaintainer(
+      reportId,
+      externalMaintainerId,
+      req.user.id
+    );
+
+    const enriched = {
+      ...updated,
+      photoUrls: buildPhotoUrls(updated.photos, req),
+    };
+
+    return res.status(200).json(enriched);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error('Error in assignReportToExternalMaintainer controller:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

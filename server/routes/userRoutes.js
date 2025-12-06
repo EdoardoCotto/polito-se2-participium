@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
-const { isLoggedIn, isAdmin } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isTechnicalOfficeStaff } = require('../middlewares/authMiddleware');
 const { updateProfile } = require('../middlewares/uploadMiddleware')
 
 /**
@@ -186,5 +186,63 @@ router.get('/users/municipality', isLoggedIn, isAdmin, userController.getMunicip
  *         description: User not found
  */
 router.put('/users/:id/update', isLoggedIn, updateProfile, userController.updateUserProfile);
+
+/**
+ * @swagger
+ * /users/external-maintainers:
+ *   get:
+ *     summary: Get all external maintainers
+ *     description: Returns a list of all external maintainers. Available to technical office staff members.
+ *     tags: [Users]
+ *     security:
+ *       - sessionAuth: []
+ *     responses:
+ *       200:
+ *         description: List of external maintainers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 5
+ *                   username:
+ *                     type: string
+ *                     example: "enel_maintainer"
+ *                   email:
+ *                     type: string
+ *                     example: "maintainer@enel.com"
+ *                   name:
+ *                     type: string
+ *                     example: "Mario"
+ *                   surname:
+ *                     type: string
+ *                     example: "Rossi"
+ *                   type:
+ *                     type: string
+ *                     example: "external_mantainer"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden (user is not a technical office staff member)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, userController.getExternalMaintainers);
 
 module.exports = router;

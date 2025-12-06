@@ -287,3 +287,36 @@ exports.getLeastLoadedOfficer = (technicalOfficeRole) => {
     });
   });
 };
+
+/**
+ * Assign a report to an external maintainer
+ * @param {number} reportId
+ * @param {number} externalMaintainerId
+ * @returns {Promise<Object|null>}
+ */
+exports.assignReportToExternalMaintainer = (reportId, externalMaintainerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE Reports
+      SET officerId = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    
+    db.run(sql, [externalMaintainerId, reportId], function (err) {
+      if (err) {
+        return reject(err);
+      }
+      if (this.changes === 0) {
+        return resolve(null);
+      }
+      // Return the updated report
+      db.get('SELECT * FROM Reports WHERE id = ?', [reportId], (err2, row) => {
+        if (err2) {
+          return reject(err2);
+        }
+        resolve(row);
+      });
+    });
+  });
+};

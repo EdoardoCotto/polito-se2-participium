@@ -140,3 +140,12 @@ exports.updateUserProfile = async (userId, updateData) => {
     const result = await userDao.updateUserProfile(userId, updateData);
     return result;
 }
+
+/**
+ * Get all external maintainers
+ * @returns {Promise<Object[]>}
+ */
+exports.getExternalMaintainers = async () => {
+    const maintainers = await userDao.getExternalMaintainers();
+    return maintainers;
+}
