@@ -506,6 +506,53 @@ const getAssignedReports = async () => {
 };
 
 /**
+ * Get External Maintainers
+ * Retrieves a list of all external maintainers
+ * Requires technical office staff authentication
+ * @returns {Promise<Array>} - Array of external maintainer user objects with id, username, email, name, surname, type
+ * @throws {Error} - If request fails (unauthorized, forbidden, etc.)
+ */
+const getExternalMaintainers = async () => {
+  const response = await fetch(`${SERVER_URL}/users/external-maintainers`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get external maintainers');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Assign Report to External Maintainer
+ * Allows a technical office staff member to assign a report that is assigned to them to an external maintainer
+ * The report must be in "assigned" status and assigned to the requesting technical office staff member
+ * Requires technical office staff authentication
+ * @param {number} reportId - The ID of the report to assign
+ * @param {number} externalMaintainerId - The ID of the external maintainer to assign the report to
+ * @returns {Promise<Object>} - Updated report object
+ * @throws {Error} - If assignment fails (validation error, unauthorized, forbidden, not found, etc.)
+ */
+const assignReportToExternalMaintainer = async (reportId, externalMaintainerId) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}/assign-external`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ externalMaintainerId }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to assign report to external maintainer');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
  * Public endpoint (no authentication required)
@@ -537,6 +584,7 @@ const API = {
   getAllowedRoles,
   getMunicipalityUsers,
   updateUserProfile,
+  getExternalMaintainers,
 
   // Report management
   createReport,
@@ -547,6 +595,7 @@ const API = {
   getAssignedReports,
   getReportById,
   reviewReport,
+  assignReportToExternalMaintainer,
 
   // Constants
   getCategories,
