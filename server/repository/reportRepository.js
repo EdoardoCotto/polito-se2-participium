@@ -361,3 +361,54 @@ exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId
 
   return mapReportRow(updated);
 };
+
+/**
+ * Update the status of a report assigned to an external maintainer
+ * @param {number} reportId
+ * @param {number} maintainerId
+ * @param {string} newStatus
+ * @returns {Promise<Object>}
+ */
+exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
+  if (!reportId || !Number.isInteger(reportId)) {
+    throw new BadRequestError('Invalid report ID');
+  }
+  if (!maintainerId) {
+    throw new UnauthorizedError('Maintainer ID is required');
+  }
+
+  // Validazione dello stato
+  if (typeof newStatus !== 'string') {
+    throw new BadRequestError('Status is required');
+  }
+
+  const normalizedStatus = newStatus.toLowerCase().trim();
+  
+  // Stati permessi per il manutentore secondo il ciclo di vita 
+  // Pending e Rejected sono gestiti dall'Organization Office [cite: 24]
+  const ALLOWED_STATUSES = [
+    REPORT_STATUSES.PROGRESS, // [cite: 27]
+    REPORT_STATUSES.SUSPENDED,   // [cite: 28]
+    REPORT_STATUSES.RESOLVED     // [cite: 29]
+  ];
+
+  if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
+    throw new BadRequestError(`Invalid status. Allowed statuses for maintainers are: ${ALLOWED_STATUSES.join(', ')}`);
+  }
+
+  // Eseguiamo l'aggiornamento
+  const updated = await reportDao.updateReportStatusByOfficer(reportId, maintainerId, normalizedStatus);
+
+  if (!updated) {
+    // Se è null, potrebbe essere che il report non esiste o non è assegnato a questo utente.
+    // Per sicurezza controlliamo se esiste il report per dare l'errore giusto.
+    const reportExists = await reportDao.getReportById(reportId);
+    if (!reportExists) {
+      throw new NotFoundError('Report not found');
+    }
+    // Se esiste ma l'update ha fallito, significa che l'officerId non corrispondeva
+    throw new UnauthorizedError('You are not assigned to this report');
+  }
+
+  return mapReportRow(updated);
+};

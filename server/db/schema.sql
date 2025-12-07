@@ -31,7 +31,9 @@ CREATE TABLE IF NOT EXISTS Users (
     'mobility_traffic_engineer',
     'environment_technician',
     'technical_office_staff_member',
-    'external_mantainer'
+    'external_maintainer',
+    'citizen',
+    'admin'
   ))
 );
 
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS Reports (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
   FOREIGN KEY (officerId) REFERENCES Users(id) ON DELETE CASCADE,
-  CHECK(status IN ('pending', 'assigned', 'rejected')),
+  CHECK(status IN ('pending', 'assigned', 'rejected', 'progress', 'suspended', 'resolved')),
   CHECK(category IN (
     'Water Supply - Drinking Water',
     'Architectural Barriers',
@@ -77,7 +79,7 @@ CREATE TABLE IF NOT EXISTS Reports (
     'public_works_engineer',
     'mobility_traffic_engineer',
     'environment_technician',
-    'technical_office_staff_member'
+    'technical_office_staff_member',
     'external_office'
   ))
 );

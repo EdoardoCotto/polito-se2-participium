@@ -333,3 +333,43 @@ exports.assignReportToExternalMaintainer = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+/**
+ * Update status for an external maintainer
+ * Route: PUT /reports/:id/status
+ */
+exports.updateMaintainerStatus = async (req, res) => {
+  try {
+    // Verifica che l'utente sia autenticato
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Nota: Il middleware delle rotte dovrebbe già verificare che l'utente sia un 'external_mantainer'
+    // Ma per robustezza possiamo fidarci del fatto che il Repository usa req.user.id come filtro nella query SQL.
+
+    const reportId = Number.parseInt(req.params.id, 10);
+    const { status } = req.body || {};
+
+    const updatedReport = await reportRepository.updateMaintainerStatus(
+      reportId, 
+      req.user.id, 
+      status
+    );
+
+    // Costruiamo gli URL delle foto per la risposta
+    const enriched = {
+      ...updatedReport,
+      photoUrls: buildPhotoUrls(updatedReport.photos, req),
+    };
+
+    return res.status(200).json(enriched);
+
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error('Error in updateMaintainerStatus controller:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

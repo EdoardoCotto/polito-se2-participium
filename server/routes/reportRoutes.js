@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
-const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff, isExternalMaintainer } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -521,5 +521,64 @@ router.put('/reports/:id/review', isLoggedIn, isMunicipal_public_relations_offic
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/reports/:id/assign-external', isLoggedIn, isTechnicalOfficeStaff, reportController.assignReportToExternalMaintainer);
+
+/**
+ * @swagger
+ * /reports/{id}/status:
+ *   put:
+ *     summary: Update report status (External Maintainer)
+ *     description: >
+ *       Allows an External Maintainer to update the status of a report assigned to them.
+ *       Allowed statuses: "progress", "suspended", "resolved".
+ *     tags: [Reports]
+ *     security:
+ *       - sessionAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Report identifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [progress, suspended, resolved]
+ *                 example: progress
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Invalid status or parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (User not assigned to this report or not a maintainer)
+ *       404:
+ *         description: Report not found
+ */
+router.put(
+  '/reports/:id/status', 
+  isLoggedIn, 
+  isExternalMaintainer,
+  reportController.updateMaintainerStatus
+);
+
 
 module.exports = router;
