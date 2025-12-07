@@ -55,6 +55,7 @@ const TECHNICAL_OFFICER_ROLES =[
   'public_works_engineer',        // Public works / maintenance & technical services
   'mobility_traffic_engineer',    // Mobility & traffic
   'environment_technician'      // Environment / built environment quality
+  'external_maintainer'          // External maintainer/contractor
 ];
 
 module.exports = {

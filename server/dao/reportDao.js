@@ -320,3 +320,38 @@ exports.assignReportToExternalMaintainer = (reportId, externalMaintainerId) => {
     });
   });
 };
+
+/**
+ * Update report status by the assigned officer (Maintainer)
+ * @param {number} reportId
+ * @param {number} officerId
+ * @param {string} newStatus
+ * @returns {Promise<Object|null>}
+ */
+exports.updateReportStatusByOfficer = (reportId, officerId, newStatus) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE Reports
+      SET status = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND officerId = ?
+    `;
+
+    db.run(sql, [newStatus, reportId, officerId], function (err) {
+      if (err) {
+        return reject(err);
+      }
+      if (this.changes === 0) {
+        // Nessuna riga aggiornata: o il report non esiste, o non è assegnato a questo officer
+        return resolve(null);
+      }
+      // Restituiamo il report aggiornato per conferma
+      db.get('SELECT * FROM Reports WHERE id = ?', [reportId], (err2, row) => {
+        if (err2) {
+          return reject(err2);
+        }
+        resolve(row);
+      });
+    });
+  });
+};

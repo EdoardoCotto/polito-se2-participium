@@ -1,10 +1,22 @@
-const sqlite = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
-const path = require('node:path');
+import sqlite from 'sqlite3';
+
+import bcrypt from 'bcrypt';
+
+//import path from 'node:path';
+import path from 'path';
+import { fileURLToPath } from 'url'; // <-- NUOVA IMPORTAZIONE
+import { dirname } from 'path';
+
+
+// const sqlite = require('sqlite3').verbose();
+// const bcrypt = require('bcrypt');
+// const path = require('node:path');
 
 // Percorso al database
-const dbPath = path.join(__dirname, 'participium.db');
-
+// Definisci __filename e __dirname per compatibilità con gli ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename); // <-- QUESTO SOSTITUISCE L'USO DIRETTO DI __dirname
+const dbPath = path.join(__dirname, 'participium.db'); // Ora __dirname è definito
 // Connessione al DB
 const db = new sqlite.Database(dbPath, (err) => {
   if (err) throw err;
@@ -23,7 +35,10 @@ const workers = [
   { username: 'civil_eng1', email: 'works@comune.test.it', name: 'Marco', surname: 'Gialli', type: 'public_works_engineer' },
   { username: 'env_tech1', email: 'env@comune.test.it', name: 'Elena', surname: 'Verdi', type: 'environment_technician' },
   { username: 'traffic_eng1', email: 'traffic@comune.test.it', name: 'Roberto', surname: 'Neri', type: 'mobility_traffic_engineer' },
-  { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'building_inspector' }
+  { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'building_inspector' },
+  // MANUTENTORI ESTERNI
+  { username: 'ext_maint1', email: 'maint1@external.com', name: 'Paolo', surname: 'Bianchi', type: 'external_maintainer' },
+  { username: 'ext_maint2', email: 'maint2@external.com', name: 'Francesca', surname: 'Russo', type: 'external_maintainer' }
 ];
 
 // --- 2. DATI REPORT DA INSERIRE ---
@@ -83,79 +98,81 @@ function runQuery(query, params = []) {
 }
 
 // --- LOGICA PRINCIPALE ---
-try {
-  console.log("🚀 Inizio procedura di seeding...");
-
-  // A. PULIZIA
-  // Cancelliamo prima i figli (Reports) per non violare foreign key, poi i padri (Users)
-  console.log("🧹 Pulizia vecchi dati...");
+(async () => {
   try {
-      await runQuery(`DELETE FROM Reports`);
-      await runQuery(`DELETE FROM Users`);
-      // Reset autoincrement ID a 1
-      await runQuery(`DELETE FROM sqlite_sequence WHERE name='Users' OR name='Reports'`);
-  } catch {
-      // Ignore errors: tables may be empty or non-existent on first run
-      // This is expected behavior, so we continue with seeding
-      console.log("   Info: Tabelle forse vuote o non esistenti, proseguo.");
-  }
+    console.log("🚀 Inizio procedura di seeding...");
 
-  // B. INSERIMENTO UTENTI
-  console.log("👥 Inserimento utenti...");
-  
-  // Test credentials for development/seeding purposes only
-  // In production, users set their own credentials through the registration form
-  // Use environment variable or fallback to default test value
-  const testCredential = process.env.SEED_PASSWORD || 'test1234';
-  const saltRounds = 10;
-  
-  // Mappa per salvare la corrispondenza: username -> ID reale nel DB
-  const userMap = {}; 
-
-  for (const w of workers) {
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hash = await bcrypt.hash(testCredential, salt);
-
-    const result = await runQuery(
-      `INSERT INTO Users (username, email, name, surname, type, password, salt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [w.username, w.email, w.name, w.surname, w.type, hash, salt]
-    );
-    
-    // Salviamo l'ID generato
-    userMap[w.username] = result.lastID;
-    console.log(`   ✅ Utente inserito: ${w.username} (ID: ${result.lastID})`);
-  }
-
-  // C. INSERIMENTO REPORT
-  console.log("📝 Inserimento report...");
-  
-  for (const r of reports) {
-    // Troviamo l'ID dell'utente autore usando la mappa creata prima
-    const userId = userMap[r.author_username];
-    
-    if (!userId) {
-      console.warn(`   ⚠️ Saltato report "${r.title}": Utente ${r.author_username} non trovato.`);
-      continue;
+    // A. PULIZIA
+    // Cancelliamo prima i figli (Reports) per non violare foreign key, poi i padri (Users)
+    console.log("🧹 Pulizia vecchi dati...");
+    try {
+        await runQuery(`DELETE FROM Reports`);
+        await runQuery(`DELETE FROM Users`);
+        // Reset autoincrement ID a 1
+        await runQuery(`DELETE FROM sqlite_sequence WHERE name='Users' OR name='Reports'`);
+    } catch {
+        // Ignore errors: tables may be empty or non-existent on first run
+        // This is expected behavior, so we continue with seeding
+        console.log("   Info: Tabelle forse vuote o non esistenti, proseguo.");
     }
 
-    await runQuery(
-      `INSERT INTO Reports (
-          userId, title, description, category, 
-          latitude, longitude, image_path1, status, technical_office
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-          userId, r.title, r.description, r.category, 
-          r.latitude, r.longitude, r.image_path1, r.status, r.technical_office
-      ]
-    );
-    console.log(`   ✅ Report creato: "${r.title}" (Autore ID: ${userId})`);
+    // B. INSERIMENTO UTENTI
+    console.log("👥 Inserimento utenti...");
+    
+    // Test credentials for development/seeding purposes only
+    // In production, users set their own credentials through the registration form
+    // Use environment variable or fallback to default test value
+    const testCredential = process.env.SEED_PASSWORD || 'test1234';
+    const saltRounds = 10;
+    
+    // Mappa per salvare la corrispondenza: username -> ID reale nel DB
+    const userMap = {}; 
+
+    for (const w of workers) {
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hash = await bcrypt.hash(testCredential, salt);
+
+      const result = await runQuery(
+        `INSERT INTO Users (username, email, name, surname, type, password, salt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [w.username, w.email, w.name, w.surname, w.type, hash, salt]
+      );
+      
+      // Salviamo l'ID generato
+      userMap[w.username] = result.lastID;
+      console.log(`   ✅ Utente inserito: ${w.username} (ID: ${result.lastID})`);
+    }
+
+    // C. INSERIMENTO REPORT
+    console.log("📝 Inserimento report...");
+    
+    for (const r of reports) {
+      // Troviamo l'ID dell'utente autore usando la mappa creata prima
+      const userId = userMap[r.author_username];
+      
+      if (!userId) {
+        console.warn(`   ⚠️ Saltato report "${r.title}": Utente ${r.author_username} non trovato.`);
+        continue;
+      }
+
+      await runQuery(
+        `INSERT INTO Reports (
+            userId, title, description, category, 
+            latitude, longitude, image_path1, status, technical_office
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            userId, r.title, r.description, r.category, 
+            r.latitude, r.longitude, r.image_path1, r.status, r.technical_office
+        ]
+      );
+      console.log(`   ✅ Report creato: "${r.title}" (Autore ID: ${userId})`);
+    }
+
+    console.log("🎉 Seeding completato con successo!");
+
+  } catch (error) {
+    console.error("❌ Errore critico durante il seeding:", error);
+  } finally {
+    db.close(() => console.log("🔒 Database chiuso."));
   }
-
-  console.log("🎉 Seeding completato con successo!");
-
-} catch (error) {
-  console.error("❌ Errore critico durante il seeding:", error);
-} finally {
-  db.close(() => console.log("🔒 Database chiuso."));
-}
+})();
