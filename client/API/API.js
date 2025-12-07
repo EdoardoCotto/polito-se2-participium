@@ -553,6 +553,33 @@ const assignReportToExternalMaintainer = async (reportId, externalMaintainerId) 
 };
 
 /**
+ * Update Report Status (External Maintainer)
+ * Allows an External Maintainer to update the status of a report assigned to them
+ * Allowed statuses: "progress", "suspended", "resolved"
+ * Requires external maintainer authentication
+ * @param {number} reportId - The ID of the report to update
+ * @param {string} status - New status ("progress", "suspended", or "resolved")
+ * @returns {Promise<Object>} - Updated report object with photoUrls
+ * @throws {Error} - If update fails (validation error, unauthorized, forbidden, not found, etc.)
+ */
+const updateMaintainerStatus = async (reportId, status) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to update report status');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
  * Public endpoint (no authentication required)
@@ -596,6 +623,7 @@ const API = {
   getReportById,
   reviewReport,
   assignReportToExternalMaintainer,
+  updateMaintainerStatus,
 
   // Constants
   getCategories,
