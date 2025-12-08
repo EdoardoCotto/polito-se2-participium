@@ -60,3 +60,23 @@ exports.isExternalMaintainer = (req, res, next) => {
   return res.status(403).json({ error: 'Access forbidden: external maintainer only' });
 };
 
+/**
+ * Middleware to allow both technical office staff and external maintainers
+ * Used for PT26: Internal comments feature
+ */
+exports.isInternalStaffOrMaintainer = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return next(new UnauthorizedError('User not authenticated'));
+  }
+
+  const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
+  const isTechnicalStaff = TECHNICAL_OFFICER_ROLES.includes(req.user.type);
+  const isExternalMaintainer = req.user.type === 'external_maintainer' || req.user.type === 'external_mantainer';
+
+  if (isTechnicalStaff || isExternalMaintainer) {
+    return next();
+  }
+
+  return next(new UnauthorizedError('Access forbidden: technical office staff or external maintainer only'));
+};
+

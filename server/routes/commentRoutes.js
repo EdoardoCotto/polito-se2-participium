@@ -45,12 +45,12 @@ const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOf
  *       404:
  *         description: Report not found
  */
-// router.post(
-//   '/comment/:id/comments', 
-//   isLoggedIn, 
-//   isTechnicalOfficeStaff, 
-//   commentController.createComment
-// );
+router.post(
+  '/comment/:id/comments', 
+  isLoggedIn, 
+  isInternalStaffOrMaintainer, 
+  commentController.createComment
+);
 
 /**
  * @swagger
