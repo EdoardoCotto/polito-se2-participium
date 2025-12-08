@@ -1,4 +1,4 @@
-import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel } from 'react-bootstrap';
+import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel, Form } from 'react-bootstrap';
 import { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
@@ -17,7 +17,17 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
   // Map state
   const [highlightedLocation, setHighlightedLocation] = useState(null);
-  
+
+  // Assign to External Maintainer modal state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [externalMaintainers, setExternalMaintainers] = useState([]);
+  const [selectedMaintainer, setSelectedMaintainer] = useState('');
+  const [loadingMaintainers, setLoadingMaintainers] = useState(false);
+  const [assignError, setAssignError] = useState('');
+  const [assignSuccess, setAssignSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
@@ -109,6 +119,71 @@ export default function TechnicalOfficeStaffMember({ user }) {
     setPhotoModalTitle('');
   };
 
+  // Open assign to external maintainer modal
+  const handleOpenAssignModal = async (report, e) => {
+    e.stopPropagation();
+    setSelectedReport(report);
+    setSelectedMaintainer('');
+    setAssignError('');
+    setAssignSuccess('');
+    setShowAssignModal(true);
+    
+    // Load external maintainers
+    try {
+      setLoadingMaintainers(true);
+      const maintainers = await API.getExternalMaintainers();
+      setExternalMaintainers(maintainers);
+    } catch (err) {
+      console.error('Failed to load external maintainers:', err);
+      setAssignError('Failed to load external maintainers');
+    } finally {
+      setLoadingMaintainers(false);
+    }
+  };
+
+  // Close assign modal
+  const handleCloseAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedReport(null);
+    setSelectedMaintainer('');
+    setAssignError('');
+    setAssignSuccess('');
+  };
+
+  // Submit assignment to external maintainer
+  const handleSubmitAssignment = async () => {
+    if (!selectedMaintainer) {
+      setAssignError('Please select an external maintainer');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setAssignError('');
+      
+      await API.assignReportToExternalMaintainer(selectedReport.id, Number.parseInt(selectedMaintainer, 10));
+      
+      setAssignSuccess(`Report successfully assigned to external maintainer!`);
+      
+      // Refresh reports and close modal after delay
+      setTimeout(() => {
+        setShowAssignModal(false);
+        setTimeout(() => {
+          fetchAssignedReports();
+          setSelectedReport(null);
+          setSelectedMaintainer('');
+          setAssignError('');
+          setAssignSuccess('');
+        }, 300);
+      }, 1500);
+      
+    } catch (err) {
+      setAssignError(err.message || 'Failed to assign report to external maintainer');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -129,6 +204,12 @@ export default function TechnicalOfficeStaffMember({ user }) {
   // Check if report has photos
   const hasPhotos = (report) => {
     return report.photoUrls && report.photoUrls.length > 0;
+  };
+
+  // Check if report can be assigned to external maintainer
+  const canAssignToExternal = (report) => {
+    // Only reports with status 'accepted' or 'in_progress' can be assigned
+    return report.status === 'accepted' || report.status === 'in_progress' || report.status === 'assigned';
   };
 
   // Precompute modal body content to avoid nested ternary in JSX
@@ -444,6 +525,25 @@ export default function TechnicalOfficeStaffMember({ user }) {
                             </div>
                           )}
 
+                          {/* Assign to External Maintainer Button */}
+                          {canAssignToExternal(report) && (
+                            <div className="mb-3">
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={(e) => handleOpenAssignModal(report, e)}
+                                style={{
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                                  borderRadius: '0.5rem',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                <i className="bi bi-person-gear me-2"></i>
+                                Assign to External Maintainer
+                              </Button>
+                            </div>
+                          )}
+
                           {/* Click hints */}
                           {isSelected ? (
                             <div className="mb-0">
@@ -486,6 +586,113 @@ export default function TechnicalOfficeStaffMember({ user }) {
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClosePhotosModal} style={{ borderRadius: '0.5rem' }}>
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Assign to External Maintainer Modal */}
+      <Modal show={showAssignModal} onHide={handleCloseAssignModal} centered size="lg">
+        <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
+          <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
+            <i className="bi bi-person-gear me-2"></i>
+            Assign to External Maintainer
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {assignError && (
+            <Alert variant="danger" dismissible onClose={() => setAssignError('')} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              {assignError}
+            </Alert>
+          )}
+          {assignSuccess && (
+            <Alert variant="success" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+              <i className="bi bi-check-circle me-2"></i>
+              {assignSuccess}
+            </Alert>
+          )}
+          
+          {selectedReport && (
+            <>
+              {/* Report Details */}
+              <Card className="mb-3" style={{ border: '1px solid #e0e0e0' }}>
+                <Card.Body className="p-3">
+                  <h6 className="fw-bold mb-2" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}>
+                    {selectedReport.title}
+                  </h6>
+                  <p className="text-muted mb-2" style={{ fontSize: 'clamp(0.9rem, 2vw, 1.05rem)' }}>
+                    {selectedReport.description || 'No description provided'}
+                  </p>
+                  <div>
+                    <Badge bg="secondary" className="me-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      {selectedReport.category}
+                    </Badge>
+                    <Badge bg={getStatusBadgeVariant(selectedReport.status)} style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      {selectedReport.status}
+                    </Badge>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* External Maintainer Select */}
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
+                  <i className="bi bi-person-gear me-2"></i>
+                  Select External Maintainer *
+                </Form.Label>
+                {loadingMaintainers ? (
+                  <div className="text-center py-3">
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    <span>Loading external maintainers...</span>
+                  </div>
+                ) : (
+                  <Form.Select
+                    value={selectedMaintainer}
+                    onChange={(e) => setSelectedMaintainer(e.target.value)}
+                    style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+                    disabled={externalMaintainers.length === 0}
+                  >
+                    <option value="">Select an external maintainer...</option>
+                    {externalMaintainers.map((maintainer) => (
+                      <option key={maintainer.id} value={maintainer.id}>
+                        {maintainer.name} {maintainer.surname} ({maintainer.username})
+                      </option>
+                    ))}
+                  </Form.Select>
+                )}
+                <Form.Text className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                  The selected external maintainer will be responsible for this report
+                </Form.Text>
+              </Form.Group>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={handleCloseAssignModal}
+            disabled={submitting}
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleSubmitAssignment}
+            disabled={submitting || loadingMaintainers || !selectedMaintainer}
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+          >
+            {submitting ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Assigning...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle me-2"></i>
+                Confirm Assignment
+              </>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

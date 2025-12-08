@@ -1,4 +1,4 @@
-import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel } from 'react-bootstrap';
+import { Container, Card, Row, Col, Badge, Button, Modal, Alert, Spinner, Carousel, Form } from 'react-bootstrap';
 import { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
@@ -17,11 +17,26 @@ export default function ExternalMaintainer({ user }) {
 
   // Map state
   const [highlightedLocation, setHighlightedLocation] = useState(null);
+
+  // Status update modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [statusSuccess, setStatusSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Available status options (based on backend API)
+  const statusOptions = [
+    { value: 'in_progress', label: 'In Progress', icon: 'bi-hourglass-split', variant: 'primary', description: 'Work has started on this report' },
+    { value: 'suspended', label: 'Suspended', icon: 'bi-pause-circle', variant: 'warning', description: 'Work is temporarily paused' },
+    { value: 'resolved', label: 'Resolved', icon: 'bi-check-circle', variant: 'success', description: 'Issue has been fixed' },
+  ];
   
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
-      'external_planner': 'External Maintener'
+      'external_mantainer': 'External Maintainer'
     };
     return roleMap[type] || type;
   };
@@ -31,11 +46,27 @@ export default function ExternalMaintainer({ user }) {
     const variants = {
       'pending': 'warning',
       'accepted': 'info',
+      'assigned': 'primary',
       'in_progress': 'primary',
       'resolved': 'success',
-      'rejected': 'danger'
+      'rejected': 'danger',
+      'suspended': 'warning'
     };
     return variants[status] || 'secondary';
+  };
+
+  // Get status display label
+  const getStatusLabel = (status) => {
+    const labels = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'assigned': 'Assigned',
+      'in_progress': 'In Progress',
+      'resolved': 'Resolved',
+      'rejected': 'Rejected',
+      'suspended': 'Suspended'
+    };
+    return labels[status] || status;
   };
 
   // Fetch assigned reports on component mount
@@ -47,7 +78,7 @@ export default function ExternalMaintainer({ user }) {
     try {
       setLoading(true);
       setError('');
-      const reports = await API.getAssignedReports();//SABRY
+      const reports = await API.getAssignedReports();
       console.log('Assigned Reports:', reports);
       setAssignedReports(reports);
     } catch (err) {
@@ -100,6 +131,61 @@ export default function ExternalMaintainer({ user }) {
     setPhotoModalTitle('');
   };
 
+  // Open status update modal
+  const handleOpenStatusModal = (report, e) => {
+    e.stopPropagation();
+    setSelectedReport(report);
+    setNewStatus('');
+    setStatusError('');
+    setStatusSuccess('');
+    setShowStatusModal(true);
+  };
+
+  // Close status modal
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setSelectedReport(null);
+    setNewStatus('');
+    setStatusError('');
+    setStatusSuccess('');
+  };
+
+  // Submit status update
+  const handleSubmitStatusUpdate = async () => {
+    if (!newStatus) {
+      setStatusError('Please select a new status');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setStatusError('');
+      
+      // Use the existing API method
+      await API.updateMaintainerStatus(selectedReport.id, newStatus);
+      
+      const selectedStatusOption = statusOptions.find(s => s.value === newStatus);
+      setStatusSuccess(`Report status updated to "${selectedStatusOption?.label}"!`);
+      
+      // Refresh reports and close modal after delay
+      setTimeout(() => {
+        setShowStatusModal(false);
+        setTimeout(() => {
+          fetchAssignedReports();
+          setSelectedReport(null);
+          setNewStatus('');
+          setStatusError('');
+          setStatusSuccess('');
+        }, 300);
+      }, 1500);
+      
+    } catch (err) {
+      setStatusError(err.message || 'Failed to update report status');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -120,6 +206,12 @@ export default function ExternalMaintainer({ user }) {
   // Check if report has photos
   const hasPhotos = (report) => {
     return report.photoUrls && report.photoUrls.length > 0;
+  };
+
+  // Check if status can be updated
+  const canUpdateStatus = (report) => {
+    const updatableStatuses = ['assigned', 'in_progress', 'suspended'];
+    return updatableStatuses.includes(report.status);
   };
 
   // Precompute modal body content to avoid nested ternary in JSX
@@ -359,7 +451,7 @@ export default function ExternalMaintainer({ user }) {
                               {report.title}
                             </h6>
                             <Badge bg={getStatusBadgeVariant(report.status)} style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                              {report.status}
+                              {getStatusLabel(report.status)}
                             </Badge>
                           </div>
 
@@ -411,7 +503,8 @@ export default function ExternalMaintainer({ user }) {
                                 style={{
                                   fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s'
+                                  transition: 'all 0.2s',
+                                  padding: '0.5rem 0.75rem'
                                 }}
                                 onClick={(e) => handleOpenPhotos(report, e)}
                                 onMouseEnter={(e) => {
@@ -433,7 +526,25 @@ export default function ExternalMaintainer({ user }) {
                                 ></i>
                               </Badge>
                             </div>
-                          )}
+                            )}
+
+                            {/* Update Status Button */}
+                            {canUpdateStatus(report) && (
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                style={{
+                                  fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                                  borderRadius: '0.5rem',
+                                  padding: '0.4rem 0.75rem'
+                                }}
+                                onClick={(e) => handleOpenStatusModal(report, e)}
+                              >
+                                <i className="bi bi-arrow-repeat me-1"></i>
+                                Update Status
+                              </Button>
+                            )}
+                        
 
                           {/* Click hints */}
                           {isSelected ? (
@@ -480,9 +591,145 @@ export default function ExternalMaintainer({ user }) {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Update Status Modal */}
+      <Modal show={showStatusModal} onHide={handleCloseStatusModal} centered size="lg">
+        <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
+          <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
+            <i className="bi bi-arrow-repeat me-2"></i>
+            Update Report Status
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {statusError && (
+            <Alert variant="danger" dismissible onClose={() => setStatusError('')} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              {statusError}
+            </Alert>
+          )}
+          {statusSuccess && (
+            <Alert variant="success" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+              <i className="bi bi-check-circle me-2"></i>
+              {statusSuccess}
+            </Alert>
+          )}
+          
+          {selectedReport && (
+            <>
+              {/* Report Details */}
+              <Card className="mb-4" style={{ border: '1px solid #e0e0e0', borderRadius: '0.75rem' }}>
+                <Card.Body className="p-3">
+                  <h6 className="fw-bold mb-2" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}>
+                    {selectedReport.title}
+                  </h6>
+                  <p className="text-muted mb-2" style={{ fontSize: 'clamp(0.9rem, 2vw, 1.05rem)' }}>
+                    {selectedReport.description || 'No description provided'}
+                  </p>
+                  <div>
+                    <Badge bg="secondary" className="me-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      <i className="bi bi-tag me-1"></i>
+                      {selectedReport.category}
+                    </Badge>
+                    <Badge bg={getStatusBadgeVariant(selectedReport.status)} style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                      Current: {getStatusLabel(selectedReport.status)}
+                    </Badge>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Status Selection */}
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold mb-3" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
+                  <i className="bi bi-arrow-repeat me-2"></i>
+                  Select New Status *
+                </Form.Label>
+                <div className="d-flex flex-column gap-3">
+                  {statusOptions.map((option) => (
+                    <Card
+                      key={option.value}
+                      className={`status-option-card ${newStatus === option.value ? 'border-primary' : ''}`}
+                      style={{
+                        cursor: 'pointer',
+                        border: newStatus === option.value ? '2px solid #0d6efd' : '1px solid #dee2e6',
+                        borderRadius: '0.75rem',
+                        transition: 'all 0.2s',
+                        backgroundColor: newStatus === option.value ? '#f0f8ff' : 'white'
+                      }}
+                      onClick={() => setNewStatus(option.value)}
+                      onMouseEnter={(e) => {
+                        if (newStatus !== option.value) {
+                          e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (newStatus !== option.value) {
+                          e.currentTarget.style.backgroundColor = 'white';
+                        }
+                      }}
+                    >
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-start">
+                          <Form.Check
+                            type="radio"
+                            id={`status-${option.value}`}
+                            checked={newStatus === option.value}
+                            onChange={() => setNewStatus(option.value)}
+                            className="me-3 mt-1"
+                          />
+                          <div className="flex-grow-1">
+                            <div className="d-flex align-items-center mb-2">
+                              <Badge bg={option.variant} style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                                <i className={`${option.icon} me-1`}></i>
+                                {option.label}
+                              </Badge>
+                            </div>
+                            <small className="text-muted" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                              {option.description}
+                            </small>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  ))}
+                </div>
+              </Form.Group>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={handleCloseStatusModal}
+            disabled={submitting}
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+          >
+            <i className="bi bi-x-circle me-2"></i>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleSubmitStatusUpdate}
+            disabled={submitting || !newStatus}
+            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+          >
+            {submitting ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle me-2"></i>
+                Confirm Update
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
+
 ExternalMaintainer.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string,
