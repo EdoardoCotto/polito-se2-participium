@@ -22,7 +22,7 @@ const ALLOWED_ROLES = [
   // generic legacy technical role (keep if already used somewhere)
   'technical_office_staff_member',
 
-  'external_mantainer'          // External maintainer/contractor
+  'external_maintainer'          // External maintainer/contractor
 ];
 
 // Optional but recommended: metadata for UI labels and future extensions.
@@ -43,7 +43,7 @@ const ROLE_METADATA = {
 
   technical_office_staff_member: { label: 'Technical Office Staff (Generic)' },
 
-  external_mantainer: { label: 'External Maintainer' }
+  external_maintainer: { label: 'External Maintainer' }
 };
 
 const TECHNICAL_OFFICER_ROLES =[
@@ -54,7 +54,7 @@ const TECHNICAL_OFFICER_ROLES =[
   'suap_officer',                 // One-stop shop for businesses (SUAP)
   'public_works_engineer',        // Public works / maintenance & technical services
   'mobility_traffic_engineer',    // Mobility & traffic
-  'environment_technician'      // Environment / built environment quality
+  'environment_technician',       // Environment / built environment quality
   'external_maintainer'          // External maintainer/contractor
 ];
 
