@@ -83,3 +83,14 @@ CREATE TABLE IF NOT EXISTS Reports (
     'external_office'
   ))
 );
+
+-- Table for internal comments on reports (invisible for citizens)
+CREATE TABLE IF NOT EXISTS InternalComments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reportId INTEGER NOT NULL,
+  authorId INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE,
+  FOREIGN KEY (authorId) REFERENCES Users(id)
+);
