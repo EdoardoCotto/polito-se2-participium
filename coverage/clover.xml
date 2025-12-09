@@ -1,28 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1765273082407" clover="3.2.0">
-  <project timestamp="1765273082407" name="All files">
-    <metrics statements="909" coveredstatements="909" conditionals="499" coveredconditionals="480" methods="149" coveredmethods="149" elements="1557" coveredelements="1538" complexity="0" loc="909" ncloc="909" packages="8" files="23" classes="23"/>
-    <package name="constants">
+<coverage generated="1765274583325" clover="3.2.0">
+  <project timestamp="1765274583325" name="All files">
+    <metrics statements="939" coveredstatements="939" conditionals="505" coveredconditionals="485" methods="160" coveredmethods="160" elements="1604" coveredelements="1584" complexity="0" loc="939" ncloc="939" packages="10" files="25" classes="25"/>
+    <package name="client.models">
+      <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+      <file name="models.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/client/models/models.js">
+        <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="11" count="16" type="stmt"/>
+        <line num="12" count="16" type="stmt"/>
+        <line num="13" count="16" type="stmt"/>
+        <line num="14" count="16" type="stmt"/>
+        <line num="15" count="16" type="stmt"/>
+        <line num="16" count="16" type="stmt"/>
+        <line num="24" count="3" type="stmt"/>
+        <line num="32" count="6" type="stmt"/>
+        <line num="40" count="6" type="stmt"/>
+      </file>
+    </package>
+    <package name="client.utils">
+      <metrics statements="21" coveredstatements="21" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
+      <file name="cropImage.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/client/utils/cropImage.js">
+        <metrics statements="21" coveredstatements="21" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="13" type="stmt"/>
+        <line num="9" count="12" type="stmt"/>
+        <line num="10" count="12" type="stmt"/>
+        <line num="12" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="17" count="11" type="stmt"/>
+        <line num="18" count="11" type="stmt"/>
+        <line num="21" count="11" type="stmt"/>
+        <line num="34" count="11" type="stmt"/>
+        <line num="35" count="11" type="stmt"/>
+        <line num="37" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="41" count="10" type="stmt"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="55" count="13" type="stmt"/>
+        <line num="56" count="13" type="stmt"/>
+        <line num="57" count="13" type="stmt"/>
+        <line num="58" count="13" type="cond" truecount="1" falsecount="1"/>
+        <line num="59" count="13" type="stmt"/>
+      </file>
+    </package>
+    <package name="server.constants">
       <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="reportCategories.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/constants/reportCategories.js">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="6" type="stmt"/>
-        <line num="13" count="6" type="stmt"/>
+        <line num="1" count="7" type="stmt"/>
+        <line num="13" count="7" type="stmt"/>
       </file>
       <file name="reportStatus.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/constants/reportStatus.js">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="4" type="stmt"/>
-        <line num="11" count="4" type="stmt"/>
+        <line num="1" count="5" type="stmt"/>
+        <line num="11" count="5" type="stmt"/>
       </file>
       <file name="roles.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/constants/roles.js">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="7" count="50" type="stmt"/>
-        <line num="29" count="50" type="stmt"/>
-        <line num="49" count="50" type="stmt"/>
-        <line num="61" count="50" type="stmt"/>
+        <line num="7" count="51" type="stmt"/>
+        <line num="29" count="51" type="stmt"/>
+        <line num="49" count="51" type="stmt"/>
+        <line num="61" count="51" type="stmt"/>
       </file>
     </package>
-    <package name="controller">
+    <package name="server.controller">
       <metrics statements="267" coveredstatements="267" conditionals="159" coveredconditionals="152" methods="37" coveredmethods="37"/>
       <file name="reportController.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/controller/reportController.js">
         <metrics statements="155" coveredstatements="155" conditionals="97" coveredconditionals="90" methods="22" coveredmethods="22"/>
@@ -301,7 +343,7 @@
         <line num="172" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="dao">
+    <package name="server.dao">
       <metrics statements="241" coveredstatements="241" conditionals="127" coveredconditionals="119" methods="66" coveredmethods="66"/>
       <file name="reportDao.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/dao/reportDao.js">
         <metrics statements="104" coveredstatements="104" conditionals="60" coveredconditionals="57" methods="32" coveredmethods="32"/>
@@ -551,49 +593,49 @@
         <line num="323" count="4" type="stmt"/>
       </file>
     </package>
-    <package name="errors">
+    <package name="server.errors">
       <metrics statements="24" coveredstatements="24" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="5"/>
       <file name="AppError.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/errors/AppError.js">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="6" count="114" type="stmt"/>
-        <line num="7" count="114" type="stmt"/>
-        <line num="8" count="114" type="stmt"/>
-        <line num="12" count="11" type="stmt"/>
+        <line num="6" count="132" type="stmt"/>
+        <line num="7" count="132" type="stmt"/>
+        <line num="8" count="132" type="stmt"/>
+        <line num="12" count="12" type="stmt"/>
       </file>
       <file name="BadRequestError.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/errors/BadRequestError.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="8" type="stmt"/>
-        <line num="5" count="48" type="stmt"/>
-        <line num="6" count="48" type="stmt"/>
-        <line num="7" count="48" type="stmt"/>
-        <line num="11" count="8" type="stmt"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="5" count="51" type="stmt"/>
+        <line num="6" count="51" type="stmt"/>
+        <line num="7" count="51" type="stmt"/>
+        <line num="11" count="9" type="stmt"/>
       </file>
       <file name="ConflictError.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/errors/ConflictError.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="7" type="stmt"/>
-        <line num="5" count="4" type="stmt"/>
-        <line num="6" count="4" type="stmt"/>
-        <line num="7" count="4" type="stmt"/>
-        <line num="11" count="7" type="stmt"/>
+        <line num="1" count="8" type="stmt"/>
+        <line num="5" count="7" type="stmt"/>
+        <line num="6" count="7" type="stmt"/>
+        <line num="7" count="7" type="stmt"/>
+        <line num="11" count="8" type="stmt"/>
       </file>
       <file name="NotFoundError.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/errors/NotFoundError.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="8" type="stmt"/>
-        <line num="5" count="14" type="stmt"/>
-        <line num="6" count="14" type="stmt"/>
-        <line num="7" count="14" type="stmt"/>
-        <line num="11" count="8" type="stmt"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="5" count="17" type="stmt"/>
+        <line num="6" count="17" type="stmt"/>
+        <line num="7" count="17" type="stmt"/>
+        <line num="11" count="9" type="stmt"/>
       </file>
       <file name="UnauthorizedError.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/errors/UnauthorizedError.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="8" type="stmt"/>
-        <line num="5" count="21" type="stmt"/>
-        <line num="6" count="21" type="stmt"/>
-        <line num="7" count="21" type="stmt"/>
-        <line num="11" count="8" type="stmt"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="5" count="24" type="stmt"/>
+        <line num="6" count="24" type="stmt"/>
+        <line num="7" count="24" type="stmt"/>
+        <line num="11" count="9" type="stmt"/>
       </file>
     </package>
-    <package name="middlewares">
+    <package name="server.middlewares">
       <metrics statements="66" coveredstatements="66" conditionals="26" coveredconditionals="26" methods="11" coveredmethods="11"/>
       <file name="authMiddleware.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/middlewares/authMiddleware.js">
         <metrics statements="31" coveredstatements="31" conditionals="18" coveredconditionals="18" methods="5" coveredmethods="5"/>
@@ -671,7 +713,7 @@
         <line num="80" count="17" type="stmt"/>
       </file>
     </package>
-    <package name="repository">
+    <package name="server.repository">
       <metrics statements="244" coveredstatements="244" conditionals="185" coveredconditionals="181" methods="22" coveredmethods="22"/>
       <file name="reportRepository.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/repository/reportRepository.js">
         <metrics statements="155" coveredstatements="155" conditionals="129" coveredconditionals="125" methods="14" coveredmethods="14"/>
@@ -924,7 +966,7 @@
         <line num="150" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="routes">
+    <package name="server.routes">
       <metrics statements="43" coveredstatements="43" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
       <file name="constantRoutes.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/routes/constantRoutes.js">
         <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
@@ -982,7 +1024,7 @@
         <line num="248" count="4" type="stmt"/>
       </file>
     </package>
-    <package name="utils">
+    <package name="server.utils">
       <metrics statements="16" coveredstatements="16" conditionals="2" coveredconditionals="2" methods="7" coveredmethods="7"/>
       <file name="passport.js" path="/Users/shadmehrrahmati/Downloads/UNI/Software Engineering II /polito-se2-participium/server/utils/passport.js">
         <metrics statements="16" coveredstatements="16" conditionals="2" coveredconditionals="2" methods="7" coveredmethods="7"/>

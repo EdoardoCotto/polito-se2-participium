@@ -9,7 +9,12 @@
     "test:coverage": "jest --runInBand --coverage"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "supertest": "^6.3.4"
   },
   "dependencies": {
