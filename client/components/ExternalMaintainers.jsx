@@ -540,8 +540,7 @@ export default function ExternalMaintainer({ user }) {
                                 }}
                                 onClick={(e) => handleOpenStatusModal(report, e)}
                               >
-                                <i className="bi bi-arrow-repeat me-1"></i>
-                                Update Status
+                                <i className="bi bi-arrow-repeat me-1"></i>Update Status
                               </Button>
                             )}
                         
@@ -596,8 +595,7 @@ export default function ExternalMaintainer({ user }) {
       <Modal show={showStatusModal} onHide={handleCloseStatusModal} centered size="lg">
         <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
           <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
-            <i className="bi bi-arrow-repeat me-2"></i>
-            Update Report Status
+            <i className="bi bi-arrow-repeat me-2"></i>Update Report Status
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
@@ -640,8 +638,7 @@ export default function ExternalMaintainer({ user }) {
               {/* Status Selection */}
               <Form.Group className="mb-3">
                 <Form.Label className="fw-semibold mb-3" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                  <i className="bi bi-arrow-repeat me-2"></i>
-                  Select New Status *
+                  <i className="bi bi-arrow-repeat me-2"></i>Select New Status *
                 </Form.Label>
                 <div className="d-flex flex-column gap-3">
                   {statusOptions.map((option) => (
@@ -703,8 +700,7 @@ export default function ExternalMaintainer({ user }) {
             disabled={submitting}
             style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
           >
-            <i className="bi bi-x-circle me-2"></i>
-            Cancel
+            <i className="bi bi-x-circle me-2"></i>Cancel
           </Button>
           <Button 
             variant="primary"
@@ -719,8 +715,7 @@ export default function ExternalMaintainer({ user }) {
               </>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>
-                Confirm Update
+                <i className="bi bi-check-circle me-2"></i>Confirm Update
               </>
             )}
           </Button>

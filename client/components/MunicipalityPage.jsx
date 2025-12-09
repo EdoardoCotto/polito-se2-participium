@@ -538,8 +538,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                   transition: 'all 0.2s'
                                 }}
                               >
-                                <i className="bi bi-person-gear me-2"></i>
-                                Assign to External Maintainer
+                                <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
                               </Button>
                             </div>
                           )}
@@ -594,8 +593,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
       <Modal show={showAssignModal} onHide={handleCloseAssignModal} centered size="lg">
         <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
           <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
-            <i className="bi bi-person-gear me-2"></i>
-            Assign to External Maintainer
+            <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
@@ -637,8 +635,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
               {/* External Maintainer Select */}
               <Form.Group className="mb-3">
                 <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                  <i className="bi bi-person-gear me-2"></i>
-                  Select External Maintainer *
+                  <i className="bi bi-person-gear me-2"></i>Select External Maintainer *
                 </Form.Label>
                 {loadingMaintainers ? (
                   <div className="text-center py-3">
@@ -689,8 +686,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
               </>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>
-                Confirm Assignment
+                <i className="bi bi-check-circle me-2"></i>Confirm Assignment
               </>
             )}
           </Button>
