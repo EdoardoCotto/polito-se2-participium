@@ -1,7 +1,8 @@
 -- SQLite Schema for Participium
 -- Database for citizen participation management system
 
--- Drop existing tables
+-- Drop existing tables (in reverse order of dependencies due to foreign keys)
+DROP TABLE IF EXISTS InternalComments;
 DROP TABLE IF EXISTS Reports;
 DROP TABLE IF EXISTS Users;
 
