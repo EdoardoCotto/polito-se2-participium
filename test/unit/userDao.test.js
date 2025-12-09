@@ -297,6 +297,18 @@ describe('userDao Functions', () => {
         await expect(d.createUser(newUser)).rejects.toThrow('Hash Error');
       });
     });
+
+    test('should reject when bcrypt.compare errors', async () => {
+      const username = unique('u');
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, name: 'A', surname: 'B', type: 'citizen', password: 'stored_hash' }) },
+        async (d) => {
+          const bcryptMod = require('bcrypt');
+          bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(new Error('Compare Error')));
+          await expect(d.getUser(username, 'pw')).rejects.toThrow('Compare Error');
+        }
+      );
+    });
   });
 
   describe('updateUserTypeById', () => {
@@ -343,6 +355,28 @@ describe('userDao Functions', () => {
     });
 
     // Skip: altri casi non forzabili senza mock del DB
+  });
+
+  describe('getExternalMaintainers', () => {
+    test('returns maintainers list', async () => {
+      await withSqliteMock(
+        { allImpl: (_s, _p, cb) => cb(null, [{ id: 1, type: 'external_mantainer' }]) },
+        async (d) => {
+          const res = await d.getExternalMaintainers();
+          expect(Array.isArray(res)).toBe(true);
+          expect(res[0].type).toBe('external_mantainer');
+        }
+      );
+    });
+
+    test('rejects on DB error', async () => {
+      await withSqliteMock(
+        { allImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        async (d) => {
+          await expect(d.getExternalMaintainers()).rejects.toThrow('DB Error');
+        }
+      );
+    });
   });
 
   describe('updateUserProfile', () => {

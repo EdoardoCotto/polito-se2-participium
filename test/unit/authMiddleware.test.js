@@ -2,7 +2,8 @@ const {
   isLoggedIn, 
   isAdmin, 
   isMunicipal_public_relations_officer,
-  isTechnicalOfficeStaff 
+  isTechnicalOfficeStaff,
+  isExternalMaintainer,
 } = require('../../server/middlewares/authMiddleware');
 const UnauthorizedError = require('../../server/errors/UnauthorizedError');
 
@@ -124,6 +125,38 @@ describe('authMiddleware', () => {
       expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const err = next.mock.calls[0][0];
       expect(err.message).toBe('User not authenticated');
+    });
+  });
+
+  describe('isExternalMaintainer', () => {
+    it('calls next when user type is external_maintainer', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'external_maintainer' };
+      // isExternalMaintainer does not check isAuthenticated; it checks user.type and calls next()
+      isExternalMaintainer(req, res, next);
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('responds 403 when user type is not external_maintainer', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'citizen' };
+      res.status = jest.fn().mockReturnThis();
+      res.json = jest.fn();
+      isExternalMaintainer(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Access forbidden: external maintainer only' });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('responds 403 when req.user is undefined (optional chaining)', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = undefined;
+      res.status = jest.fn().mockReturnThis();
+      res.json = jest.fn();
+      isExternalMaintainer(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Access forbidden: external maintainer only' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

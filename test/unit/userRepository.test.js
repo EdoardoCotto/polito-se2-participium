@@ -97,6 +97,15 @@ describe('userRepository.createUser', () => {
     expect(userDao.createUser).toHaveBeenCalledWith(input);
     expect(res).toEqual(created);
   });
+
+  test('unexpected DAO error triggers catch and rethrow', async () => {
+    const input = { username: 'x', email: 'x@example.com', name: 'N', surname: 'S', password: 'p' };
+    userDao.getUserByUsername.mockResolvedValue(null);
+    userDao.getUserByEmail.mockResolvedValue(null);
+    const err = new Error('DB down');
+    userDao.createUser.mockRejectedValue(err);
+    await expect(userRepository.createUser(input)).rejects.toThrow(/DB down/);
+  });
 });
 
 describe('userRepository.createUserIfAdmin', () => {
@@ -210,6 +219,18 @@ describe('userRepository.getMunicipalityUsers', () => {
     userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
     userDao.findMunicipalityUsers.mockResolvedValueOnce(list);
     const res = await userRepository.getMunicipalityUsers(1);
+    expect(res).toEqual(list);
+  });
+});
+
+describe('userRepository.getExternalMaintainers', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('returns maintainers list from DAO', async () => {
+    const list = [{ id: 5, type: 'external_mantainer' }];
+    userDao.getExternalMaintainers = jest.fn().mockResolvedValueOnce(list);
+    const res = await userRepository.getExternalMaintainers();
+    expect(userDao.getExternalMaintainers).toHaveBeenCalledTimes(1);
     expect(res).toEqual(list);
   });
 });

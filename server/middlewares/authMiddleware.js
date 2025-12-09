@@ -50,9 +50,9 @@ exports.isTechnicalOfficeStaff = (req, res, next) => {
 
 
 exports.isExternalMaintainer = (req, res, next) => {
-  // 1. Verifichiamo che l'utente sia loggato (req.user deve esistere)
-  // 2. Verifichiamo il tipo. Nota: nello schema SQL hai scritto 'external_mantainer' (senza la 'i' dopo la 'n')
-  if (req.user && req.user.type === 'external_maintainer') {
+    // 1. Verifichiamo che l'utente sia loggato (req.user deve esistere)
+    // 2. Verifichiamo il tipo. Nota: nello schema SQL hai scritto 'external_mantainer' (senza la 'i' dopo la 'n')
+    if (req.user?.type === 'external_maintainer') {
     return next(); // L'utente è autorizzato, passa al prossimo step (il controller)
   }
 

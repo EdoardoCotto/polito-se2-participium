@@ -7,6 +7,7 @@ jest.mock('../../server/repository/userRepository', () => ({
   createUserIfAdmin: jest.fn(),
   getMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
+  getExternalMaintainers: jest.fn(),
 }));
 
 const userController = require('../../server/controller/userController');
@@ -21,6 +22,29 @@ describe('userController', () => {
   const makeRes = () => ({
     status: jest.fn().mockReturnThis(),
     json: jest.fn(),
+  });
+
+  // getExternalMaintainers
+  it('getExternalMaintainers -> 200 OK', async () => {
+    const maintainers = [{ id: 1, type: 'external_mantainer' }];
+    userRepository.getExternalMaintainers.mockResolvedValueOnce(maintainers);
+    await userController.getExternalMaintainers({}, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(maintainers);
+  });
+
+  it('getExternalMaintainers -> AppError mapped', async () => {
+    userRepository.getExternalMaintainers.mockRejectedValueOnce(new AppError('Forbidden', 403));
+    await userController.getExternalMaintainers({}, res);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Forbidden' });
+  });
+
+  it('getExternalMaintainers -> unknown error -> 500', async () => {
+    userRepository.getExternalMaintainers.mockRejectedValueOnce(new Error('db'));
+    await userController.getExternalMaintainers({}, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
 
   beforeEach(() => {

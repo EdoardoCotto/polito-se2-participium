@@ -32,6 +32,9 @@ const setup = () => {
       deserializeUser: jest.fn(),
     };
     jest.doMock('passport', () => passportMock, { virtual: true });
+    // Some modules inside server resolve passport from its local node_modules
+    // Ensure that resolution is mocked there too
+    jest.doMock('../../server/node_modules/passport', () => passportMock, { virtual: true });
 
     // Load SUT: this will register strategy, serialize, deserialize on mocked passport
     const exportedPassport = require('../../server/utils/passport');
