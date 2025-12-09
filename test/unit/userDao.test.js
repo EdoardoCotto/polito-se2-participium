@@ -539,4 +539,56 @@ describe('userDao Functions', () => {
       );
     });
   });
+
+  describe('getUser bcrypt error coverage', () => {
+    test('getUser rejects on bcrypt compare error', async () => {
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { id: 1, username: 'user', password: 'hash', name: 'N', surname: 'S', type: 'citizen' }),
+        },
+        async (d) => {
+          const bcryptMod = require('bcrypt');
+          bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(new Error('Bcrypt error'), null));
+          await expect(d.getUser('user', 'password')).rejects.toThrow('Bcrypt error');
+        }
+      );
+    });
+  });
+
+  describe('getExternalMaintainers', () => {
+    test('returns list of external maintainers', async () => {
+      await withSqliteMock(
+        {
+          allImpl: (_s, _p, cb) => cb(null, [{ id: 1, username: 'm1', type: 'external_mantainer' }]),
+        },
+        async (d) => {
+          const result = await d.getExternalMaintainers();
+          expect(result).toEqual([{ id: 1, username: 'm1', type: 'external_mantainer' }]);
+        }
+      );
+    });
+
+    test('rejects on database error', async () => {
+      await withSqliteMock(
+        {
+          allImpl: (_s, _p, cb) => cb(new Error('DB error'), null),
+        },
+        async (d) => {
+          await expect(d.getExternalMaintainers()).rejects.toThrow('DB error');
+        }
+      );
+    });
+
+    test('returns empty array when no maintainers', async () => {
+      await withSqliteMock(
+        {
+          allImpl: (_s, _p, cb) => cb(null, null),
+        },
+        async (d) => {
+          const result = await d.getExternalMaintainers();
+          expect(result).toEqual([]);
+        }
+      );
+    });
+  });
 });

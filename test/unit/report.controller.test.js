@@ -624,6 +624,7 @@ describe('reportController.reviewReport', () => {
   });
 });
 
+<<<<<<< HEAD
 // ──────────────────────────────────────────────
 //   TEST assignReportToExternalMaintainer
 // ──────────────────────────────────────────────
@@ -632,28 +633,46 @@ describe('reportController.assignReportToExternalMaintainer', () => {
 
   it('401 se manca user', async () => {
     const req = { user: null, params: { id: '1' }, body: { externalMaintainerId: 2 } };
+=======
+describe('reportController.assignReportToExternalMaintainer', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('401 if no user', async () => {
+    const req = { params: { id: '1' }, body: { externalMaintainerId: 5 } };
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     const res = mkRes();
     await controller.assignReportToExternalMaintainer(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
   });
 
+<<<<<<< HEAD
   it('400 id non valido', async () => {
     const req = { user: { id: 10 }, params: { id: 'abc' }, body: { externalMaintainerId: 2 } };
+=======
+  it('400 if invalid report id', async () => {
+    const req = { user: { id: 1 }, params: { id: 'abc' }, body: { externalMaintainerId: 5 } };
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     const res = mkRes();
     await controller.assignReportToExternalMaintainer(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid report id' });
   });
 
+<<<<<<< HEAD
   it('400 manca externalMaintainerId', async () => {
     const req = { user: { id: 10 }, params: { id: '5' }, body: {} };
+=======
+  it('400 if no externalMaintainerId', async () => {
+    const req = { user: { id: 1 }, params: { id: '10' }, body: {} };
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     const res = mkRes();
     await controller.assignReportToExternalMaintainer(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: 'External maintainer ID is required' });
   });
 
+<<<<<<< HEAD
   it('200 successo con mapping photoUrls', async () => {
     const req = { user: { id: 3 }, params: { id: '9' }, body: { externalMaintainerId: 7 }, protocol: 'http', get: () => 'host' };
     const res = mkRes();
@@ -681,12 +700,47 @@ describe('reportController.assignReportToExternalMaintainer', () => {
     const req = { user: { id: 3 }, params: { id: '9' }, body: { externalMaintainerId: 7 } };
     const res = mkRes();
     repo.assignReportToExternalMaintainer.mockRejectedValue(new Error('boom'));
+=======
+  it('200 success', async () => {
+    const req = {
+      user: { id: 1 },
+      params: { id: '10' },
+      body: { externalMaintainerId: 5 },
+      protocol: 'http',
+      get: () => 'localhost:3000'
+    };
+    const res = mkRes();
+    repo.assignReportToExternalMaintainer.mockResolvedValue({
+      id: 10,
+      externalMaintainerId: 5,
+      photos: []
+    });
+    await controller.assignReportToExternalMaintainer(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  it('propaga AppError', async () => {
+    const req = { user: { id: 1 }, params: { id: '10' }, body: { externalMaintainerId: 5 } };
+    const res = mkRes();
+    repo.assignReportToExternalMaintainer.mockRejectedValue(new AppError('Not found', 404));
+    await controller.assignReportToExternalMaintainer(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Not found' });
+  });
+
+  it('500 errore generico', async () => {
+    const req = { user: { id: 1 }, params: { id: '10' }, body: { externalMaintainerId: 5 } };
+    const res = mkRes();
+    repo.assignReportToExternalMaintainer.mockRejectedValue(new Error('oops'));
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     await controller.assignReportToExternalMaintainer(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
 });
 
+<<<<<<< HEAD
 // ──────────────────────────────────────────────
 //   TEST updateMaintainerStatus
 // ──────────────────────────────────────────────
@@ -695,12 +749,20 @@ describe('reportController.updateMaintainerStatus', () => {
 
   it('401 se manca user', async () => {
     const req = { user: null, params: { id: '12' }, body: { status: 'progress' } };
+=======
+describe('reportController.updateMaintainerStatus', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('401 if no user', async () => {
+    const req = { params: { id: '1' }, body: { status: 'progress' } };
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     const res = mkRes();
     await controller.updateMaintainerStatus(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
   });
 
+<<<<<<< HEAD
   it('200 successo con mapping photoUrls', async () => {
     const req = { user: { id: 22 }, params: { id: '12' }, body: { status: 'progress' }, protocol: 'https', get: () => 'ex.com' };
     const res = mkRes();
@@ -725,6 +787,40 @@ describe('reportController.updateMaintainerStatus', () => {
     const req = { user: { id: 22 }, params: { id: '12' }, body: { status: 'progress' } };
     const res = mkRes();
     repo.updateMaintainerStatus.mockRejectedValue(new Error('x'));
+=======
+  it('200 success', async () => {
+    const req = {
+      user: { id: 5 },
+      params: { id: '10' },
+      body: { status: 'progress' },
+      protocol: 'http',
+      get: () => 'localhost:3000'
+    };
+    const res = mkRes();
+    repo.updateMaintainerStatus.mockResolvedValue({
+      id: 10,
+      status: 'progress',
+      photos: []
+    });
+    await controller.updateMaintainerStatus(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  it('propaga AppError', async () => {
+    const req = { user: { id: 5 }, params: { id: '10' }, body: { status: 'progress' } };
+    const res = mkRes();
+    repo.updateMaintainerStatus.mockRejectedValue(new AppError('Invalid status', 400));
+    await controller.updateMaintainerStatus(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid status' });
+  });
+
+  it('500 errore generico', async () => {
+    const req = { user: { id: 5 }, params: { id: '10' }, body: { status: 'progress' } };
+    const res = mkRes();
+    repo.updateMaintainerStatus.mockRejectedValue(new Error('oops'));
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     await controller.updateMaintainerStatus(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });

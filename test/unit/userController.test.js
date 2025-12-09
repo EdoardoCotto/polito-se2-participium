@@ -328,4 +328,34 @@ describe('userController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
     });
   });
+
+  describe('getExternalMaintainers', () => {
+    it('returns list of external maintainers', async () => {
+      const maintainers = [{ id: 1, username: 'maintainer1' }];
+      userRepository.getExternalMaintainers.mockResolvedValueOnce(maintainers);
+      const req = {};
+      const res = makeRes();
+      await userController.getExternalMaintainers(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(maintainers);
+    });
+
+    it('propaga AppError', async () => {
+      userRepository.getExternalMaintainers.mockRejectedValueOnce(new AppError('Error', 500));
+      const req = {};
+      const res = makeRes();
+      await userController.getExternalMaintainers(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Error' });
+    });
+
+    it('unknown error -> 500', async () => {
+      userRepository.getExternalMaintainers.mockRejectedValueOnce(new Error('x'));
+      const req = {};
+      const res = makeRes();
+      await userController.getExternalMaintainers(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+    });
+  });
 });

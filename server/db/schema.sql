@@ -1,7 +1,8 @@
 -- SQLite Schema for Participium
 -- Database for citizen participation management system
 
--- Drop existing tables
+-- Drop existing tables (in reverse order of dependencies due to foreign keys)
+DROP TABLE IF EXISTS InternalComments;
 DROP TABLE IF EXISTS Reports;
 DROP TABLE IF EXISTS Users;
 
@@ -82,4 +83,15 @@ CREATE TABLE IF NOT EXISTS Reports (
     'technical_office_staff_member',
     'external_office'
   ))
+);
+
+-- Table for internal comments on reports (invisible for citizens)
+CREATE TABLE IF NOT EXISTS InternalComments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reportId INTEGER NOT NULL,
+  authorId INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE,
+  FOREIGN KEY (authorId) REFERENCES Users(id)
 );

@@ -11,6 +11,7 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const reportRoutes = require('./routes/reportRoutes')
 const constantRoutes = require('./routes/constantRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 const app = express();
 
 // Disable X-Powered-By header for security
@@ -43,6 +44,7 @@ app.use('/api', sessionRoutes);
 app.use('/api', userRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', constantRoutes);
+app.use('/api', commentRoutes);
 
 app.use(errorHandler);
 

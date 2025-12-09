@@ -10,6 +10,7 @@ jest.mock('../../server/dao/userDao', () => ({
   updateUserTypeById: jest.fn(),
   findMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
+  getExternalMaintainers: jest.fn(),
 }));
 
 const userDao = require('../../server/dao/userDao');
@@ -273,5 +274,19 @@ describe('userRepository.updateUserProfile', () => {
     const res = await userRepository.updateUserProfile(2, payload);
     expect(userDao.updateUserProfile).toHaveBeenCalledWith(2, payload);
     expect(res).toEqual({ id: 2, name: 'New' });
+  });
+});
+
+describe('userRepository.getExternalMaintainers', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('returns list of external maintainers', async () => {
+    const mockMaintainers = [{ id: 1, username: 'maintainer1', type: 'external_maintainer' }];
+    userDao.getExternalMaintainers.mockResolvedValue(mockMaintainers);
+    const result = await userRepository.getExternalMaintainers();
+    expect(userDao.getExternalMaintainers).toHaveBeenCalled();
+    expect(result).toEqual(mockMaintainers);
   });
 });

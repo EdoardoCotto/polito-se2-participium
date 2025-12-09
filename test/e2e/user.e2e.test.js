@@ -105,7 +105,10 @@ describe('User API End-to-End Tests', () => {
       password: 'Password123!',
       type: 'urban_planner'
     });
+<<<<<<< HEAD
     // Allow 500 in CI when DB constraint triggers unexpectedly
+=======
+>>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     expect([201, 409, 400, 500]).toContain(createRes.statusCode);
     let createdId;
     if (createRes.statusCode === 201) {

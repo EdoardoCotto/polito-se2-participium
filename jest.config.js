@@ -16,6 +16,11 @@ module.exports = {
     '!server/db/**',
     '!server/index.js',
     '!server/swagger.js',
+    '!server/routes/**',
+    'client/**/*.{js,jsx}',
+    '!client/**/*.test.{js,jsx}',
+    '!client/src/main.jsx',
+    '!client/cypress/**',
   ],
   projects: [
     {
@@ -33,6 +38,22 @@ module.exports = {
       roots: ['<rootDir>/test/e2e'],
       testMatch: ['<rootDir>/test/e2e/**/*.test.js'],
       // No sqlite3 mapping here: use real sqlite3
+    },
+    {
+      displayName: 'client',
+      testEnvironment: 'jsdom',
+      clearMocks: true,
+      resetMocks: true,
+      restoreMocks: true,
+      resetModules: true,
+      roots: ['<rootDir>/test/client'],
+      testMatch: ['<rootDir>/test/client/**/*.test.{js,jsx}'],
+      transform: {
+        '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
+      },
+      moduleNameMapper: {
+        '\\.(css|less|scss|sass)$': '<rootDir>/__mock__/styleMock.js',
+      },
     },
   ],
 };
