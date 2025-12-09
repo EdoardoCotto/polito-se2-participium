@@ -597,6 +597,53 @@ async function getCategories() {
   return await response.json();
 }
 
+/**
+ * Create Comment
+ * Adds an internal comment to a report
+ * Requires authentication and internal staff or maintainer role
+ * @param {number} reportId - The ID of the report to comment on
+ * @param {string} comment - The comment text
+ * @returns {Promise<Object>} - Created comment object with id, reportId, userId, comment, createdAt
+ * @throws {Error} - If creation fails (validation error, unauthorized, forbidden, not found, etc.)
+ */
+const createComment = async (reportId, comment) => {
+  const response = await fetch(`${SERVER_URL}/comment/${reportId}/comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ comment }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to create comment');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Comments
+ * Retrieves all internal comments for a report
+ * Requires authentication and technical office staff role
+ * @param {number} reportId - The ID of the report to get comments for
+ * @returns {Promise<Array>} - Array of comment objects with id, reportId, userId, comment, createdAt
+ * @throws {Error} - If request fails (unauthorized, forbidden, not found, etc.)
+ */
+const getComments = async (reportId) => {
+  const response = await fetch(`${SERVER_URL}/comment/${reportId}/comments`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get comments');
+  }
+
+  return await response.json();
+};
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -624,6 +671,10 @@ const API = {
   reviewReport,
   assignReportToExternalMaintainer,
   updateMaintainerStatus,
+
+  // Comment management
+  createComment,
+  getComments,
 
   // Constants
   getCategories,
