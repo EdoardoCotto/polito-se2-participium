@@ -16,6 +16,7 @@ module.exports = {
     '!server/db/**',
     '!server/index.js',
     '!server/swagger.js',
+    '!server/routes/**',
     'client/**/*.{js,jsx}',
     '!client/**/*.test.{js,jsx}',
     '!client/src/main.jsx',

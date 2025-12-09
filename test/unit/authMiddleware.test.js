@@ -3,7 +3,8 @@ const {
   isAdmin,
   isMunicipal_public_relations_officer,
   isTechnicalOfficeStaff,
-  isExternalMaintainer
+  isExternalMaintainer,
+  isInternalStaffOrMaintainer
 } = require('../../server/middlewares/authMiddleware');
 const UnauthorizedError = require('../../server/errors/UnauthorizedError');
 
@@ -153,6 +154,56 @@ describe('authMiddleware', () => {
       isExternalMaintainer(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({ error: 'Access forbidden: external maintainer only' });
+    });
+  });
+
+  describe('isInternalStaffOrMaintainer', () => {
+    it('should call next() if user is authenticated and is technical office staff', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'urban_planner' };
+
+      isInternalStaffOrMaintainer(req, res, next);
+
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('should call next() if user is authenticated and is external_maintainer', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'external_maintainer' };
+
+      isInternalStaffOrMaintainer(req, res, next);
+
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('should call next() if user is authenticated and is external_mantainer (typo version)', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'external_mantainer' };
+
+      isInternalStaffOrMaintainer(req, res, next);
+
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('should call next() with UnauthorizedError if user is authenticated but not authorized', () => {
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { type: 'citizen' };
+
+      isInternalStaffOrMaintainer(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+      const error = next.mock.calls[0][0];
+      expect(error.message).toBe('Access forbidden: technical office staff or external maintainer only');
+    });
+
+    it('should call next() with UnauthorizedError if user is not authenticated', () => {
+      req.isAuthenticated.mockReturnValue(false);
+
+      isInternalStaffOrMaintainer(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+      const error = next.mock.calls[0][0];
+      expect(error.message).toBe('User not authenticated');
     });
   });
 });

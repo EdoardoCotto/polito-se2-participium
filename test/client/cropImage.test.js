@@ -154,6 +154,22 @@ describe('cropImage utilities', () => {
       await expect(getCroppedImg(imageSrc, pixelCrop)).rejects.toThrow('Failed to load image');
     });
 
+    it('should handle image loading error without message', async () => {
+      global.Image = jest.fn(() => ({
+        addEventListener: jest.fn((event, handler) => {
+          if (event === 'error') {
+            setTimeout(() => handler({}), 0);
+          }
+        }),
+        src: '',
+      }));
+
+      const imageSrc = 'invalid-image-src';
+      const pixelCrop = { x: 0, y: 0, width: 100, height: 100 };
+
+      await expect(getCroppedImg(imageSrc, pixelCrop)).rejects.toThrow('Failed to load image: Unknown error');
+    });
+
     it('should set image src correctly', async () => {
       const imageSrc = 'data:image/png;base64,testdata';
       const pixelCrop = { x: 0, y: 0, width: 100, height: 100 };
