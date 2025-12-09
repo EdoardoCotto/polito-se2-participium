@@ -323,4 +323,82 @@ describe("reportDao", () => {
     expect(mockDb.run).toHaveBeenCalled();
     restore();
   });
+
+  test("assignReportToExternalMaintainer() should reject on update error", async () => {
+    const { dao, mockDb, restore } = withDao({ runImpl: (_s, _p, cb) => cb.call({}, new Error("Update fail")) });
+    await expect(dao.assignReportToExternalMaintainer(1, 5)).rejects.toThrow("Update fail");
+    expect(mockDb.run).toHaveBeenCalled();
+    restore();
+  });
+
+  test("assignReportToExternalMaintainer() should return null if no row updated", async () => {
+    const { dao, mockDb, restore } = withDao({ runImpl: (_s, _p, cb) => cb.call({ changes: 0 }, null) });
+    const result = await dao.assignReportToExternalMaintainer(999, 5);
+    expect(result).toBeNull();
+    expect(mockDb.run).toHaveBeenCalled();
+    restore();
+  });
+
+  test("assignReportToExternalMaintainer() should reject on select error after update", async () => {
+    const { dao, mockDb, restore } = withDao({
+      runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
+      getImpl: (_s, _p, cb) => cb(new Error("Select fail")),
+    });
+    await expect(dao.assignReportToExternalMaintainer(1, 5)).rejects.toThrow("Select fail");
+    expect(mockDb.run).toHaveBeenCalled();
+    expect(mockDb.get).toHaveBeenCalled();
+    restore();
+  });
+
+  test("assignReportToExternalMaintainer() should return updated report", async () => {
+    const fakeReport = { id: 1, officerId: 5, status: "assigned" };
+    const { dao, mockDb, restore } = withDao({
+      runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
+      getImpl: (_s, _p, cb) => cb(null, fakeReport),
+    });
+    const result = await dao.assignReportToExternalMaintainer(1, 5);
+    expect(result).toEqual(fakeReport);
+    expect(mockDb.run).toHaveBeenCalled();
+    expect(mockDb.get).toHaveBeenCalled();
+    restore();
+  });
+
+  test("updateReportStatusByOfficer() should reject on update error", async () => {
+    const { dao, mockDb, restore } = withDao({ runImpl: (_s, _p, cb) => cb.call({}, new Error("Update fail")) });
+    await expect(dao.updateReportStatusByOfficer(1, 5, "progress")).rejects.toThrow("Update fail");
+    expect(mockDb.run).toHaveBeenCalled();
+    restore();
+  });
+
+  test("updateReportStatusByOfficer() should return null if no row updated", async () => {
+    const { dao, mockDb, restore } = withDao({ runImpl: (_s, _p, cb) => cb.call({ changes: 0 }, null) });
+    const result = await dao.updateReportStatusByOfficer(999, 5, "progress");
+    expect(result).toBeNull();
+    expect(mockDb.run).toHaveBeenCalled();
+    restore();
+  });
+
+  test("updateReportStatusByOfficer() should reject on select error after update", async () => {
+    const { dao, mockDb, restore } = withDao({
+      runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
+      getImpl: (_s, _p, cb) => cb(new Error("Select fail")),
+    });
+    await expect(dao.updateReportStatusByOfficer(1, 5, "progress")).rejects.toThrow("Select fail");
+    expect(mockDb.run).toHaveBeenCalled();
+    expect(mockDb.get).toHaveBeenCalled();
+    restore();
+  });
+
+  test("updateReportStatusByOfficer() should return updated report", async () => {
+    const fakeReport = { id: 1, officerId: 5, status: "progress" };
+    const { dao, mockDb, restore } = withDao({
+      runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
+      getImpl: (_s, _p, cb) => cb(null, fakeReport),
+    });
+    const result = await dao.updateReportStatusByOfficer(1, 5, "progress");
+    expect(result).toEqual(fakeReport);
+    expect(mockDb.run).toHaveBeenCalled();
+    expect(mockDb.get).toHaveBeenCalled();
+    restore();
+  });
 });

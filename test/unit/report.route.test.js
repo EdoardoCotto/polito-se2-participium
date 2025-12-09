@@ -7,6 +7,7 @@ jest.mock('../../server/middlewares/authMiddleware', () => ({
   isAdmin: (_req, _res, next) => next(),
   isMunicipal_public_relations_officer: (req, _res, next) => { req.user = { id: 2, type: 'municipal_public_relations_officer' }; next(); },
   isTechnicalOfficeStaff: (req, _res, next) => { req.user = { id: 3, type: 'urban_planner' }; next(); },
+  isExternalMaintainer: (req, _res, next) => { req.user = { id: 4, type: 'external_maintainer' }; next(); },
   // Needed by userRoutes: provide a no-op middleware so route mounting succeeds.
   updateProfile: (_req, _res, next) => next(),
 }));
@@ -35,6 +36,20 @@ jest.mock('../../server/controller/reportController', () => ({
       return res.status(400).json({ error: 'Status is required' });
     }
     return res.json({ id: Number.parseInt(req.params.id, 10), status });
+  },
+  assignReportToExternalMaintainer: (req, res) => {
+    const { externalMaintainerId } = req.body || {};
+    if (!externalMaintainerId) {
+      return res.status(400).json({ error: 'External maintainer ID is required' });
+    }
+    return res.status(200).json({ id: Number.parseInt(req.params.id, 10), externalMaintainerId });
+  },
+  updateMaintainerStatus: (req, res) => {
+    const { status } = req.body || {};
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+    return res.status(200).json({ id: Number.parseInt(req.params.id, 10), status });
   }
 }));
 

@@ -11,6 +11,7 @@ const { TECHNICAL_OFFICER_ROLES } = require("../../server/constants/roles");
 const { REPORT_CATEGORIES } = require("../../server/constants/reportCategories");
 
 jest.mock("../../server/dao/reportDao");
+jest.mock("../../server/dao/userDao");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -573,5 +574,216 @@ describe("reportRepository.getCitizenReports", () => {
     const res = await reportRepository.getCitizenReports({});
     expect(reportDao.getCitizenReports).toHaveBeenCalledWith({});
     expect(res[0]).toMatchObject({ id: 101, userId: 7, photos: ["a.jpg"] });
+  });
+});
+
+// ----------------------------------------------------
+// assignReportToExternalMaintainer
+// ----------------------------------------------------
+describe("reportRepository.assignReportToExternalMaintainer", () => {
+  test("throws if reportId is missing", async () => {
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(null, 5, 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if reportId is not an integer", async () => {
+    await expect(
+      reportRepository.assignReportToExternalMaintainer("abc", 5, 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if externalMaintainerId is missing", async () => {
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, null, 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if externalMaintainerId is not an integer", async () => {
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, "abc", 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if report not found", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue(null);
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  test("throws if report is not in assigned status", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.PENDING,
+      officerId: 1,
+    });
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if report is not assigned to the requesting officer", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.ASSIGNED,
+      officerId: 999,
+    });
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(/You can only assign reports that are assigned to you/);
+  });
+
+  test("throws if external maintainer not found", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.ASSIGNED,
+      officerId: 1,
+    });
+    userDao.getUserById = jest.fn().mockResolvedValue(null);
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  test("throws if user is not an external maintainer", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.ASSIGNED,
+      officerId: 1,
+    });
+    userDao.getUserById = jest.fn().mockResolvedValue({
+      id: 5,
+      type: "citizen",
+    });
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if dao returns null", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.ASSIGNED,
+      officerId: 1,
+    });
+    userDao.getUserById = jest.fn().mockResolvedValue({
+      id: 5,
+      type: "external_mantainer",
+    });
+    reportDao.assignReportToExternalMaintainer = jest.fn().mockResolvedValue(null);
+    await expect(
+      reportRepository.assignReportToExternalMaintainer(10, 5, 1)
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  test("success - returns mapped report", async () => {
+    reportDao.getReportById = jest.fn().mockResolvedValue({
+      reportId: 10,
+      status: REPORT_STATUSES.ASSIGNED,
+      officerId: 1,
+    });
+    userDao.getUserById = jest.fn().mockResolvedValue({
+      id: 5,
+      type: "external_mantainer",
+    });
+    const updatedRow = {
+      reportId: 10,
+      userId: 1,
+      latitude: 45,
+      longitude: 7,
+      title: "T",
+      description: "D",
+      category: REPORT_CATEGORIES[0],
+      status: REPORT_STATUSES.ASSIGNED,
+      rejection_reason: null,
+      technical_office: null,
+      created_at: "2024-01-01",
+      updated_at: "2024-01-02",
+      image_path1: null,
+      image_path2: null,
+      image_path3: null,
+      userUsername: "u",
+      userName: "n",
+      userSurname: "s",
+      userEmail: "e@test.com",
+      officerId: 5,
+    };
+    reportDao.assignReportToExternalMaintainer = jest.fn().mockResolvedValue(updatedRow);
+    const result = await reportRepository.assignReportToExternalMaintainer(10, 5, 1);
+    expect(result).toMatchObject({ id: 10 });
+  });
+});
+
+// ----------------------------------------------------
+// updateMaintainerStatus
+// ----------------------------------------------------
+describe("reportRepository.updateMaintainerStatus", () => {
+  test("throws if reportId is invalid", async () => {
+    await expect(
+      reportRepository.updateMaintainerStatus("abc", 5, "progress")
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if maintainerId is missing", async () => {
+    await expect(
+      reportRepository.updateMaintainerStatus(10, null, "progress")
+    ).rejects.toThrow(/Maintainer ID is required/);
+  });
+
+  test("throws if status is not a string", async () => {
+    await expect(
+      reportRepository.updateMaintainerStatus(10, 5, null)
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if status is not allowed", async () => {
+    await expect(
+      reportRepository.updateMaintainerStatus(10, 5, "pending")
+    ).rejects.toThrow(BadRequestError);
+  });
+
+  test("throws if dao returns null and report not found", async () => {
+    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(null);
+    reportDao.getReportById = jest.fn().mockResolvedValue(null);
+    await expect(
+      reportRepository.updateMaintainerStatus(10, 5, "progress")
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  test("throws if dao returns null and report exists (not assigned to maintainer)", async () => {
+    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(null);
+    reportDao.getReportById = jest.fn().mockResolvedValue({ reportId: 10 });
+    await expect(
+      reportRepository.updateMaintainerStatus(10, 5, "progress")
+    ).rejects.toThrow(/You are not assigned to this report/);
+  });
+
+  test("success - returns mapped report", async () => {
+    const updatedRow = {
+      reportId: 10,
+      userId: 1,
+      latitude: 45,
+      longitude: 7,
+      title: "T",
+      description: "D",
+      category: REPORT_CATEGORIES[0],
+      status: REPORT_STATUSES.PROGRESS,
+      rejection_reason: null,
+      technical_office: null,
+      created_at: "2024-01-01",
+      updated_at: "2024-01-02",
+      image_path1: null,
+      image_path2: null,
+      image_path3: null,
+      userUsername: "u",
+      userName: "n",
+      userSurname: "s",
+      userEmail: "e@test.com",
+      officerId: 5,
+    };
+    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(updatedRow);
+    const result = await reportRepository.updateMaintainerStatus(10, 5, "progress");
+    expect(result).toMatchObject({ id: 10, status: REPORT_STATUSES.PROGRESS });
   });
 });
