@@ -26,7 +26,7 @@ describe('userController', () => {
 
   // getExternalMaintainers
   it('getExternalMaintainers -> 200 OK', async () => {
-    const maintainers = [{ id: 1, type: 'external_mantainer' }];
+    const maintainers = [{ id: 1, type: 'external_maintainer' }];
     userRepository.getExternalMaintainers.mockResolvedValueOnce(maintainers);
     await userController.getExternalMaintainers({}, res);
     expect(res.status).toHaveBeenCalledWith(200);

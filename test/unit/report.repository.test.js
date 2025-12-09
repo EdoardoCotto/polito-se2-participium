@@ -669,7 +669,7 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
         assignReportToExternalMaintainer: jest.fn().mockResolvedValueOnce(null),
       }));
       jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_mantainer' }),
+        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_maintainer' }),
       }));
       const repo = require('../../server/repository/reportRepository');
       return expect(repo.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/Report not found/i);
@@ -685,7 +685,7 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
         assignReportToExternalMaintainer: jest.fn().mockResolvedValueOnce(daoRow),
       }));
       jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_mantainer' }),
+        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_maintainer' }),
       }));
       const repo2 = require('../../server/repository/reportRepository');
       const res = await repo2.assignReportToExternalMaintainer(1, 2, 3);
@@ -781,7 +781,7 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
     });
     userDao.getUserById = jest.fn().mockResolvedValue({
       id: 5,
-      type: "external_mantainer",
+      type: "external_maintainer",
     });
     reportDao.assignReportToExternalMaintainer = jest.fn().mockResolvedValue(null);
     await expect(
@@ -797,7 +797,7 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
     });
     userDao.getUserById = jest.fn().mockResolvedValue({
       id: 5,
-      type: "external_mantainer",
+      type: "external_maintainer",
     });
     const updatedRow = {
       reportId: 10,

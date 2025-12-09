@@ -223,7 +223,7 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
  *                     example: "Rossi"
  *                   type:
  *                     type: string
- *                     example: "external_mantainer"
+ *                     example: "external_maintainer"
  *       401:
  *         description: Unauthorized
  *         content:

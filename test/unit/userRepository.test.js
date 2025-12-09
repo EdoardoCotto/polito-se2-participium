@@ -228,7 +228,7 @@ describe('userRepository.getExternalMaintainers', () => {
   afterEach(() => jest.clearAllMocks());
 
   test('returns maintainers list from DAO', async () => {
-    const list = [{ id: 5, type: 'external_mantainer' }];
+    const list = [{ id: 5, type: 'external_maintainer' }];
     userDao.getExternalMaintainers = jest.fn().mockResolvedValueOnce(list);
     const res = await userRepository.getExternalMaintainers();
     expect(userDao.getExternalMaintainers).toHaveBeenCalledTimes(1);

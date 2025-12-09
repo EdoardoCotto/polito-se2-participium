@@ -211,7 +211,7 @@ exports.getExternalMaintainers = () => {
     const sql = `
       SELECT id, username, email, name, surname, type
       FROM Users
-      WHERE type = 'external_mantainer'
+      WHERE type = 'external_maintainer'
       ORDER BY surname ASC, name ASC, username ASC
     `;
     db.all(sql, [], (err, rows) => {

@@ -360,11 +360,11 @@ describe('userDao Functions', () => {
   describe('getExternalMaintainers', () => {
     test('returns maintainers list', async () => {
       await withSqliteMock(
-        { allImpl: (_s, _p, cb) => cb(null, [{ id: 1, type: 'external_mantainer' }]) },
+        { allImpl: (_s, _p, cb) => cb(null, [{ id: 1, type: 'external_maintainer' }]) },
         async (d) => {
           const res = await d.getExternalMaintainers();
           expect(Array.isArray(res)).toBe(true);
-          expect(res[0].type).toBe('external_mantainer');
+          expect(res[0].type).toBe('external_maintainer');
         }
       );
     });
@@ -559,11 +559,11 @@ describe('userDao Functions', () => {
     test('returns list of external maintainers', async () => {
       await withSqliteMock(
         {
-          allImpl: (_s, _p, cb) => cb(null, [{ id: 1, username: 'm1', type: 'external_mantainer' }]),
+          allImpl: (_s, _p, cb) => cb(null, [{ id: 1, username: 'm1', type: 'external_maintainer' }]),
         },
         async (d) => {
           const result = await d.getExternalMaintainers();
-          expect(result).toEqual([{ id: 1, username: 'm1', type: 'external_mantainer' }]);
+          expect(result).toEqual([{ id: 1, username: 'm1', type: 'external_maintainer' }]);
         }
       );
     });

@@ -345,7 +345,7 @@ exports.updateMaintainerStatus = async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Nota: Il middleware delle rotte dovrebbe già verificare che l'utente sia un 'external_mantainer'
+    // Nota: Il middleware delle rotte dovrebbe già verificare che l'utente sia un 'external_maintainer'
     // Ma per robustezza possiamo fidarci del fatto che il Repository usa req.user.id come filtro nella query SQL.
 
     const reportId = Number.parseInt(req.params.id, 10);

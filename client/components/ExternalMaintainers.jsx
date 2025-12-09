@@ -28,7 +28,7 @@ export default function ExternalMaintainer({ user }) {
 
   // Available status options (based on backend API)
   const statusOptions = [
-    { value: 'in_progress', label: 'In Progress', icon: 'bi-hourglass-split', variant: 'primary', description: 'Work has started on this report' },
+    { value: 'progress', label: 'In Progress', icon: 'bi-hourglass-split', variant: 'primary', description: 'Work has started on this report' },
     { value: 'suspended', label: 'Suspended', icon: 'bi-pause-circle', variant: 'warning', description: 'Work is temporarily paused' },
     { value: 'resolved', label: 'Resolved', icon: 'bi-check-circle', variant: 'success', description: 'Issue has been fixed' },
   ];
@@ -36,7 +36,7 @@ export default function ExternalMaintainer({ user }) {
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
-      'external_mantainer': 'External Maintainer'
+      'external_maintainer': 'External Maintainer'
     };
     return roleMap[type] || type;
   };
@@ -210,7 +210,7 @@ export default function ExternalMaintainer({ user }) {
 
   // Check if status can be updated
   const canUpdateStatus = (report) => {
-    const updatableStatuses = ['assigned', 'in_progress', 'suspended'];
+    const updatableStatuses = ['assigned', 'progress', 'suspended'];
     return updatableStatuses.includes(report.status);
   };
 

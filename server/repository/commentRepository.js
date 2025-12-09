@@ -17,7 +17,7 @@ exports.addComment = async (reportId, authorId, text) => {
   // OPZIONALE: Se vuoi che il manutentore possa commentare SOLO se il report è assegnato a lui:
   /*
   const user = await userDao.getUserById(authorId);
-  if (user.type === 'external_mantainer' && report.officerId !== authorId) {
+  if (user.type === 'external_maintainer' && report.officerId !== authorId) {
      throw new UnauthorizedError('You can only comment on reports assigned to you');
   }
   */

@@ -349,7 +349,7 @@ exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId
   if (!maintainer) {
     throw new NotFoundError('External maintainer not found');
   }
-  if (maintainer.type !== 'external_mantainer') {
+  if (maintainer.type !== 'external_maintainer') {
     throw new BadRequestError('The specified user is not an external maintainer');
   }
 

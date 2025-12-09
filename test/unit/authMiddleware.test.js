@@ -203,9 +203,9 @@ describe('authMiddleware', () => {
       expect(next).toHaveBeenCalledWith();
     });
 
-    it('should call next() if user is authenticated and is external_mantainer (typo version)', () => {
+    it('should call next() if user is authenticated and is external_maintainer (typo version)', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'external_mantainer' };
+      req.user = { type: 'external_maintainer' };
 
       isInternalStaffOrMaintainer(req, res, next);
 

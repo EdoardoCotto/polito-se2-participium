@@ -140,7 +140,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
       setLoadingMaintainers(false);
     }
   };
-
+  console.log('external :', externalMaintainers);
   // Close assign modal
   const handleCloseAssignModal = () => {
     setShowAssignModal(false);
