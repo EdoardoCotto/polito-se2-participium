@@ -31,6 +31,7 @@ jest.mock('../../server/controller/reportController', () => ({
   getApprovedReports: (_req, res) => res.json([]),
   getCitizenReports: (_req, res) => res.json([]),
   getAssignedReports: (_req, res) => res.json([]),
+  getExternalAssignedReports: (_req, res) => res.json([]),
   getReportById: (req, res) => res.json({ id: Number.parseInt(req.params.id, 10) }),
   reviewReport: (_req, res) => res.json({ ok: true }),
   assignReportToExternalMaintainer: (_req, res) => res.status(200).json({ ok: true }),
