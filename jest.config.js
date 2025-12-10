@@ -5,22 +5,27 @@ const common = {
   restoreMocks: true,
   transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
   resetModules: true,
+  collectCoverageFrom: [
+    'server/**/*.js',
+    '!server/db/**/*.js',
+    '!server/index.js',
+    '!server/swagger.js',
+    '!server/routes/**/*.js',
+    '!**/__mock__/**',
+  ],
 };
 
 module.exports = {
   collectCoverage: true,
   coverageReporters: ["text", "text-summary", "lcov", "clover"],
   coverageDirectory: '<rootDir>/coverage',
-  collectCoverageFrom: [
-    'server/**/*.js',
-    '!server/db/**',
-    '!server/index.js',
-    '!server/swagger.js',
-    '!server/routes/**',
-    'client/**/*.{js,jsx}',
-    '!client/**/*.test.{js,jsx}',
-    '!client/src/main.jsx',
-    '!client/cypress/**',
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/__mock__/',
+    '/server/db/',
+    '/server/index.js',
+    '/server/swagger.js',
+    '/server/routes/',
   ],
   projects: [
     {
@@ -46,6 +51,14 @@ module.exports = {
       resetMocks: true,
       restoreMocks: true,
       resetModules: true,
+      collectCoverageFrom: [
+        'client/**/*.{js,jsx}',
+        '!client/**/*.test.{js,jsx}',
+        '!client/main.jsx',
+        '!client/cypress/**',
+        '!client/components/**/*.jsx',
+        '!client/App.jsx',
+      ],
       roots: ['<rootDir>/test/client'],
       testMatch: ['<rootDir>/test/client/**/*.test.{js,jsx}'],
       transform: {
