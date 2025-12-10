@@ -19,26 +19,7 @@ const unique = (() => {
 const withSqliteMock = async (impls, fn) => {
   const { getImpl, runImpl, allImpl } = impls || {};
   jest.resetModules();
-  // Provide an isolated bcrypt mock instance per invocation
-  const localBcrypt = {
-    compare: jest.fn((pw, hash, cb) => cb(null, false)),
-    // Support both callback and promise styles
-    genSalt: jest.fn((rounds, cb) => {
-      if (typeof cb === 'function') {
-        cb(null, 'mock_salt');
-        return undefined;
-      }
-      return Promise.resolve('mock_salt');
-    }),
-    hash: jest.fn((password, salt, cb) => {
-      if (typeof cb === 'function') {
-        cb(null, 'mock_hash');
-        return undefined;
-      }
-      return Promise.resolve('mock_hash');
-    }),
-  };
-  jest.doMock('bcrypt', () => localBcrypt, { virtual: true });
+  // bcrypt is mapped to __mock__/bcrypt.js via jest.config
 
     const defaultGet = (_sql, _params, cb2) => cb2(null, undefined);
     const defaultRun = (_sql, _params, cb2) => cb2.call({ lastID: 100, changes: 1 }, null);
@@ -57,16 +38,21 @@ const withSqliteMock = async (impls, fn) => {
       ...base,
       verbose: () => base,
     };
-  }, { virtual: true });
+  });
 
   let localDao;
+  let localBcrypt;
   jest.isolateModules(() => {
     // eslint-disable-next-line global-require
     localDao = require('../../server/dao/userDao');
+    // Ensure we expose the SAME bcrypt instance used by the isolated DAO
+    // eslint-disable-next-line global-require
+    localBcrypt = require('bcrypt');
   });
 
   try {
-    await fn(localDao);
+    // Pass through the isolated bcrypt mock instance actually used by DAO
+    await fn(localDao, { bcrypt: localBcrypt });
   } finally {
     jest.resetModules();
   }
@@ -89,13 +75,13 @@ describe('userDao Functions', () => {
           runImpl: (_s, _p, cb) => cb.call({ lastID: 11 }, null),
           getImpl: (_s, _p, cb) => cb(null, { id: 11, username, name: 'John', surname: 'Doe', type: 'citizen', password: 'stored_hash' }),
         },
-        async (d) => {
-          const bcryptMod = require('bcrypt');
+        async (d, mods) => {
+          const bcryptMod = mods.bcrypt;
           bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, true));
           const created = await d.createUser({ username, email, name: 'John', surname: 'Doe', password: 'password123', type: 'citizen' });
           const result = await d.getUser(username, 'password123');
           expect(result).toEqual({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
-          expect(require('bcrypt').compare).toHaveBeenCalled();
+          expect(mods.bcrypt.compare).toHaveBeenCalled();
         }
       );
     });
@@ -115,8 +101,8 @@ describe('userDao Functions', () => {
       const email = `${unique('e')}@example.com`;
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, name: 'A', surname: 'B', type: 'citizen', password: 'stored_hash' }) },
-        async (d) => {
-          const bcryptMod = require('bcrypt');
+        async (d, mods) => {
+          const bcryptMod = mods.bcrypt;
           bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, false));
           const result = await d.getUser(username, 'wrongpassword');
           expect(result).toBe(false);
@@ -219,10 +205,10 @@ describe('userDao Functions', () => {
 
       await withSqliteMock(
           { runImpl: (_s, _p, cb) => cb.call({ lastID: 201 }, null) },
-        async (d) => {
+        async (d, mods) => {
           const result = await d.createUser(newUser);
-          expect(require('bcrypt').genSalt).toHaveBeenCalled();
-          expect(require('bcrypt').hash).toHaveBeenCalledWith('password123', 'mock_salt');
+          expect(mods.bcrypt.genSalt).toHaveBeenCalled();
+          expect(mods.bcrypt.hash).toHaveBeenCalledWith('password123', 'mock_salt');
           expect(result).toEqual({ id: 201, username: newUser.username, email: newUser.email, name: 'Jane', surname: 'Smith', type: 'citizen' });
         }
       );
