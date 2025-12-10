@@ -38,13 +38,13 @@ const mapReportRow = (row) => {
       surname: row.userSurname,
       email: row.userEmail,
     },
-    externalMaintainer: {
+    externalMaintainer: row.maintainerId ? {
       id: row.maintainerId,
       username: row.maintainerUsername,
       name: row.maintainerName,
       surname: row.maintainerSurname,
       email: row.maintainerEmail,
-    }
+    } : null,
   };
 };
 
