@@ -14,13 +14,6 @@ exports.addComment = async (reportId, authorId, text) => {
   const report = await reportDao.getReportById(reportId);
   if (!report) throw new NotFoundError('Report not found');
 
-  // OPZIONALE: Se vuoi che il manutentore possa commentare SOLO se il report è assegnato a lui:
-  /*
-  const user = await userDao.getUserById(authorId);
-  if (user.type === 'external_maintainer' && report.officerId !== authorId) {
-     throw new UnauthorizedError('You can only comment on reports assigned to you');
-  }
-  */
   // Per ora assumiamo che se hai accesso alla rotta, puoi commentare per coordinazione.
 
   const newComment = await commentDao.createComment(reportId, authorId, text.trim());
