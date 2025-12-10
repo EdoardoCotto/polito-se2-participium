@@ -144,6 +144,7 @@ describe("reportRepository.createReport", () => {
       created_at: "2024-01-01",
       updated_at: "2024-01-02",
       externalMaintainer: null,
+      officer: null,
       photos: ["p1.jpg"],
       user: {
         id: 1,
