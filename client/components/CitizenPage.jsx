@@ -312,7 +312,7 @@ export default function CitizenPage({ user }) {
     const colors = {
       'pending': 'warning',
       'approved': 'success',
-      'in_progress': 'info',
+      'progress': 'info',
       'resolved': 'primary',
       'rejected': 'danger'
     };
@@ -979,7 +979,7 @@ export default function CitizenPage({ user }) {
                     <i className="bi bi-images me-2"></i>Photos ({selectedReportDetail.photoUrls.length})
                   </h6>
                   <Carousel interval={null} className="report-photo-carousel">
-                    {selectedReportDetail.photoUrls.map((photoUrl) => (
+                    {selectedReportDetail.photoUrls.map((photoUrl, index) => (
                       <Carousel.Item key={photoUrl}>
                         <div className="report-photo-container">
                           <img

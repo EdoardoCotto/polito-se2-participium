@@ -3510,3 +3510,290 @@
   background: #f8f9fa;
 }
 
+/* ============================================
+   MESSAGES/COMMENTS MODAL STYLES
+   ============================================ */
+
+/* Messages Container Scrollbar Styling */
+.messages-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(203, 213, 225, 0.15);
+  border-radius: 10px;
+  margin: 10px 0;
+  border: 1px solid rgba(203, 213, 225, 0.2);
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5e7bb3 0%, #7c93c3 100%);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(248, 250, 252, 0.5);
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #4a6fa5 0%, #5e7bb3 100%);
+  box-shadow: 0 2px 8px rgba(94, 123, 179, 0.3);
+}
+
+/* Message Slide-In Animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Message Bubble Hover Effect */
+.message-bubble:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Message Bubble Active Effect */
+.message-bubble:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Message Input Focus Effects */
+.message-input:focus {
+  border-color: #5e7bb3 !important;
+  box-shadow: 0 0 0 4px rgba(94, 123, 179, 0.15) !important;
+  background-color: #ffffff !important;
+}
+
+.message-input:hover:not(:focus):not(:disabled) {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+}
+
+/* Send Button Hover Effects */
+.send-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(94, 123, 179, 0.4) !important;
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0) scale(1);
+}
+
+.send-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Chat Icon Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Municipality-specific Message Styles */
+.message-bubble[style*="5e7bb3"] {
+  box-shadow: 0 4px 16px rgba(94, 123, 179, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.message-bubble[style*="5e7bb3"]:hover {
+  box-shadow: 0 8px 24px rgba(94, 123, 179, 0.4) !important;
+}
+
+/* Empty State Icon Animation */
+@keyframes messageIconFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+}
+
+/* Error Alert Styles in Messages */
+.messages-container .alert {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Loading Spinner in Messages */
+.messages-container .spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Message Timestamp Fade */
+.message-bubble > div:last-child {
+  transition: opacity 0.2s ease;
+}
+
+.message-bubble:hover > div:last-child {
+  opacity: 1 !important;
+}
+
+/* Message Author Badge Hover */
+.message-bubble .badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Input Character Counter (if needed in future) */
+.message-input-counter {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Message Container Auto-Scroll Indicator */
+.messages-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to top, rgba(248, 250, 252, 1), transparent);
+  pointer-events: none;
+}
+
+/* Responsive Message Styles */
+@media (max-width: 768px) {
+  .message-bubble {
+    max-width: 85% !important;
+  }
+  
+  .send-button {
+    min-width: 70px !important;
+    padding: 0.65rem 1.2rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .message-bubble {
+    max-width: 90% !important;
+    padding: 0.8rem 1rem !important;
+  }
+  
+  .send-button {
+    min-width: 60px !important;
+    height: 46px !important;
+    padding: 0.6rem 1rem !important;
+  }
+  
+  .message-input {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Typing Indicator (for future enhancement) */
+@keyframes typingDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 10px 15px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  animation: typingDot 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Message Read Receipt (for future enhancement) */
+.message-read-receipt {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  color: #5e7bb3;
+  font-size: 0.75rem;
+}
+
+.message-read-receipt.read {
+  color: #28a745;
+}
+
+/* Message Attachment Preview (for future enhancement) */
+.message-attachment {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.message-attachment:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(4px);
+}
+
+/* Message Context Menu (for future enhancement) */
+.message-context-menu {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 1000;
+  animation: slideIn 0.2s ease-out;
+}
+
+.message-context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.message-context-menu button:hover {
+  background: #f1f5f9;
+}
+

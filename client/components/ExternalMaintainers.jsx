@@ -36,7 +36,7 @@ export default function ExternalMaintainer({ user }) {
 
   // Available status options (based on backend API)
   const statusOptions = [
-    { value: 'in_progress', label: 'In Progress', icon: 'bi-hourglass-split', variant: 'primary', description: 'Work has started on this report' },
+    { value: 'progress', label: 'In Progress', icon: 'bi-hourglass-split', variant: 'primary', description: 'Work has started on this report' },
     { value: 'suspended', label: 'Suspended', icon: 'bi-pause-circle', variant: 'warning', description: 'Work is temporarily paused' },
     { value: 'resolved', label: 'Resolved', icon: 'bi-check-circle', variant: 'success', description: 'Issue has been fixed' },
   ];
@@ -55,7 +55,7 @@ export default function ExternalMaintainer({ user }) {
       'pending': 'warning',
       'accepted': 'info',
       'assigned': 'primary',
-      'in_progress': 'primary',
+      'progress': 'primary',
       'resolved': 'success',
       'rejected': 'danger',
       'suspended': 'warning'
@@ -69,7 +69,7 @@ export default function ExternalMaintainer({ user }) {
       'pending': 'Pending',
       'accepted': 'Accepted',
       'assigned': 'Assigned',
-      'in_progress': 'In Progress',
+      'progress': 'In Progress',
       'resolved': 'Resolved',
       'rejected': 'Rejected',
       'suspended': 'Suspended'
@@ -671,22 +671,22 @@ export default function ExternalMaintainer({ user }) {
                                   transition: 'all 0.3s ease',
                                   padding: '0.5rem 0.875rem',
                                   fontWeight: '600',
-                                  background: 'linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%)',
+                                  background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)',
                                   border: 'none',
                                   borderRadius: '0.5rem',
-                                  boxShadow: '0 2px 6px rgba(8, 145, 178, 0.25)',
+                                  boxShadow: '0 2px 6px rgba(94, 123, 179, 0.25)',
                                   color: 'white'
                                 }}
                                 onClick={(e) => handleOpenPhotos(report, e)}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = 'linear-gradient(135deg, #0891b2 0%, #06748c 100%)';
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #4a6fa5 0%, #3d5c8f 100%)';
                                   e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(8, 145, 178, 0.4)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = 'linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%)';
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)';
                                   e.currentTarget.style.transform = 'translateY(0)';
-                                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(8, 145, 178, 0.25)';
+                                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(94, 123, 179, 0.25)';
                                 }}
                               >
                                 <i className="bi bi-images me-2"></i>
@@ -739,7 +739,7 @@ export default function ExternalMaintainer({ user }) {
                           {/* Comments/Messages Button */}
                           <div className="mb-3">
                             <Button
-                              variant="outline-info"
+                              variant="outline-primary"
                               size="sm"
                               onClick={(e) => handleOpenCommentsModal(report, e)}
                               style={{
@@ -748,21 +748,21 @@ export default function ExternalMaintainer({ user }) {
                                 transition: 'all 0.3s ease',
                                 fontWeight: '600',
                                 padding: '0.5rem 1rem',
-                                border: '2px solid #17a2b8',
-                                color: '#17a2b8',
-                                boxShadow: '0 2px 4px rgba(23, 162, 184, 0.2)'
+                                border: '2px solid #5e7bb3',
+                                color: '#5e7bb3',
+                                boxShadow: '0 2px 4px rgba(94, 123, 179, 0.2)'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)';
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7c93c3 100%)';
                                 e.currentTarget.style.color = 'white';
                                 e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 162, 184, 0.4)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
                               }}
                               onMouseLeave={(e) => {
                                 e.currentTarget.style.background = '';
-                                e.currentTarget.style.color = '#17a2b8';
+                                e.currentTarget.style.color = '#5e7bb3';
                                 e.currentTarget.style.transform = '';
-                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(23, 162, 184, 0.2)';
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(94, 123, 179, 0.2)';
                               }}
                             >
                               <i className="bi bi-chat-dots me-2"></i>Messages
@@ -1026,25 +1026,30 @@ export default function ExternalMaintainer({ user }) {
       {/* Comments/Messages Modal */}
       <Modal show={showCommentsModal} onHide={handleCloseCommentsModal} centered size="lg">
         <Modal.Header closeButton style={{ 
-          background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)', 
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)', 
           color: 'white',
           borderBottom: 'none',
-          padding: '1.5rem'
+          padding: '1.5rem 2rem',
+          boxShadow: '0 4px 12px rgba(94, 123, 179, 0.15)'
         }}>
           <Modal.Title style={{ 
-            fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+            fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
             fontWeight: '700',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            letterSpacing: '-0.02em'
           }}>
-            <i className="bi bi-chat-dots me-2" style={{ fontSize: '1.5rem' }}></i>
+            <i className="bi bi-chat-dots-fill me-3" style={{ 
+              fontSize: '1.6rem',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}></i>
             Messages - {selectedReport?.title}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ 
-          backgroundColor: '#f0f2f5',
+          backgroundColor: '#f8fafc',
           padding: '0',
-          maxHeight: '60vh',
+          maxHeight: '65vh',
           display: 'flex',
           flexDirection: 'column'
         }}>
@@ -1052,25 +1057,48 @@ export default function ExternalMaintainer({ user }) {
           <div style={{ 
             flex: 1,
             overflowY: 'auto',
-            padding: '1.5rem',
+            padding: '1.5rem 2rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem'
-          }}>
+            gap: '1rem',
+            scrollBehavior: 'smooth',
+            background: 'linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%)'
+          }}
+          className="messages-container"
+          >
             {loadingComments ? (
-              <div className="text-center py-4">
-                <Spinner animation="border" style={{ color: '#17a2b8' }} />
-                <p className="mt-2 text-muted">Loading messages...</p>
+              <div className="text-center py-5">
+                <Spinner animation="border" style={{ color: '#5e7bb3', width: '2.5rem', height: '2.5rem' }} />
+                <p className="mt-3 text-muted fw-medium">Loading messages...</p>
               </div>
             ) : commentError && comments.length === 0 ? (
-              <Alert variant="danger" style={{ borderRadius: '0.75rem' }}>
-                <i className="bi bi-exclamation-triangle me-2"></i>
+              <Alert variant="danger" style={{ 
+                borderRadius: '1rem',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+                background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
+              }}>
+                <i className="bi bi-exclamation-triangle-fill me-2"></i>
                 {commentError}
               </Alert>
             ) : comments.length === 0 ? (
-              <div className="text-center py-4">
-                <i className="bi bi-chat" style={{ fontSize: '3rem', color: '#cbd5e1' }}></i>
-                <p className="mt-3 text-muted">No messages yet. Start the conversation!</p>
+              <div className="text-center py-5">
+                <div style={{
+                  background: 'linear-gradient(135deg, #e8f0ff 0%, #d6e5ff 100%)',
+                  borderRadius: '50%',
+                  width: '120px',
+                  height: '120px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
+                }}>
+                  <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
+                </div>
+                <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
+                  No messages yet. Start the conversation!
+                </p>
               </div>
             ) : (
               <>
@@ -1080,21 +1108,39 @@ export default function ExternalMaintainer({ user }) {
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      margin: '1rem 0',
+                      margin: '1.5rem 0',
                       gap: '1rem'
                     }}>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: '#cbd5e1' }}></div>
+                      <div style={{ 
+                        flex: 1, 
+                        height: '2px', 
+                        background: 'linear-gradient(to right, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
+                        borderRadius: '1px'
+                      }}></div>
                       <div style={{
-                        padding: '0.25rem 1rem',
-                        backgroundColor: '#e2e8f0',
-                        borderRadius: '1rem',
-                        fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                        fontWeight: '600',
-                        color: '#475569'
+                        padding: '0.5rem 1.3rem',
+                        background: 'linear-gradient(135deg, #f8fafc 0%, #e8f0ff 100%)',
+                        borderRadius: '2rem',
+                        fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                        fontWeight: '700',
+                        color: '#5e7bb3',
+                        boxShadow: '0 3px 10px rgba(94, 123, 179, 0.15)',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        border: '1px solid rgba(94, 123, 179, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
                       }}>
+                        <i className="bi bi-calendar-check" style={{ fontSize: '1em' }}></i>
                         {formatCommentDate(dayComments[0].created_at)}
                       </div>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: '#cbd5e1' }}></div>
+                      <div style={{ 
+                        flex: 1, 
+                        height: '2px', 
+                        background: 'linear-gradient(to left, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
+                        borderRadius: '1px'
+                      }}></div>
                     </div>
 
                     {/* Messages for this day */}
@@ -1106,47 +1152,84 @@ export default function ExternalMaintainer({ user }) {
                           style={{
                             display: 'flex',
                             justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.75rem',
+                            animation: 'slideIn 0.3s ease-out'
                           }}
+                          className="message-wrapper"
                         >
-                          <div style={{
-                            maxWidth: '70%',
-                            backgroundColor: isOwnMessage ? '#17a2b8' : 'white',
-                            color: isOwnMessage ? 'white' : '#2c3e50',
-                            borderRadius: isOwnMessage ? '1rem 1rem 0.25rem 1rem' : '1rem 1rem 1rem 0.25rem',
-                            padding: '0.75rem 1rem',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                          }}>
+                          <div 
+                            className="message-bubble"
+                            style={{
+                              maxWidth: '75%',
+                              background: isOwnMessage 
+                                ? 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)' 
+                                : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                              color: isOwnMessage ? '#ffffff' : '#495057',
+                              borderRadius: isOwnMessage 
+                                ? '1.5rem 1.5rem 0.4rem 1.5rem' 
+                                : '1.5rem 1.5rem 1.5rem 0.4rem',
+                              padding: '1rem 1.3rem',
+                              boxShadow: isOwnMessage
+                                ? '0 6px 20px rgba(94, 123, 179, 0.35), 0 2px 6px rgba(0, 0, 0, 0.1)'
+                                : '0 3px 15px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06)',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              position: 'relative',
+                              backdropFilter: isOwnMessage ? 'none' : 'blur(10px)',
+                              border: isOwnMessage ? 'none' : '1px solid rgba(203, 213, 225, 0.3)'
+                            }}
+                          >
                             {!isOwnMessage && (
                               <div style={{ 
                                 fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                                fontWeight: '600',
-                                marginBottom: '0.25rem',
-                                opacity: 0.9
+                                fontWeight: '700',
+                                marginBottom: '0.5rem',
+                                color: '#5e7bb3',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.6rem',
+                                paddingBottom: '0.4rem',
+                                borderBottom: '1px solid rgba(94, 123, 179, 0.1)'
                               }}>
-                                {comment.name} {comment.surname}
+                                <i className="bi bi-person-circle" style={{ fontSize: '1.1em', opacity: 0.8 }}></i>
+                                <span>{comment.name} {comment.surname}</span>
                                 <Badge 
-                                  bg={comment.authorRole === 'external_maintainer' ? 'info' : 'secondary'}
-                                  className="ms-2"
-                                  style={{ fontSize: '0.7rem', fontWeight: '500' }}
+                                  bg={comment.authorRole === 'external_maintainer' ? 'primary' : 'secondary'}
+                                  style={{ 
+                                    fontSize: '0.6rem', 
+                                    fontWeight: '700',
+                                    padding: '0.3rem 0.6rem',
+                                    borderRadius: '0.6rem',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    backgroundColor: comment.authorRole === 'external_maintainer' ? '#5e7bb3' : '',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)'
+                                  }}
                                 >
                                   {getCommentAuthorRole(comment.authorRole)}
                                 </Badge>
                               </div>
                             )}
                             <div style={{ 
-                              fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
                               wordWrap: 'break-word',
-                              lineHeight: '1.4'
+                              lineHeight: '1.6',
+                              whiteSpace: 'pre-wrap',
+                              marginTop: isOwnMessage ? '0' : '0.3rem'
                             }}>
                               {comment.comment}
                             </div>
                             <div style={{ 
                               fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
-                              marginTop: '0.25rem',
-                              opacity: 0.7,
-                              textAlign: 'right'
+                              marginTop: '0.6rem',
+                              opacity: isOwnMessage ? 0.9 : 0.65,
+                              textAlign: 'right',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'flex-end',
+                              gap: '0.3rem'
                             }}>
+                              <i className="bi bi-clock" style={{ fontSize: '0.9em' }}></i>
                               {formatCommentTime(comment.created_at)}
                             </div>
                           </div>
@@ -1161,17 +1244,31 @@ export default function ExternalMaintainer({ user }) {
 
           {/* Message Input */}
           <div style={{ 
-            padding: '1rem 1.5rem',
-            backgroundColor: 'white',
-            borderTop: '1px solid #dee2e6'
+            padding: '1.25rem 2rem 1.5rem',
+            backgroundColor: '#ffffff',
+            borderTop: '2px solid #e2e8f0',
+            boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)'
           }}>
             {commentError && comments.length > 0 && (
-              <Alert variant="danger" dismissible onClose={() => setCommentError('')} className="mb-2" style={{ fontSize: '0.85rem' }}>
+              <Alert 
+                variant="danger" 
+                dismissible 
+                onClose={() => setCommentError('')} 
+                className="mb-3" 
+                style={{ 
+                  fontSize: '0.85rem',
+                  borderRadius: '0.75rem',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.15)'
+                }}
+              >
+                <i className="bi bi-exclamation-circle-fill me-2"></i>
                 {commentError}
               </Alert>
             )}
             <Form.Group>
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-3 align-items-end">
                 <Form.Control
                   as="textarea"
                   rows={2}
@@ -1185,36 +1282,48 @@ export default function ExternalMaintainer({ user }) {
                     }
                   }}
                   disabled={sendingComment}
+                  className="message-input"
                   style={{
-                    fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
-                    borderRadius: '0.75rem',
-                    border: '2px solid #dee2e6',
-                    resize: 'none'
+                    fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+                    borderRadius: '1rem',
+                    border: '2px solid #e2e8f0',
+                    resize: 'none',
+                    padding: '0.75rem 1rem',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#f8fafc',
+                    lineHeight: '1.5'
                   }}
                 />
                 <Button
                   variant="primary"
                   onClick={handleSendComment}
                   disabled={sendingComment || !newComment.trim()}
+                  className="send-button"
                   style={{
-                    borderRadius: '0.75rem',
-                    padding: '0.5rem 1.25rem',
-                    background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)',
+                    borderRadius: '1rem',
+                    padding: '0.75rem 1.5rem',
+                    background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)',
                     border: 'none',
-                    fontWeight: '600',
-                    minWidth: '80px'
+                    fontWeight: '700',
+                    minWidth: '90px',
+                    height: '52px',
+                    boxShadow: '0 4px 12px rgba(94, 123, 179, 0.3)',
+                    transition: 'all 0.2s ease',
+                    fontSize: '1rem'
                   }}
                 >
                   {sendingComment ? (
                     <Spinner animation="border" size="sm" />
                   ) : (
-                    <>
-                      <i className="bi bi-send-fill"></i>
-                    </>
+                    <i className="bi bi-send-fill"></i>
                   )}
                 </Button>
               </div>
-              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)' }}>
+              <small className="text-muted d-block mt-2" style={{ 
+                fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
+                fontWeight: '500'
+              }}>
+                <i className="bi bi-info-circle me-1"></i>
                 Press Enter to send, Shift+Enter for new line
               </small>
             </Form.Group>
