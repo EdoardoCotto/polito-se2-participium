@@ -28,6 +28,9 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const [assignSuccess, setAssignSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // state to cache report external assignments
+  const [reportExternalAssignments, setReportExternalAssignments] = useState({});
+
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
@@ -67,9 +70,36 @@ export default function TechnicalOfficeStaffMember({ user }) {
       setLoading(true);
       setError('');
       const reports = await API.getAssignedReports();
-      console.log('Assigned Reports:', reports);
+      console.log('📋 Assigned Reports:', reports);
+      
+      // Debug: mostra struttura primo report
+      if (reports.length > 0) {
+        console.log('🔍 Primo report:', reports[0]);
+        console.log('🔍 externalMaintainer:', reports[0].externalMaintainer);
+      }
+      
       setAssignedReports(reports);
+
+      // Map external assignments - usa externalMaintainer invece di maintainerType
+      const assignments = {};
+      reports.forEach(report => {
+        console.log(`🔍 Report ${report.id}:`, {
+          hasExternal: !!report.externalMaintainer,
+          externalData: report.externalMaintainer
+        });
+        
+        // Check if assigned to external maintainer usando externalMaintainer
+        if (report.externalMaintainer && report.externalMaintainer.id) {
+          console.log(`✅ Report ${report.id} è assegnato a external maintainer:`, report.externalMaintainer);
+          assignments[report.id] = report.externalMaintainer;
+        }
+      });
+      
+      console.log('🔍 External assignments mapped:', assignments);
+      setReportExternalAssignments(assignments);
+
     } catch (err) {
+      console.error('❌ Error fetching reports:', err);
       setError(err.message || 'Failed to load assigned reports');
     } finally {
       setLoading(false);
@@ -122,6 +152,13 @@ export default function TechnicalOfficeStaffMember({ user }) {
   // Open assign to external maintainer modal
   const handleOpenAssignModal = async (report, e) => {
     e.stopPropagation();
+    
+    // Prevent opening if already assigned to external maintainer
+    if (report.externalMaintainer && report.externalMaintainer.id) {
+      console.log('Report già assegnato a external maintainer:', report.externalMaintainer);
+      return;
+    }
+    
     setSelectedReport(report);
     setSelectedMaintainer('');
     setAssignError('');
@@ -132,6 +169,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
     try {
       setLoadingMaintainers(true);
       const maintainers = await API.getExternalMaintainers();
+      console.log('🔍 External maintainers loaded:', maintainers);
       setExternalMaintainers(maintainers);
     } catch (err) {
       console.error('Failed to load external maintainers:', err);
@@ -140,7 +178,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
       setLoadingMaintainers(false);
     }
   };
-  console.log('external :', externalMaintainers);
+
   // Close assign modal
   const handleCloseAssignModal = () => {
     setShowAssignModal(false);
@@ -208,8 +246,56 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
   // Check if report can be assigned to external maintainer
   const canAssignToExternal = (report) => {
-    // Only reports with status 'accepted' or 'in_progress' can be assigned
-    return report.status === 'accepted' || report.status === 'in_progress' || report.status === 'assigned';
+    console.log(`🔍 canAssignToExternal per report ${report.id}:`, {
+      userType: user?.type,
+      hasExternal: !!report.externalMaintainer,
+      status: report.status
+    });
+    
+    // Verifica che l'utente sia un municipal worker
+    const municipalWorkerRoles = [
+      'urban_planner',
+      'building_permit_officer',
+      'building_inspector',
+      'suap_officer',
+      'public_works_engineer',
+      'mobility_traffic_engineer',
+      'environment_technician',
+      'municipal_public_relations_officer',
+      'municipal_administrator',
+      'technical_office_staff_member',
+    ];
+
+    if (!user || !municipalWorkerRoles.includes(user.type)) {
+      console.log(`❌ User non è municipal worker`);
+      return false;
+    }
+    
+    // Non mostrare il pulsante se già assegnato a external maintainer
+    if (report.externalMaintainer && report.externalMaintainer.id) {
+      console.log(`❌ Report già assegnato a external maintainer`);
+      return false;
+    }
+    
+    // Mostra il pulsante solo per report accepted, in_progress, o assigned
+    const canAssign = ['accepted', 'in_progress', 'assigned'].includes(report.status);
+    console.log(`${canAssign ? '✅' : '❌'} Status check: ${report.status}`);
+    return canAssign;
+  };
+
+  // Check if report is already assigned to external maintainer
+  const isAssignedToExternal = (report) => {
+    const isAssigned = report.externalMaintainer && report.externalMaintainer.id;
+    console.log(`🔍 isAssignedToExternal per report ${report.id}: ${isAssigned}`);
+    return isAssigned;
+  };
+
+  // Get external maintainer info for assigned report
+  const getExternalMaintainerInfo = (report) => {
+    if (report.externalMaintainer && report.externalMaintainer.id) {
+      return report.externalMaintainer;
+    }
+    return null;
   };
 
   // Precompute modal body content to avoid nested ternary in JSX
@@ -525,39 +611,80 @@ export default function TechnicalOfficeStaffMember({ user }) {
                             </div>
                           )}
 
-                          {/* Assign to External Maintainer Button */}
-                          {canAssignToExternal(report) && (
+                          {/* Assign to External Maintainer Button OR Assigned Info */}
+                          {isAssignedToExternal(report) ? (
+                            // Show assigned info if already assigned to external
                             <div className="mb-3">
-                              <Button
-                                variant="outline-primary"
-                                size="sm"
-                                onClick={(e) => handleOpenAssignModal(report, e)}
-                                style={{
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                                  borderRadius: '0.5rem',
-                                  transition: 'all 0.3s ease',
-                                  fontWeight: '600',
-                                  padding: '0.5rem 1rem',
-                                  border: '2px solid #5e7bb3',
-                                  color: '#5e7bb3',
-                                  boxShadow: '0 2px 4px rgba(94, 123, 179, 0.2)'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)';
-                                  e.currentTarget.style.color = 'white';
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = '';
-                                  e.currentTarget.style.color = '#5e7bb3';
-                                  e.currentTarget.style.transform = '';
-                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(94, 123, 179, 0.2)';
-                                }}
-                              >
-                                <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
-                              </Button>
+                              <Card style={{
+                                border: '2px solid #17a2b8',
+                                borderRadius: '0.75rem',
+                                backgroundColor: '#e7f6f8',
+                                boxShadow: '0 2px 6px rgba(23, 162, 184, 0.15)'
+                              }}>
+                                <Card.Body className="p-2 px-3">
+                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <Badge bg="info" style={{ 
+                                      fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                                      padding: '0.4rem 0.7rem',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      <i className="bi bi-person-check-fill me-1"></i>
+                                      Assigned to External
+                                    </Badge>
+                                    <div style={{ 
+                                      fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                                      color: '#0c5460',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem'
+                                    }}>
+                                      <i className="bi bi-person-gear"></i>
+                                      <strong>
+                                        {getExternalMaintainerInfo(report).name} {getExternalMaintainerInfo(report).surname}
+                                      </strong>
+                                      <span className="text-muted" style={{ fontSize: '0.9em' }}>
+                                        (@{getExternalMaintainerInfo(report).username})
+                                      </span>
+                                    </div>
+                                  </div>
+                                </Card.Body>
+                              </Card>
                             </div>
+                          ) : (
+                            // Show assign button if not assigned yet
+                            canAssignToExternal(report) && (
+                              <div className="mb-3">
+                                <Button
+                                  variant="outline-primary"
+                                  size="sm"
+                                  onClick={(e) => handleOpenAssignModal(report, e)}
+                                  style={{
+                                    fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                                    borderRadius: '0.5rem',
+                                    transition: 'all 0.3s ease',
+                                    fontWeight: '600',
+                                    padding: '0.5rem 1rem',
+                                    border: '2px solid #5e7bb3',
+                                    color: '#5e7bb3',
+                                    boxShadow: '0 2px 4px rgba(94, 123, 179, 0.2)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)';
+                                    e.currentTarget.style.color = 'white';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = '';
+                                    e.currentTarget.style.color = '#5e7bb3';
+                                    e.currentTarget.style.transform = '';
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(94, 123, 179, 0.2)';
+                                  }}
+                                >
+                                  <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
+                                </Button>
+                              </div>
+                            )
                           )}
 
                           {/* Click hints */}
