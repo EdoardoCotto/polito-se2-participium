@@ -536,9 +536,26 @@ export default function ExternalMaintainer({ user }) {
                                 style={{
                                   fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
                                   borderRadius: '0.5rem',
-                                  padding: '0.4rem 0.75rem'
+                                  padding: '0.5rem 0.875rem',
+                                  fontWeight: '600',
+                                  border: '2px solid #5e7bb3',
+                                  color: '#5e7bb3',
+                                  boxShadow: '0 2px 4px rgba(94, 123, 179, 0.2)',
+                                  transition: 'all 0.3s ease'
                                 }}
                                 onClick={(e) => handleOpenStatusModal(report, e)}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)';
+                                  e.currentTarget.style.color = 'white';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '';
+                                  e.currentTarget.style.color = '#5e7bb3';
+                                  e.currentTarget.style.transform = '';
+                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(94, 123, 179, 0.2)';
+                                }}
                               >
                                 <i className="bi bi-arrow-repeat me-1"></i>Update Status
                               </Button>
@@ -593,20 +610,41 @@ export default function ExternalMaintainer({ user }) {
 
       {/* Update Status Modal */}
       <Modal show={showStatusModal} onHide={handleCloseStatusModal} centered size="lg">
-        <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
-          <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
-            <i className="bi bi-arrow-repeat me-2"></i>Update Report Status
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)', 
+          color: 'white',
+          borderBottom: 'none',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ 
+            fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>
+            Update Report Status
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4">
+        <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
           {statusError && (
-            <Alert variant="danger" dismissible onClose={() => setStatusError('')} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+            <Alert variant="danger" dismissible onClose={() => setStatusError('')} style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+              borderRadius: '0.75rem',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(220, 53, 69, 0.2)'
+            }}>
               <i className="bi bi-exclamation-triangle me-2"></i>
               {statusError}
             </Alert>
           )}
           {statusSuccess && (
-            <Alert variant="success" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+            <Alert variant="success" style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+              borderRadius: '0.75rem',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(25, 135, 84, 0.2)'
+            }}>
               <i className="bi bi-check-circle me-2"></i>
               {statusSuccess}
             </Alert>
@@ -615,8 +653,12 @@ export default function ExternalMaintainer({ user }) {
           {selectedReport && (
             <>
               {/* Report Details */}
-              <Card className="mb-4" style={{ border: '1px solid #e0e0e0', borderRadius: '0.75rem' }}>
-                <Card.Body className="p-3">
+              <Card className="mb-4" style={{ 
+                border: 'none',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Card.Body className="p-3" style={{ backgroundColor: 'white' }}>
                   <h6 className="fw-bold mb-2" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}>
                     {selectedReport.title}
                   </h6>
@@ -636,9 +678,18 @@ export default function ExternalMaintainer({ user }) {
               </Card>
 
               {/* Status Selection */}
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold mb-3" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                  <i className="bi bi-arrow-repeat me-2"></i>Select New Status *
+              <Form.Group className="mb-3" style={{
+                backgroundColor: 'white',
+                padding: '1.25rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Form.Label className="fw-semibold mb-3" style={{ 
+                  fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
+                  color: '#2c3e50'
+                }}>
+                  <i className="bi bi-arrow-repeat me-2" style={{ color: '#5e7bb3' }}></i>
+                  Select New Status *
                 </Form.Label>
                 <div className="d-flex flex-column gap-3">
                   {statusOptions.map((option) => (
@@ -647,20 +698,27 @@ export default function ExternalMaintainer({ user }) {
                       className={`status-option-card ${newStatus === option.value ? 'border-primary' : ''}`}
                       style={{
                         cursor: 'pointer',
-                        border: newStatus === option.value ? '2px solid #0d6efd' : '1px solid #dee2e6',
+                        border: newStatus === option.value ? '2px solid #5e7bb3' : '2px solid #dee2e6',
                         borderRadius: '0.75rem',
-                        transition: 'all 0.2s',
-                        backgroundColor: newStatus === option.value ? '#f0f8ff' : 'white'
+                        transition: 'all 0.3s ease',
+                        backgroundColor: newStatus === option.value ? '#f0f5fb' : 'white',
+                        boxShadow: newStatus === option.value ? '0 4px 12px rgba(94, 123, 179, 0.25)' : '0 2px 4px rgba(0, 0, 0, 0.05)'
                       }}
                       onClick={() => setNewStatus(option.value)}
                       onMouseEnter={(e) => {
                         if (newStatus !== option.value) {
                           e.currentTarget.style.backgroundColor = '#f8f9fa';
+                          e.currentTarget.style.borderColor = '#5e7bb3';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(94, 123, 179, 0.15)';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (newStatus !== option.value) {
                           e.currentTarget.style.backgroundColor = 'white';
+                          e.currentTarget.style.borderColor = '#dee2e6';
+                          e.currentTarget.style.transform = '';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
                         }
                       }}
                     >
@@ -693,12 +751,32 @@ export default function ExternalMaintainer({ user }) {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ 
+          backgroundColor: '#f8f9fa',
+          borderTop: 'none',
+          padding: '1.25rem'
+        }}>
           <Button 
             variant="secondary" 
             onClick={handleCloseStatusModal}
             disabled={submitting}
-            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+            style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
+              borderRadius: '0.5rem',
+              padding: '0.6rem 1.5rem',
+              fontWeight: '600',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '';
+            }}
           >
             <i className="bi bi-x-circle me-2"></i>Cancel
           </Button>
@@ -706,7 +784,25 @@ export default function ExternalMaintainer({ user }) {
             variant="primary"
             onClick={handleSubmitStatusUpdate}
             disabled={submitting || !newStatus}
-            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+            style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
+              borderRadius: '0.5rem',
+              padding: '0.6rem 1.5rem',
+              fontWeight: '600',
+              background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)',
+              border: 'none',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting && newStatus) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '';
+            }}
           >
             {submitting ? (
               <>
