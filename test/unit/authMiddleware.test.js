@@ -4,10 +4,7 @@ const {
   isMunicipal_public_relations_officer,
   isTechnicalOfficeStaff,
   isExternalMaintainer,
-<<<<<<< HEAD
-=======
   isInternalStaffOrMaintainer
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
 } = require('../../server/middlewares/authMiddleware');
 const UnauthorizedError = require('../../server/errors/UnauthorizedError');
 
