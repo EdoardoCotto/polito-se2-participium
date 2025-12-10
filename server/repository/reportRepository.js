@@ -398,40 +398,38 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
     throw new UnauthorizedError('Maintainer ID is required');
   }
 
-  // Validazione dello stato
   if (typeof newStatus !== 'string') {
     throw new BadRequestError('Status is required');
   }
 
   const normalizedStatus = newStatus.toLowerCase().trim();
   
-  // Stati permessi per il manutentore secondo il ciclo di vita 
-  // Pending e Rejected sono gestiti dall'Organization Office [cite: 24]
+  // Stati permessi per il manutentore esterno
   const ALLOWED_STATUSES = [
-    REPORT_STATUSES.PROGRESS, // [cite: 27]
-    REPORT_STATUSES.SUSPENDED,   // [cite: 28]
-    REPORT_STATUSES.RESOLVED     // [cite: 29]
+    'progress',
+    'suspended',
+    'resolved'
   ];
 
   if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
-    throw new BadRequestError(`Invalid status. Allowed statuses for maintainers are: ${ALLOWED_STATUSES.join(', ')}`);
+    throw new BadRequestError(`Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
   }
 
-  // Eseguiamo l'aggiornamento
-  const updated = await reportDao.updateReportStatusByOfficer(reportId, maintainerId, normalizedStatus);
+  // CHIAMATA CORRETTA AL NUOVO METODO DAO
+  const updatedRow = await reportDao.updateReportStatusByExternalMaintainer(reportId, maintainerId, normalizedStatus);
 
-  if (!updated) {
-    // Se è null, potrebbe essere che il report non esiste o non è assegnato a questo utente.
-    // Per sicurezza controlliamo se esiste il report per dare l'errore giusto.
+  if (!updatedRow) {
+    // Check esistenza per errore preciso
     const reportExists = await reportDao.getReportById(reportId);
     if (!reportExists) {
       throw new NotFoundError('Report not found');
     }
-    // Se esiste ma l'update ha fallito, significa che l'officerId non corrispondeva
-    throw new UnauthorizedError('You are not assigned to this report');
+    // Se esiste, allora non era assegnato a questo maintainer
+    throw new UnauthorizedError('You are not assigned to this report as external maintainer');
   }
 
-  return mapReportRow(updated);
+  // Ora updatedRow contiene tutte le join, quindi mapReportRow funziona
+  return mapReportRow(updatedRow);
 };
 /**
  * Get reports assigned to an external maintainer

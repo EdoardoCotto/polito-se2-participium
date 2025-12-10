@@ -372,7 +372,57 @@ exports.updateReportStatusByOfficer = (reportId, officerId, newStatus) => {
     });
   });
 };
+exports.updateReportStatusByExternalMaintainer = (reportId, maintainerId, newStatus) => {
+  return new Promise((resolve, reject) => {
+    // 1. UPDATE usando external_maintainerId
+    const sqlUpdate = `
+      UPDATE Reports
+      SET status = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND external_maintainerId = ?
+    `;
 
+    db.run(sqlUpdate, [newStatus, reportId, maintainerId], function (err) {
+      if (err) return reject(err);
+      
+      if (this.changes === 0) {
+        // Nessuna riga aggiornata: report inesistente o non assegnato a questo maintainer
+        return resolve(null);
+      }
+
+      // 2. SELECT con le JOIN (necessario per mapReportRow)
+      // Copiamo la logica della SELECT usata in getReportsByExternalMaintainerId
+      // così l'oggetto ritornato ha officerName, userEmail, ecc.
+      const sqlSelect = `
+        SELECT 
+          R.id          AS reportId,
+          R.userId      AS reportUserId,
+          R.latitude, R.longitude, R.title, R.description, R.category,
+          R.status, R.rejection_reason, R.technical_office,
+          R.created_at, R.updated_at,
+          R.image_path1, R.image_path2, R.image_path3,
+          
+          -- Dati Utente
+          U.id AS userId, U.username AS userUsername, U.name AS userName, 
+          U.surname AS userSurname, U.email AS userEmail,
+
+          -- Dati Officer (Importante per il maintainer vedere chi è l'officer)
+          OFF.id AS officerId, OFF.username AS officerUsername, 
+          OFF.name AS officerName, OFF.surname AS officerSurname, OFF.email AS officerEmail
+
+        FROM Reports R
+        LEFT JOIN Users U ON R.userId = U.id
+        LEFT JOIN Users OFF ON R.officerId = OFF.id
+        WHERE R.id = ?
+      `;
+
+      db.get(sqlSelect, [reportId], (err2, row) => {
+        if (err2) return reject(err2);
+        resolve(row);
+      });
+    });
+  });
+};
 /**
  * Get reports assigned to a specific external maintainer
  * @param {number} maintainerId
