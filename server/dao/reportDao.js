@@ -372,3 +372,63 @@ exports.updateReportStatusByOfficer = (reportId, officerId, newStatus) => {
     });
   });
 };
+
+/**
+ * Get reports assigned to a specific external maintainer
+ * @param {number} maintainerId
+ * @returns {Promise<Object[]>}
+ */
+exports.getReportsByExternalMaintainerId = (maintainerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        -- Dati del Report
+        R.id          AS reportId,
+        R.userId      AS reportUserId,
+        R.latitude,
+        R.longitude,
+        R.title,
+        R.description,
+        R.category,
+        R.status,
+        R.rejection_reason,
+        R.technical_office,
+        R.created_at,
+        R.updated_at,
+        R.image_path1,
+        R.image_path2,
+        R.image_path3,
+        
+        -- Dati dell'Utente (Cittadino)
+        U.id          AS userId,
+        U.username    AS userUsername,
+        U.name        AS userName,
+        U.surname     AS userSurname,
+        U.email       AS userEmail,
+
+        -- Dati dell'Officer Interno (Chi ha assegnato il report)
+        OFF.id         AS officerId,
+        OFF.username   AS officerUsername,
+        OFF.name       AS officerName,
+        OFF.surname    AS officerSurname,
+        OFF.email      AS officerEmail
+
+      FROM Reports R
+      -- Join per l'utente che ha creato il report
+      LEFT JOIN Users U ON R.userId = U.id
+      -- Join per l'officer interno (usando alias OFF)
+      LEFT JOIN Users OFF ON R.officerId = OFF.id
+      
+      WHERE R.external_maintainerId = ?
+        AND R.status != 'rejected' -- O status IN ('assigned', 'progress', 'resolved', 'suspended')
+      ORDER BY R.created_at DESC
+    `;
+    
+    db.all(sql, [maintainerId], (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(rows || []);
+    });
+  });
+};

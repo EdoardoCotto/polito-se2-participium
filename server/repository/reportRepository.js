@@ -18,8 +18,8 @@ const mapReportRow = (row) => {
   ].filter(Boolean);
 
   return {
-    id: row.reportId,           // ⬅ report
-    userId: row.userId,         // ⬅ utente (dalla join)
+    id: row.reportId,
+    userId: row.userId,
     latitude: row.latitude,
     longitude: row.longitude,
     title: row.title,
@@ -31,6 +31,8 @@ const mapReportRow = (row) => {
     created_at: row.created_at,
     updated_at: row.updated_at,
     photos: photosFromDb,
+    
+    // Dati del cittadino
     user: {
       id: row.userId,
       username: row.userUsername,
@@ -38,13 +40,24 @@ const mapReportRow = (row) => {
       surname: row.userSurname,
       email: row.userEmail,
     },
-    externalMaintainer: {
+
+    // Se la query ha restituito dati del Manutentore (usato quando guarda l'Officer)
+    externalMaintainer: row.maintainerId ? {
       id: row.maintainerId,
       username: row.maintainerUsername,
       name: row.maintainerName,
       surname: row.maintainerSurname,
       email: row.maintainerEmail,
-    }
+    } : null,
+
+    // Se la query ha restituito dati dell'Officer (usato quando guarda il Manutentore)
+    officer: row.officerId ? {
+      id: row.officerId,
+      username: row.officerUsername,
+      name: row.officerName,
+      surname: row.officerSurname,
+      email: row.officerEmail,
+    } : null,
   };
 };
 
@@ -419,4 +432,25 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
   }
 
   return mapReportRow(updated);
+};
+/**
+ * Get reports assigned to an external maintainer
+ * @param {number} maintainerId
+ * @returns {Promise<Object[]>}
+ */
+exports.getAssignedReportsForExternal = async (maintainerId) => {
+  if (!maintainerId) {
+    throw new BadRequestError('Maintainer ID is required');
+  }
+
+  if (!Number.isInteger(maintainerId)) {
+    throw new BadRequestError('Maintainer ID must be a valid integer');
+  }
+
+  // Chiamata al nuovo metodo DAO
+  const rows = await reportDao.getReportsByExternalMaintainerId(maintainerId);
+  console.log('Rows fetched for external maintainer:', rows);
+  
+  // Riutilizziamo la stessa funzione mapReportRow aggiornata
+  return rows.map(mapReportRow);
 };

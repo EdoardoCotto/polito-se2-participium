@@ -580,6 +580,26 @@ const updateMaintainerStatus = async (reportId, status) => {
 };
 
 /**
+ * Get External Assigned Reports
+ * Retrieves all reports assigned to the logged-in external maintainer
+ * Requires external maintainer authentication
+ * @returns {Promise<Array>} - Array of assigned report objects with photoUrls
+ * @throws {Error} - If request fails (unauthorized, forbidden, etc.)
+ */
+const getExternalAssignedReports = async () => {
+  const response = await fetch(`${SERVER_URL}/reports/external/assigned`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get external assigned reports');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Report Categories
  * Fetches the list of report categories from the server
  * Public endpoint (no authentication required)
@@ -667,6 +687,7 @@ const API = {
   getApprovedReports,
   getCitizenReports,
   getAssignedReports,
+  getExternalAssignedReports,
   getReportById,
   reviewReport,
   assignReportToExternalMaintainer,

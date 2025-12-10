@@ -373,3 +373,30 @@ exports.updateMaintainerStatus = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+/**
+ * Get reports assigned to the logged-in external maintainer
+ */
+exports.getExternalAssignedReports = async (req, res) => {
+  try {
+    // Verifica base auth (già parzialmente coperta dai middleware, ma good practice)
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Nota: req.user.id qui è l'ID dell'External Maintainer loggato
+    const reports = await reportRepository.getAssignedReportsForExternal(req.user.id);
+    
+    const enriched = reports.map((report) => ({
+      ...report,
+      photoUrls: buildPhotoUrls(report.photos, req),
+    }));
+
+    return res.status(200).json(enriched);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    console.error('Error in getExternalAssignedReports controller:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
