@@ -231,6 +231,7 @@ exports.getReportsByOfficerId = (officerId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
+        -- Dati del Report
         R.id          AS reportId,
         R.userId      AS reportUserId,
         R.latitude,
@@ -246,17 +247,33 @@ exports.getReportsByOfficerId = (officerId) => {
         R.image_path1,
         R.image_path2,
         R.image_path3,
+        
+        -- Dati dell'Utente (Cittadino/Creatore)
         U.id          AS userId,
         U.username    AS userUsername,
         U.name        AS userName,
         U.surname     AS userSurname,
-        U.email       AS userEmail
+        U.email       AS userEmail,
+
+        -- Dati del Manutentore Esterno (Nuova Sezione)
+        EM.id         AS maintainerId,
+        EM.username   AS maintainerUsername,
+        EM.name       AS maintainerName,
+        EM.surname    AS maintainerSurname,
+        EM.email      AS maintainerEmail,
+        EM.type       AS maintainerType
+
       FROM Reports R
+      -- Join per l'utente che ha creato il report
       LEFT JOIN Users U ON R.userId = U.id
+      -- Join per il manutentore esterno (usando alias EM)
+      LEFT JOIN Users EM ON R.external_maintainerId = EM.id
+      
       WHERE R.officerId = ?
         AND R.status != 'rejected'
       ORDER BY R.created_at DESC
     `;
+    
     db.all(sql, [officerId], (err, rows) => {
       if (err) {
         return reject(err);

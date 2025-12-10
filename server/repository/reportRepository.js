@@ -38,6 +38,13 @@ const mapReportRow = (row) => {
       surname: row.userSurname,
       email: row.userEmail,
     },
+    externalMaintainer: {
+      id: row.maintainerId,
+      username: row.maintainerUsername,
+      name: row.maintainerName,
+      surname: row.maintainerSurname,
+      email: row.maintainerEmail,
+    }
   };
 };
 
@@ -304,6 +311,7 @@ exports.getAssignedReports = async (officerId) => {
   }
 
   const rows = await reportDao.getReportsByOfficerId(officerId);
+  console.log('Rows fetched for officer:', rows);
   return rows.map(mapReportRow);
 };
 
