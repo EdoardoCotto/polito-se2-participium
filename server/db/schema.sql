@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS Users (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   CHECK(type IN (
+    'municipality_user',
     'municipal_public_relations_officer',
     'municipal_administrator',
     'urban_planner',
