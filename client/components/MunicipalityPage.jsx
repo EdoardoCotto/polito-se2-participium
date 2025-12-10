@@ -535,7 +535,24 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                 style={{
                                   fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
                                   borderRadius: '0.5rem',
-                                  transition: 'all 0.2s'
+                                  transition: 'all 0.3s ease',
+                                  fontWeight: '600',
+                                  padding: '0.5rem 1rem',
+                                  border: '2px solid #5e7bb3',
+                                  color: '#5e7bb3',
+                                  boxShadow: '0 2px 4px rgba(94, 123, 179, 0.2)'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)';
+                                  e.currentTarget.style.color = 'white';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '';
+                                  e.currentTarget.style.color = '#5e7bb3';
+                                  e.currentTarget.style.transform = '';
+                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(94, 123, 179, 0.2)';
                                 }}
                               >
                                 <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
@@ -591,20 +608,41 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
       {/* Assign to External Maintainer Modal */}
       <Modal show={showAssignModal} onHide={handleCloseAssignModal} centered size="lg">
-        <Modal.Header closeButton style={{ backgroundColor: '#5e7bb3', color: 'white' }}>
-          <Modal.Title style={{ fontSize: 'clamp(1.1rem, 3vw, 1.4rem)' }}>
-            <i className="bi bi-person-gear me-2"></i>Assign to External Maintainer
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)', 
+          color: 'white',
+          borderBottom: 'none',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ 
+            fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <i className="bi bi-person-gear me-2" style={{ fontSize: '1.5rem' }}></i>
+            Assign to External Maintainer
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-4">
+        <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
           {assignError && (
-            <Alert variant="danger" dismissible onClose={() => setAssignError('')} style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+            <Alert variant="danger" dismissible onClose={() => setAssignError('')} style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+              borderRadius: '0.75rem',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(220, 53, 69, 0.2)'
+            }}>
               <i className="bi bi-exclamation-triangle me-2"></i>
               {assignError}
             </Alert>
           )}
           {assignSuccess && (
-            <Alert variant="success" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+            <Alert variant="success" style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+              borderRadius: '0.75rem',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(25, 135, 84, 0.2)'
+            }}>
               <i className="bi bi-check-circle me-2"></i>
               {assignSuccess}
             </Alert>
@@ -613,8 +651,12 @@ export default function TechnicalOfficeStaffMember({ user }) {
           {selectedReport && (
             <>
               {/* Report Details */}
-              <Card className="mb-3" style={{ border: '1px solid #e0e0e0' }}>
-                <Card.Body className="p-3">
+              <Card className="mb-3" style={{ 
+                border: 'none',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Card.Body className="p-3" style={{ backgroundColor: 'white' }}>
                   <h6 className="fw-bold mb-2" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}>
                     {selectedReport.title}
                   </h6>
@@ -633,20 +675,44 @@ export default function TechnicalOfficeStaffMember({ user }) {
               </Card>
 
               {/* External Maintainer Select */}
-              <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.05rem)' }}>
-                  <i className="bi bi-person-gear me-2"></i>Select External Maintainer *
+              <Form.Group className="mb-3" style={{
+                backgroundColor: 'white',
+                padding: '1.25rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Form.Label className="fw-semibold" style={{ 
+                  fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
+                  color: '#2c3e50',
+                  marginBottom: '0.75rem'
+                }}>
+                  <i className="bi bi-person-gear me-2" style={{ color: '#5e7bb3' }}></i>
+                  Select External Maintainer *
                 </Form.Label>
                 {loadingMaintainers ? (
                   <div className="text-center py-3">
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    <span>Loading external maintainers...</span>
+                    <Spinner animation="border" size="sm" className="me-2" style={{ color: '#5e7bb3' }} />
+                    <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', color: '#6c757d' }}>Loading external maintainers...</span>
                   </div>
                 ) : (
                   <Form.Select
                     value={selectedMaintainer}
                     onChange={(e) => setSelectedMaintainer(e.target.value)}
-                    style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+                    style={{ 
+                      fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
+                      borderRadius: '0.5rem',
+                      border: '2px solid #e0e0e0',
+                      padding: '0.75rem',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#5e7bb3';
+                      e.currentTarget.style.boxShadow = '0 0 0 0.2rem rgba(94, 123, 179, 0.25)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                     disabled={externalMaintainers.length === 0}
                   >
                     <option value="">Select an external maintainer...</option>
@@ -664,12 +730,32 @@ export default function TechnicalOfficeStaffMember({ user }) {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ 
+          backgroundColor: '#f8f9fa',
+          borderTop: 'none',
+          padding: '1.25rem'
+        }}>
           <Button 
             variant="secondary" 
             onClick={handleCloseAssignModal}
             disabled={submitting}
-            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+            style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
+              borderRadius: '0.5rem',
+              padding: '0.6rem 1.5rem',
+              fontWeight: '600',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '';
+            }}
           >
             Cancel
           </Button>
@@ -677,7 +763,25 @@ export default function TechnicalOfficeStaffMember({ user }) {
             variant="primary"
             onClick={handleSubmitAssignment}
             disabled={submitting || loadingMaintainers || !selectedMaintainer}
-            style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)', borderRadius: '0.5rem' }}
+            style={{ 
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)', 
+              borderRadius: '0.5rem',
+              padding: '0.6rem 1.5rem',
+              fontWeight: '600',
+              background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)',
+              border: 'none',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting && !loadingMaintainers && selectedMaintainer) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '';
+            }}
           >
             {submitting ? (
               <>
