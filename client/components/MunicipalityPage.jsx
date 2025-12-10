@@ -28,6 +28,14 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const [assignSuccess, setAssignSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Comments/Messages modal state
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
+
   // state to cache report external assignments
   const [reportExternalAssignments, setReportExternalAssignments] = useState({});
 
@@ -222,6 +230,66 @@ export default function TechnicalOfficeStaffMember({ user }) {
     }
   };
 
+  // Open comments modal
+  const handleOpenCommentsModal = async (report, e) => {
+    e.stopPropagation();
+    setSelectedReport(report);
+    setComments([]);
+    setNewComment('');
+    setCommentError('');
+    setShowCommentsModal(true);
+    await fetchComments(report.id);
+  };
+
+  // Close comments modal
+  const handleCloseCommentsModal = () => {
+    setShowCommentsModal(false);
+    setSelectedReport(null);
+    setComments([]);
+    setNewComment('');
+    setCommentError('');
+  };
+
+  // Fetch comments for a report
+  const fetchComments = async (reportId) => {
+    try {
+      setLoadingComments(true);
+      setCommentError('');
+      const fetchedComments = await API.getComments(reportId);
+      setComments(fetchedComments);
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+      setCommentError(err.message || 'Failed to load comments');
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Send new comment
+  const handleSendComment = async () => {
+    if (!newComment.trim()) {
+      setCommentError('Please enter a message');
+      return;
+    }
+
+    try {
+      setSendingComment(true);
+      setCommentError('');
+      
+      await API.createComment(selectedReport.id, newComment.trim());
+      setNewComment('');
+      
+      // Refresh comments
+      await fetchComments(selectedReport.id);
+      
+    } catch (err) {
+      console.error('Failed to send comment:', err);
+      setCommentError(err.message || 'Failed to send message');
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -232,6 +300,76 @@ export default function TechnicalOfficeStaffMember({ user }) {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Format comment time - only time
+  const formatCommentTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  // Format comment date - full date for separators
+  const formatCommentDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare only dates
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      });
+    }
+  };
+
+  // Group comments by date
+  const groupCommentsByDate = (comments) => {
+    const groups = {};
+    comments.forEach(comment => {
+      const date = new Date(comment.created_at);
+      const dateKey = date.toDateString();
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(comment);
+    });
+    return groups;
+  };
+
+  // Get role display name for comment author
+  const getCommentAuthorRole = (role) => {
+    const roleMap = {
+      'urban_planner': 'Urban Planner',
+      'building_permit_officer': 'Building Permit Officer',
+      'building_inspector': 'Building Inspector',
+      'suap_officer': 'SUAP Officer',
+      'public_works_engineer': 'Public Works Engineer',
+      'mobility_traffic_engineer': 'Mobility & Traffic Engineer',
+      'environment_technician': 'Environment Technician',
+      'municipal_public_relations_officer': 'Public Relations Officer',
+      'municipal_administrator': 'Municipal Administrator',
+      'technical_office_staff_member': 'Technical Office Staff',
+      'external_maintainer': 'External Maintainer',
+      'citizen': 'Citizen',
+      'admin': 'Administrator'
+    };
+    return roleMap[role] || role;
   };
 
   // Count photos for a report
@@ -687,6 +825,39 @@ export default function TechnicalOfficeStaffMember({ user }) {
                             )
                           )}
 
+                          {/* Comments/Messages Button */}
+                          <div className="mb-3">
+                            <Button
+                              variant="outline-info"
+                              size="sm"
+                              onClick={(e) => handleOpenCommentsModal(report, e)}
+                              style={{
+                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                                borderRadius: '0.5rem',
+                                transition: 'all 0.3s ease',
+                                fontWeight: '600',
+                                padding: '0.5rem 1rem',
+                                border: '2px solid #17a2b8',
+                                color: '#17a2b8',
+                                boxShadow: '0 2px 4px rgba(23, 162, 184, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)';
+                                e.currentTarget.style.color = 'white';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 162, 184, 0.4)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '';
+                                e.currentTarget.style.color = '#17a2b8';
+                                e.currentTarget.style.transform = '';
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(23, 162, 184, 0.2)';
+                              }}
+                            >
+                              <i className="bi bi-chat-dots me-2"></i>Messages
+                            </Button>
+                          </div>
+
                           {/* Click hints */}
                           {isSelected ? (
                             <div className="mb-0">
@@ -920,6 +1091,205 @@ export default function TechnicalOfficeStaffMember({ user }) {
             )}
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Comments/Messages Modal */}
+      <Modal show={showCommentsModal} onHide={handleCloseCommentsModal} centered size="lg">
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)', 
+          color: 'white',
+          borderBottom: 'none',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ 
+            fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <i className="bi bi-chat-dots me-2" style={{ fontSize: '1.5rem' }}></i>
+            Messages - {selectedReport?.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          backgroundColor: '#f0f2f5',
+          padding: '0',
+          maxHeight: '60vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* Messages Container */}
+          <div style={{ 
+            flex: 1,
+            overflowY: 'auto',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            {loadingComments ? (
+              <div className="text-center py-4">
+                <Spinner animation="border" style={{ color: '#17a2b8' }} />
+                <p className="mt-2 text-muted">Loading messages...</p>
+              </div>
+            ) : commentError && comments.length === 0 ? (
+              <Alert variant="danger" style={{ borderRadius: '0.75rem' }}>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                {commentError}
+              </Alert>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-4">
+                <i className="bi bi-chat" style={{ fontSize: '3rem', color: '#cbd5e1' }}></i>
+                <p className="mt-3 text-muted">No messages yet. Start the conversation!</p>
+              </div>
+            ) : (
+              <>
+                {Object.entries(groupCommentsByDate(comments)).map(([dateKey, dayComments]) => (
+                  <div key={dateKey}>
+                    {/* Date Separator */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      margin: '1rem 0',
+                      gap: '1rem'
+                    }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: '#cbd5e1' }}></div>
+                      <div style={{
+                        padding: '0.25rem 1rem',
+                        backgroundColor: '#e2e8f0',
+                        borderRadius: '1rem',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                        fontWeight: '600',
+                        color: '#475569'
+                      }}>
+                        {formatCommentDate(dayComments[0].created_at)}
+                      </div>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: '#cbd5e1' }}></div>
+                    </div>
+
+                    {/* Messages for this day */}
+                    {dayComments.map((comment) => {
+                      const isOwnMessage = comment.authorId === user?.id;
+                      return (
+                        <div
+                          key={comment.id}
+                          style={{
+                            display: 'flex',
+                            justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
+                            marginBottom: '0.5rem'
+                          }}
+                        >
+                          <div style={{
+                            maxWidth: '70%',
+                            backgroundColor: isOwnMessage ? '#5e7bb3' : 'white',
+                            color: isOwnMessage ? 'white' : '#2c3e50',
+                            borderRadius: isOwnMessage ? '1rem 1rem 0.25rem 1rem' : '1rem 1rem 1rem 0.25rem',
+                            padding: '0.75rem 1rem',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            {!isOwnMessage && (
+                              <div style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                                fontWeight: '600',
+                                marginBottom: '0.25rem',
+                                opacity: 0.9
+                              }}>
+                                {comment.name} {comment.surname}
+                                <Badge 
+                                  bg={comment.authorRole === 'external_maintainer' ? 'info' : 'secondary'}
+                                  className="ms-2"
+                                  style={{ fontSize: '0.7rem', fontWeight: '500' }}
+                                >
+                                  {getCommentAuthorRole(comment.authorRole)}
+                                </Badge>
+                              </div>
+                            )}
+                            <div style={{ 
+                              fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                              wordWrap: 'break-word',
+                              lineHeight: '1.4'
+                            }}>
+                              {comment.comment}
+                            </div>
+                            <div style={{ 
+                              fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
+                              marginTop: '0.25rem',
+                              opacity: 0.7,
+                              textAlign: 'right'
+                            }}>
+                              {formatCommentTime(comment.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* Message Input */}
+          <div style={{ 
+            padding: '1rem 1.5rem',
+            backgroundColor: 'white',
+            borderTop: '1px solid #dee2e6'
+          }}>
+            {commentError && comments.length > 0 && (
+              <Alert variant="danger" dismissible onClose={() => setCommentError('')} className="mb-2" style={{ fontSize: '0.85rem' }}>
+                {commentError}
+              </Alert>
+            )}
+            <Form.Group>
+              <div className="d-flex gap-2">
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  placeholder="Type your message..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendComment();
+                    }
+                  }}
+                  disabled={sendingComment}
+                  style={{
+                    fontSize: 'clamp(0.85rem, 2vw, 0.95rem)',
+                    borderRadius: '0.75rem',
+                    border: '2px solid #dee2e6',
+                    resize: 'none'
+                  }}
+                />
+                <Button
+                  variant="primary"
+                  onClick={handleSendComment}
+                  disabled={sendingComment || !newComment.trim()}
+                  style={{
+                    borderRadius: '0.75rem',
+                    padding: '0.5rem 1.25rem',
+                    background: 'linear-gradient(135deg, #17a2b8 0%, #20c997 100%)',
+                    border: 'none',
+                    fontWeight: '600',
+                    minWidth: '80px'
+                  }}
+                >
+                  {sendingComment ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    <>
+                      <i className="bi bi-send-fill"></i>
+                    </>
+                  )}
+                </Button>
+              </div>
+              <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)' }}>
+                Press Enter to send, Shift+Enter for new line
+              </small>
+            </Form.Group>
+          </div>
+        </Modal.Body>
       </Modal>
     </div>
   );
