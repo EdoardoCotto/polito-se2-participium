@@ -7,8 +7,6 @@ const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
 const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff, isExternalMaintainer, isInternalStaffOrMaintainer } = require('../middlewares/authMiddleware');
 
-// Rimossa la duplicazione dell'import
-
 
 /**
  * @swagger

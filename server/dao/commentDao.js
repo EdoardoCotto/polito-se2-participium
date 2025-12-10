@@ -12,22 +12,45 @@ const db = new sqlite.Database(dbPath, (err) => {
  */
 exports.createComment = (reportId, authorId, comment) => {
   return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO InternalComments (reportId, authorId, comment) VALUES (?, ?, ?)`;
-    db.run(sql, [reportId, authorId, comment], function (err) {
+    
+    // 1. VERIFICA: Recuperiamo i dati di assegnazione del report
+    const checkSql = `SELECT officerId, external_maintainerId FROM Reports WHERE id = ?`;
+    
+    db.get(checkSql, [reportId], (err, report) => {
       if (err) return reject(err);
+      if (!report) return reject(new Error('ReportNotFound')); // O gestisci come preferisci
+
+      // 2. LOGICA DI BLOCCO: 
+      // Verifichiamo se l'autore è l'officer assegnato O il manutentore assegnato
+      const isAssignedOfficer = (report.officerId === authorId);
+      const isAssignedMaintainer = (report.external_maintainerId === authorId);
+
+      // Se non è nessuno dei due, rifiutiamo la Promise
+      if (!isAssignedOfficer && !isAssignedMaintainer) {
+        // Usiamo un messaggio chiaro o un errore custom che il controller possa mappare in 403 Forbidden
+        return reject(new Error('UnauthorizedComment: User is not assigned to this report'));
+      }
+
+      // 3. ESECUZIONE: Se autorizzato, procediamo con l'INSERT originale
+      const insertSql = `INSERT INTO InternalComments (reportId, authorId, comment) VALUES (?, ?, ?)`;
       
-      // Fetch the created comment with author details (same format as getCommentsByReportId)
-      const selectSql = `
-        SELECT 
-          C.id, C.reportId, C.comment, C.created_at,
-          U.id as authorId, U.name, U.surname, U.type as authorRole
-        FROM InternalComments C
-        JOIN Users U ON C.authorId = U.id
-        WHERE C.id = ?
-      `;
-      db.get(selectSql, [this.lastID], (err2, row) => {
+      db.run(insertSql, [reportId, authorId, comment], function (err2) {
         if (err2) return reject(err2);
-        resolve(row);
+        
+        // 4. RESTITUZIONE: Fetch del commento appena creato con i dettagli dell'autore
+        const selectSql = `
+          SELECT 
+            C.id, C.reportId, C.comment, C.created_at,
+            U.id as authorId, U.name, U.surname, U.type as authorRole
+          FROM InternalComments C
+          JOIN Users U ON C.authorId = U.id
+          WHERE C.id = ?
+        `;
+        
+        db.get(selectSql, [this.lastID], (err3, row) => {
+          if (err3) return reject(err3);
+          resolve(row);
+        });
       });
     });
   });
