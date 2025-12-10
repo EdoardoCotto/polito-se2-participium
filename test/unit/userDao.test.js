@@ -268,6 +268,14 @@ describe('userDao Functions', () => {
       );
     });
 
+    // SKIPPED: This test attempts to mock bcrypt.genSalt() errors, but the bcrypt module
+    // is already required and initialized before this mock can take effect, causing the
+    // mock to not intercept the actual call. To properly test bcrypt error handling, the
+    // DAO module would need to be refactored to allow dependency injection of the bcrypt
+    // module, or use a different mocking strategy that can intercept the native module.
+    // The error handling path exists in the code but cannot be reliably tested with current
+    // mocking approach. Consider refactoring to use bcrypt as an injectable dependency.
+    // TODO: Refactor DAO to allow bcrypt dependency injection for proper error testing
     test.skip('should reject on bcrypt genSalt error', async () => {
       const newUser = {
         username: 'newuser',
@@ -283,6 +291,11 @@ describe('userDao Functions', () => {
       });
     });
 
+    // SKIPPED: Same bcrypt mocking issue as genSalt test above. The bcrypt.hash() function
+    // cannot be mocked after the module is already loaded. This prevents testing the error
+    // handling path when password hashing fails. Requires refactoring the DAO to use
+    // dependency injection or a mockable bcrypt wrapper to enable proper error testing.
+    // TODO: Refactor DAO to allow bcrypt dependency injection for proper error testing
     test.skip('should reject on bcrypt hash error', async () => {
       const newUser = {
         username: 'newuser',
@@ -298,6 +311,11 @@ describe('userDao Functions', () => {
       });
     });
 
+    // SKIPPED: Same bcrypt mocking limitation. The bcrypt.compare() function uses a callback
+    // interface that cannot be properly mocked after the module is loaded. Testing password
+    // comparison error handling requires either refactoring to use bcrypt's promise API with
+    // dependency injection, or creating a wrapper module that can be mocked effectively.
+    // TODO: Refactor DAO to allow bcrypt dependency injection for proper error testing
     test.skip('should reject when bcrypt.compare errors', async () => {
       const username = unique('u');
       await withSqliteMock(
@@ -541,6 +559,11 @@ describe('userDao Functions', () => {
   });
 
   describe('getUser bcrypt error coverage', () => {
+    // SKIPPED: This is another bcrypt.compare() error test with the same mocking limitations
+    // as described above. The bcrypt module's callback-based compare function cannot be
+    // effectively mocked in the current test setup. This test would require refactoring the
+    // DAO to use dependency injection or a wrapper that allows proper mocking of bcrypt errors.
+    // TODO: Refactor DAO to allow bcrypt dependency injection for proper error testing
     test.skip('getUser rejects on bcrypt compare error', async () => {
       await withSqliteMock(
         {
