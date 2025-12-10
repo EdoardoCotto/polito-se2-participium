@@ -382,7 +382,13 @@ export default function ExternalMaintainer({ user }) {
                 <h4 className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <i className="bi bi-clipboard-check me-2"></i>
                   Assigned Reports
-                  <Badge bg="light" text="dark" className="ms-2" style={{ fontSize: 'clamp(0.75rem, 2vw, 0.9rem)' }}>
+                  <Badge bg="light" text="dark" className="ms-2" style={{ 
+                    fontSize: 'clamp(0.75rem, 2vw, 0.9rem)',
+                    fontWeight: '600',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  }}>
                     {assignedReports.length}
                   </Badge>
                 </h4>
@@ -391,24 +397,43 @@ export default function ExternalMaintainer({ user }) {
                 {/* Loading State */}
                 {loading && (
                   <div className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="mt-3 text-muted">Loading assigned reports...</p>
+                    <Spinner animation="border" style={{ color: '#5e7bb3', width: '3rem', height: '3rem' }} />
+                    <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', fontWeight: '500' }}>
+                      Loading assigned reports...
+                    </p>
                   </div>
                 )}
 
                 {/* Empty State */}
                 {!loading && !error && assignedReports.length === 0 && (
                   <div className="text-center py-5">
-                    <i className="bi bi-inbox" style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', color: '#dee2e6' }}></i>
-                    <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
+                    <i className="bi bi-inbox" style={{ 
+                      fontSize: 'clamp(3rem, 8vw, 5rem)', 
+                      color: '#cbd5e1',
+                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+                    }}></i>
+                    <p className="mt-3 text-muted" style={{ 
+                      fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                      fontWeight: '500'
+                    }}>
                       No reports assigned to you
+                    </p>
+                    <p className="text-muted" style={{ 
+                      fontSize: 'clamp(0.8rem, 2vw, 0.95rem)'
+                    }}>
+                      Reports will appear here once assigned
                     </p>
                   </div>
                 )}
 
                 {/* Error State */}
                 {error && !loading && (
-                  <Alert variant="danger" dismissible onClose={() => setError('')}>
+                  <Alert variant="danger" dismissible onClose={() => setError('')} style={{
+                    borderRadius: '0.75rem',
+                    border: 'none',
+                    boxShadow: '0 2px 8px rgba(220, 53, 69, 0.2)',
+                    fontSize: 'clamp(0.9rem, 2vw, 1rem)'
+                  }}>
                     <i className="bi bi-exclamation-triangle me-2"></i>
                     {error}
                   </Alert>
@@ -425,26 +450,30 @@ export default function ExternalMaintainer({ user }) {
                           key={report.id} 
                           className={`shadow-sm ${isSelected ? 'border-primary' : ''}`}
                           style={{ 
-                            border: isSelected ? '0.125rem solid #0d6efd' : '0.0625rem solid #e0e0e0',
-                            borderRadius: '0.75rem',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
+                            border: isSelected ? '2px solid #5e7bb3' : '1px solid #e8ecef',
+                            borderRadius: '0.875rem',
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer',
+                            backgroundColor: isSelected ? '#f8fafc' : 'white',
+                            boxShadow: isSelected ? '0 4px 12px rgba(94, 123, 179, 0.25)' : '0 2px 4px rgba(0, 0, 0, 0.06)'
                           }}
                           onClick={() => handleReportClick(report)}
                           onMouseEnter={(e) => {
                             if (!isSelected) {
-                              e.currentTarget.style.transform = 'translateY(-0.125rem)';
-                              e.currentTarget.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
+                              e.currentTarget.style.transform = 'translateY(-3px)';
+                              e.currentTarget.style.boxShadow = '0 8px 16px rgba(94, 123, 179, 0.15)';
+                              e.currentTarget.style.borderColor = '#5e7bb3';
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (!isSelected) {
                               e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.06)';
+                              e.currentTarget.style.borderColor = '#e8ecef';
                             }
                           }}
                         >
-                        <Card.Body className="p-3">
+                        <Card.Body className="p-3 p-md-4">
                           {/* Report Header */}
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <h6 className="mb-0 fw-bold" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
@@ -499,30 +528,37 @@ export default function ExternalMaintainer({ user }) {
                           {hasPhotos(report) && (
                             <div className="mb-3">
                               <Badge
-                                bg="info"
                                 style={{
-                                  fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s',
-                                  padding: '0.5rem 0.75rem'
+                                  transition: 'all 0.3s ease',
+                                  padding: '0.5rem 0.875rem',
+                                  fontWeight: '600',
+                                  background: 'linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%)',
+                                  border: 'none',
+                                  borderRadius: '0.5rem',
+                                  boxShadow: '0 2px 6px rgba(8, 145, 178, 0.25)',
+                                  color: 'white'
                                 }}
                                 onClick={(e) => handleOpenPhotos(report, e)}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#0891b2';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #0891b2 0%, #06748c 100%)';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(8, 145, 178, 0.4)';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '';
-                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%)';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(8, 145, 178, 0.25)';
                                 }}
                               >
-                                <i className="bi bi-image me-1"></i>
+                                <i className="bi bi-images me-2"></i>
                                 <span>
                                   {countPhotos(report)} photo{countPhotos(report) === 1 ? '' : 's'}
                                 </span>
                                 <i
-                                  className="bi bi-box-arrow-up-right ms-1"
-                                  style={{ fontSize: '0.7em' }}
+                                  className="bi bi-box-arrow-up-right ms-2"
+                                  style={{ fontSize: '0.75em' }}
                                 ></i>
                               </Badge>
                             </div>
