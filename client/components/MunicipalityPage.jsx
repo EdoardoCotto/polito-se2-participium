@@ -36,9 +36,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const [newComment, setNewComment] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
 
-  // state to cache report external assignments
-  const [reportExternalAssignments, setReportExternalAssignments] = useState({});
-
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
@@ -97,14 +94,13 @@ export default function TechnicalOfficeStaffMember({ user }) {
         });
         
         // Check if assigned to external maintainer usando externalMaintainer
-        if (report.externalMaintainer && report.externalMaintainer.id) {
+        if (report.externalMaintainer?.id) {
           console.log(`✅ Report ${report.id} è assegnato a external maintainer:`, report.externalMaintainer);
           assignments[report.id] = report.externalMaintainer;
         }
       });
       
       console.log('🔍 External assignments mapped:', assignments);
-      setReportExternalAssignments(assignments);
 
     } catch (err) {
       console.error('❌ Error fetching reports:', err);
@@ -162,7 +158,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
     e.stopPropagation();
     
     // Prevent opening if already assigned to external maintainer
-    if (report.externalMaintainer && report.externalMaintainer.id) {
+    if (report.externalMaintainer?.id) {
       console.log('Report già assegnato a external maintainer:', report.externalMaintainer);
       return;
     }
@@ -333,7 +329,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+        year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric'
       });
     }
   };
@@ -379,7 +375,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
   
   // Check if report has photos
   const hasPhotos = (report) => {
-    return report.photoUrls && report.photoUrls.length > 0;
+    return report.photoUrls?.length > 0;
   };
 
   // Check if report can be assigned to external maintainer
@@ -410,7 +406,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
     }
     
     // Non mostrare il pulsante se già assegnato a external maintainer
-    if (report.externalMaintainer && report.externalMaintainer.id) {
+    if (report.externalMaintainer?.id) {
       console.log(`❌ Report già assegnato a external maintainer`);
       return false;
     }
@@ -423,14 +419,14 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
   // Check if report is already assigned to external maintainer
   const isAssignedToExternal = (report) => {
-    const isAssigned = report.externalMaintainer && report.externalMaintainer.id;
+    const isAssigned = report.externalMaintainer?.id;
     console.log(`🔍 isAssignedToExternal per report ${report.id}: ${isAssigned}`);
     return isAssigned;
   };
 
   // Get external maintainer info for assigned report
   const getExternalMaintainerInfo = (report) => {
-    if (report.externalMaintainer && report.externalMaintainer.id) {
+    if (report.externalMaintainer?.id) {
       return report.externalMaintainer;
     }
     return null;
@@ -768,8 +764,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                       whiteSpace: 'nowrap',
                                       backgroundColor: '#5e7bb3'
                                     }}>
-                                      <i className="bi bi-person-check-fill me-1"></i>
-                                      Assigned to External
+                                      <i className="bi bi-person-check-fill me-1"></i>Assigned to External
                                     </Badge>
                                     <div style={{ 
                                       fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
@@ -1218,6 +1213,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                     {/* Messages for this day */}
                     {dayComments.map((comment) => {
                       const isOwnMessage = comment.authorId === user?.id;
+                      const isExternalMaintainer = comment.authorRole === 'external_maintainer';
                       return (
                         <div
                           key={comment.id}
@@ -1265,7 +1261,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                 <i className="bi bi-person-circle" style={{ fontSize: '1.1em', opacity: 0.8 }}></i>
                                 <span>{comment.name} {comment.surname}</span>
                                 <Badge 
-                                  bg={comment.authorRole === 'external_maintainer' ? 'primary' : 'secondary'}
+                                  bg={isExternalMaintainer ? 'primary' : 'secondary'}
                                   style={{ 
                                     fontSize: '0.6rem', 
                                     fontWeight: '700',
@@ -1273,7 +1269,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                                     borderRadius: '0.6rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
-                                    backgroundColor: comment.authorRole === 'external_maintainer' ? '#5e7bb3' : '',
+                                    backgroundColor: isExternalMaintainer ? '#5e7bb3' : '',
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)'
                                   }}
                                 >
@@ -1395,8 +1391,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                 fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
                 fontWeight: '500'
               }}>
-                <i className="bi bi-info-circle me-1"></i>
-                Press Enter to send, Shift+Enter for new line
+                <i className="bi bi-info-circle me-1"></i>Press Enter to send, Shift+Enter for new line
               </small>
             </Form.Group>
           </div>
@@ -1408,6 +1403,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
 TechnicalOfficeStaffMember.propTypes = {
   user: PropTypes.shape({
+    id: PropTypes.number,
     name: PropTypes.string,
     surname: PropTypes.string,
     type: PropTypes.string,

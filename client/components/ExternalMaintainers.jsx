@@ -296,7 +296,7 @@ export default function ExternalMaintainer({ user }) {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+        year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric'
       });
     }
   };
@@ -1146,6 +1146,7 @@ export default function ExternalMaintainer({ user }) {
                     {/* Messages for this day */}
                     {dayComments.map((comment) => {
                       const isOwnMessage = comment.authorId === user?.id;
+                      const isExternalMaintainer = comment.authorRole === 'external_maintainer';
                       return (
                         <div
                           key={comment.id}
@@ -1193,7 +1194,7 @@ export default function ExternalMaintainer({ user }) {
                                 <i className="bi bi-person-circle" style={{ fontSize: '1.1em', opacity: 0.8 }}></i>
                                 <span>{comment.name} {comment.surname}</span>
                                 <Badge 
-                                  bg={comment.authorRole === 'external_maintainer' ? 'primary' : 'secondary'}
+                                  bg={isExternalMaintainer ? 'primary' : 'secondary'}
                                   style={{ 
                                     fontSize: '0.6rem', 
                                     fontWeight: '700',
@@ -1201,7 +1202,7 @@ export default function ExternalMaintainer({ user }) {
                                     borderRadius: '0.6rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
-                                    backgroundColor: comment.authorRole === 'external_maintainer' ? '#5e7bb3' : '',
+                                    backgroundColor: isExternalMaintainer ? '#5e7bb3' : '',
                                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)'
                                   }}
                                 >
@@ -1323,8 +1324,7 @@ export default function ExternalMaintainer({ user }) {
                 fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
                 fontWeight: '500'
               }}>
-                <i className="bi bi-info-circle me-1"></i>
-                Press Enter to send, Shift+Enter for new line
+                <i className="bi bi-info-circle me-1"></i>Press Enter to send, Shift+Enter for new line
               </small>
             </Form.Group>
           </div>
@@ -1336,6 +1336,7 @@ export default function ExternalMaintainer({ user }) {
 
 ExternalMaintainer.propTypes = {
   user: PropTypes.shape({
+    id: PropTypes.number,
     name: PropTypes.string,
     surname: PropTypes.string,
     type: PropTypes.string,
