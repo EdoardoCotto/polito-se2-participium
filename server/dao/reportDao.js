@@ -298,7 +298,7 @@ exports.assignReportToExternalMaintainer = (reportId, externalMaintainerId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       UPDATE Reports
-      SET officerId = ?,
+      SET external_maintainerId= ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;

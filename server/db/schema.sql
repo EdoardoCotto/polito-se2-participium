@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS Reports (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
   FOREIGN KEY (officerId) REFERENCES Users(id) ON DELETE CASCADE,
-  FOREIGN KEY (external_maintainerId) REFERENCES Users(id) ON DELETE CASCADE,\
+  FOREIGN KEY (external_maintainerId) REFERENCES Users(id) ON DELETE CASCADE,
   CHECK(status IN ('pending', 'assigned', 'rejected', 'progress', 'suspended', 'resolved')),
   CHECK(category IN (
     'Water Supply - Drinking Water',
