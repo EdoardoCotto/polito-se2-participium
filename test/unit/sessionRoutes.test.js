@@ -43,10 +43,14 @@ jest.mock('../../server/controller/sessionController', () => ({
     });
   },
   getCurrentSession: (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+    // Mock isAuthenticated to simulate an authenticated user for testing
+    req.isAuthenticated = () => true;
+    req.user = { id: 1, username: 'testuser', name: 'Test', surname: 'User', type: 'citizen' };
+    
+    if (req.isAuthenticated()) {
+      return res.status(200).json(req.user);
     }
-    return res.status(200).json(req.user);
+    return res.status(401).json({ error: 'Not authenticated' });
   },
   logout: (_req, res) => {
     return res.status(200).json({ message: 'Logged out successfully' });

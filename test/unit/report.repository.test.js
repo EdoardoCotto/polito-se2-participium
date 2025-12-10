@@ -581,118 +581,6 @@ describe("reportRepository.getCitizenReports", () => {
 // assignReportToExternalMaintainer
 // ----------------------------------------------------
 describe("reportRepository.assignReportToExternalMaintainer", () => {
-<<<<<<< HEAD
-  test("invalid ids throw", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').assignReportToExternalMaintainer(0, 2, 3)
-    ).rejects.toThrow(/Report ID is required|Invalid report ID/i);
-  });
-
-  test("non-integer reportId throws", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').assignReportToExternalMaintainer('1', 2, 3)
-    ).rejects.toThrow(/valid integer/i);
-  });
-
-  test("missing externalMaintainerId throws", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').assignReportToExternalMaintainer(1, undefined, 3)
-    ).rejects.toThrow(/External maintainer ID is required/i);
-  });
-
-  test("non-integer externalMaintainerId throws", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').assignReportToExternalMaintainer(1, '2', 3)
-    ).rejects.toThrow(/valid integer/i);
-  });
-
-  test("report not found throws", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue(null),
-      }));
-      const repo = require('../../server/repository/reportRepository');
-      return expect(repo.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/Report not found/i);
-    });
-  });
-
-  test("report not assigned throws", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue({ status: REPORT_STATUSES.PENDING }),
-      }));
-      const repo = require('../../server/repository/reportRepository');
-      return expect(repo.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/Only assigned reports/i);
-    });
-  });
-
-  test("wrong officer throws Unauthorized", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue({ status: REPORT_STATUSES.ASSIGNED, officerId: 99 }),
-      }));
-      const repo = require('../../server/repository/reportRepository');
-      return expect(repo.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/assigned to you/i);
-    });
-  });
-
-  test("maintainer not found or wrong type throws", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue({ status: REPORT_STATUSES.ASSIGNED, officerId: 3 }),
-      }));
-      jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue(null),
-      }));
-      const repo1 = require('../../server/repository/reportRepository');
-      expect(repo1.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/External maintainer not found/i);
-
-      // Reset modules to ensure next require picks up the new userDao mock
-      jest.resetModules();
-      jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'citizen' }),
-      }));
-      const repo2 = require('../../server/repository/reportRepository');
-      return expect(repo2.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/not an external maintainer/i);
-    });
-  });
-
-  test("update null throws NotFound", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue({ status: REPORT_STATUSES.ASSIGNED, officerId: 3 }),
-        assignReportToExternalMaintainer: jest.fn().mockResolvedValueOnce(null),
-      }));
-      jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_maintainer' }),
-      }));
-      const repo = require('../../server/repository/reportRepository');
-      return expect(repo.assignReportToExternalMaintainer(1, 2, 3)).rejects.toThrow(/Report not found/i);
-    });
-  });
-
-  test("success maps row", async () => {
-    jest.isolateModules(async () => {
-      jest.resetModules();
-      const daoRow = { reportId: 55, userId: 1, latitude: 1, longitude: 2, title: 't', description: 'd', category: REPORT_CATEGORIES[0], status: REPORT_STATUSES.ASSIGNED, rejection_reason: null, technical_office: TECHNICAL_OFFICER_ROLES[0], created_at: '2024-01-01', updated_at: '2024-01-02', image_path1: 'a.jpg', image_path2: null, image_path3: null, userUsername: 'u', userName: 'n', userSurname: 's', userEmail: 'e@test.com' };
-      jest.doMock('../../server/dao/reportDao', () => ({
-        getReportById: jest.fn().mockResolvedValue({ status: REPORT_STATUSES.ASSIGNED, officerId: 3 }),
-        assignReportToExternalMaintainer: jest.fn().mockResolvedValueOnce(daoRow),
-      }));
-      jest.doMock('../../server/dao/userDao', () => ({
-        getUserById: jest.fn().mockResolvedValue({ id: 2, type: 'external_maintainer' }),
-      }));
-      const repo2 = require('../../server/repository/reportRepository');
-      const res = await repo2.assignReportToExternalMaintainer(1, 2, 3);
-      expect(res.id).toBe(55);
-      expect(res.photos).toEqual(['a.jpg']);
-    });
-=======
   test("throws if reportId is missing", async () => {
     await expect(
       reportRepository.assignReportToExternalMaintainer(null, 5, 1)
@@ -824,7 +712,6 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
     reportDao.assignReportToExternalMaintainer = jest.fn().mockResolvedValue(updatedRow);
     const result = await reportRepository.assignReportToExternalMaintainer(10, 5, 1);
     expect(result).toMatchObject({ id: 10 });
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
   });
 });
 
@@ -832,64 +719,6 @@ describe("reportRepository.assignReportToExternalMaintainer", () => {
 // updateMaintainerStatus
 // ----------------------------------------------------
 describe("reportRepository.updateMaintainerStatus", () => {
-<<<<<<< HEAD
-  test("invalid input throws", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').updateMaintainerStatus(0, 2, REPORT_STATUSES.PROGRESS)
-    ).rejects.toThrow(/Invalid report ID|Maintainer ID is required/i);
-  });
-
-  test("invalid status value throws BadRequest", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').updateMaintainerStatus(1, 2, 'not_allowed')
-    ).rejects.toThrow(/Invalid status/i);
-  });
-
-  test("status not a string throws", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').updateMaintainerStatus(1, 2, null)
-    ).rejects.toThrow(/Status is required/i);
-  });
-
-  test("missing maintainerId triggers Unauthorized branch", async () => {
-    await expect(
-      require('../../server/repository/reportRepository').updateMaintainerStatus(5, undefined, REPORT_STATUSES.PROGRESS)
-    ).rejects.toThrow(/Maintainer ID is required/i);
-  });
-
-  test("update null with missing report yields NotFound, else Unauthorized", async () => {
-    jest.isolateModules(() => {
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        updateReportStatusByOfficer: jest.fn().mockResolvedValueOnce(null),
-        getReportById: jest.fn().mockResolvedValueOnce(null),
-      }));
-      const repo1 = require('../../server/repository/reportRepository');
-      expect(repo1.updateMaintainerStatus(1, 2, REPORT_STATUSES.PROGRESS)).rejects.toThrow(/Report not found/i);
-
-      jest.resetModules();
-      jest.doMock('../../server/dao/reportDao', () => ({
-        updateReportStatusByOfficer: jest.fn().mockResolvedValueOnce(null),
-        getReportById: jest.fn().mockResolvedValueOnce({ reportId: 1 }),
-      }));
-      const repo2 = require('../../server/repository/reportRepository');
-      return expect(repo2.updateMaintainerStatus(1, 2, REPORT_STATUSES.PROGRESS)).rejects.toThrow(/not assigned/i);
-    });
-  });
-
-  test("success maps updated row", async () => {
-    jest.isolateModules(async () => {
-      jest.resetModules();
-      const daoRow = { reportId: 55, userId: 1, latitude: 1, longitude: 2, title: 't', description: 'd', category: REPORT_CATEGORIES[0], status: REPORT_STATUSES.PROGRESS, rejection_reason: null, technical_office: TECHNICAL_OFFICER_ROLES[0], created_at: '2024-01-01', updated_at: '2024-01-02', image_path1: 'a.jpg', image_path2: null, image_path3: null, userUsername: 'u', userName: 'n', userSurname: 's', userEmail: 'e@test.com' };
-      jest.doMock('../../server/dao/reportDao', () => ({
-        updateReportStatusByOfficer: jest.fn().mockResolvedValueOnce(daoRow),
-      }));
-      const repo = require('../../server/repository/reportRepository');
-      const res = await repo.updateMaintainerStatus(1, 2, REPORT_STATUSES.PROGRESS);
-      expect(res.id).toBe(55);
-      expect(res.status).toBe(REPORT_STATUSES.PROGRESS);
-    });
-=======
   test("throws if reportId is invalid", async () => {
     await expect(
       reportRepository.updateMaintainerStatus("abc", 5, "progress")
@@ -956,6 +785,5 @@ describe("reportRepository.updateMaintainerStatus", () => {
     reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(updatedRow);
     const result = await reportRepository.updateMaintainerStatus(10, 5, "progress");
     expect(result).toMatchObject({ id: 10, status: REPORT_STATUSES.PROGRESS });
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
   });
 });

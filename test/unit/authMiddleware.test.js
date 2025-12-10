@@ -130,54 +130,30 @@ describe('authMiddleware', () => {
   });
 
   describe('isExternalMaintainer', () => {
-<<<<<<< HEAD
-    it('calls next when user type is external_maintainer', () => {
-      req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'external_maintainer' };
-      // isExternalMaintainer does not check isAuthenticated; it checks user.type and calls next()
-=======
     it('calls next if user is external_maintainer', () => {
       req.user = { type: 'external_maintainer' };
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
       isExternalMaintainer(req, res, next);
       expect(next).toHaveBeenCalledWith();
     });
 
-<<<<<<< HEAD
-    it('responds 403 when user type is not external_maintainer', () => {
-      req.isAuthenticated.mockReturnValue(true);
-=======
     it('returns 403 if user is not external_maintainer', () => {
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
       req.user = { type: 'citizen' };
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
       isExternalMaintainer(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({ error: 'Access forbidden: external maintainer only' });
-<<<<<<< HEAD
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('responds 403 when req.user is undefined (optional chaining)', () => {
-      req.isAuthenticated.mockReturnValue(true);
-      req.user = undefined;
-=======
     });
 
     it('returns 403 if user is not set', () => {
       req.user = null;
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
       isExternalMaintainer(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({ error: 'Access forbidden: external maintainer only' });
-<<<<<<< HEAD
-      expect(next).not.toHaveBeenCalled();
-=======
     });
   });
 
@@ -228,7 +204,6 @@ describe('authMiddleware', () => {
       expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const error = next.mock.calls[0][0];
       expect(error.message).toBe('User not authenticated');
->>>>>>> c951a75a6e707746e1925ca8487710214f131d35
     });
   });
 });

@@ -268,7 +268,7 @@ describe('userDao Functions', () => {
       );
     });
 
-    test.skip('should reject on bcrypt genSalt error', async () => {
+    test('should reject on bcrypt genSalt error', async () => {
       const newUser = {
         username: 'newuser',
         email: 'new@example.com',
@@ -283,7 +283,7 @@ describe('userDao Functions', () => {
       });
     });
 
-    test.skip('should reject on bcrypt hash error', async () => {
+    test('should reject on bcrypt hash error', async () => {
       const newUser = {
         username: 'newuser',
         email: 'new@example.com',
@@ -298,7 +298,7 @@ describe('userDao Functions', () => {
       });
     });
 
-    test.skip('should reject when bcrypt.compare errors', async () => {
+    test('should reject when bcrypt.compare errors', async () => {
       const username = unique('u');
       await withSqliteMock(
         { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, name: 'A', surname: 'B', type: 'citizen', password: 'stored_hash' }) },
@@ -541,7 +541,7 @@ describe('userDao Functions', () => {
   });
 
   describe('getUser bcrypt error coverage', () => {
-    test.skip('getUser rejects on bcrypt compare error', async () => {
+    test('getUser rejects on bcrypt compare error', async () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { id: 1, username: 'user', password: 'hash', name: 'N', surname: 'S', type: 'citizen' }),
