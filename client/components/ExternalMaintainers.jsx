@@ -78,8 +78,7 @@ export default function ExternalMaintainer({ user }) {
     try {
       setLoading(true);
       setError('');
-      const reports = await API.getAssignedReports();
-      console.log('Assigned Reports:', reports);
+      const reports = await API.getExternalAssignedReports();
       setAssignedReports(reports);
     } catch (err) {
       setError(err.message || 'Failed to load assigned reports');
@@ -93,7 +92,6 @@ export default function ExternalMaintainer({ user }) {
     // If clicking on already selected report, deselect it
     if (highlightedLocation?.reportId === report.id) {
       setHighlightedLocation(null);
-      console.log('Report deselected');
       return;
     }
 
@@ -105,7 +103,7 @@ export default function ExternalMaintainer({ user }) {
         title: report.title,
         reportId: report.id
       });
-      console.log('Report selected:', report.title, report.latitude, report.longitude);
+
     }
   };
 
@@ -113,7 +111,7 @@ export default function ExternalMaintainer({ user }) {
   const handleOpenPhotos = (report, e) => {
     e.stopPropagation();
     const photos = report.photoUrls || [];
-    console.log('Photos to display:', photos);
+
     
     if (photos.length === 0) {
       console.warn('No photos found for this report');
