@@ -737,3 +737,58 @@ describe('reportController.updateMaintainerStatus', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
 });
+
+describe('reportController.getExternalAssignedReports', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('401 if no user', async () => {
+    const req = {};
+    const res = mkRes();
+    await controller.getExternalAssignedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+  });
+
+  it('401 if user without id', async () => {
+    const req = { user: { type: 'external_maintainer' } };
+    const res = mkRes();
+    await controller.getExternalAssignedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
+  });
+
+  it('200 success with photoUrls mapping', async () => {
+    const req = {
+      user: { id: 5 },
+      protocol: 'http',
+      get: () => 'localhost:3000'
+    };
+    const res = mkRes();
+    repo.getAssignedReportsForExternal = jest.fn().mockResolvedValue([
+      { id: 10, photos: ['/static/uploads/a.jpg'] }
+    ]);
+    await controller.getExternalAssignedReports(req, res);
+    expect(repo.getAssignedReportsForExternal).toHaveBeenCalledWith(5);
+    expect(res.status).toHaveBeenCalledWith(200);
+    const payload = res.json.mock.calls[0][0];
+    expect(payload[0].photoUrls).toEqual(['http://localhost:3000/static/uploads/a.jpg']);
+  });
+
+  it('propaga AppError', async () => {
+    const req = { user: { id: 5 }, protocol: 'http', get: () => 'host' };
+    const res = mkRes();
+    repo.getAssignedReportsForExternal = jest.fn().mockRejectedValue(new AppError('Not authorized', 403));
+    await controller.getExternalAssignedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Not authorized' });
+  });
+
+  it('500 errore generico', async () => {
+    const req = { user: { id: 5 }, protocol: 'http', get: () => 'host' };
+    const res = mkRes();
+    repo.getAssignedReportsForExternal = jest.fn().mockRejectedValue(new Error('oops'));
+    await controller.getExternalAssignedReports(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+  });
+});

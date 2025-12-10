@@ -475,6 +475,27 @@ describe('API Client', () => {
         expect(result.status).toBe('progress');
       });
     });
+
+    describe('getExternalAssignedReports', () => {
+      it('should get assigned reports for external maintainer', async () => {
+        const mockReports = [{ id: 1, status: 'assigned', externalMaintainerId: 5 }];
+        fetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockReports,
+        });
+
+        const result = await API.getExternalAssignedReports();
+
+        expect(fetch).toHaveBeenCalledWith(
+          'http://localhost:3001/api/reports/external/assigned',
+          expect.objectContaining({
+            method: 'GET',
+            credentials: 'include',
+          })
+        );
+        expect(result).toEqual(mockReports);
+      });
+    });
   });
 
   describe('Comment Management', () => {
@@ -688,6 +709,16 @@ describe('API Client', () => {
 
       await expect(API.updateMaintainerStatus(1, 'progress'))
         .rejects.toThrow('Status update failed');
+    });
+
+    it('should handle failed getExternalAssignedReports', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Not authorized' }),
+      });
+
+      await expect(API.getExternalAssignedReports())
+        .rejects.toThrow('Not authorized');
     });
 
     it('should handle failed getCategories', async () => {

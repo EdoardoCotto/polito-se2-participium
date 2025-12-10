@@ -315,6 +315,180 @@ export default function ExternalMaintainer({ user }) {
     return groups;
   };
 
+  // Render comments content based on loading/error/data state
+  const renderCommentsContent = () => {
+    if (loadingComments) {
+      return (
+        <div className="text-center py-5">
+          <Spinner animation="border" style={{ color: '#5e7bb3', width: '2.5rem', height: '2.5rem' }} />
+          <p className="mt-3 text-muted fw-medium">Loading messages...</p>
+        </div>
+      );
+    }
+
+    if (commentError && comments.length === 0) {
+      return (
+        <Alert variant="danger" style={{ 
+          borderRadius: '1rem',
+          border: 'none',
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+          background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
+        }}>
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {commentError}
+        </Alert>
+      );
+    }
+
+    if (comments.length === 0) {
+      return (
+        <div className="text-center py-5">
+          <div style={{
+            background: 'linear-gradient(135deg, #e8f0ff 0%, #d6e5ff 100%)',
+            borderRadius: '50%',
+            width: '120px',
+            height: '120px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem',
+            boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
+          }}>
+            <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
+          </div>
+          <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
+            No messages yet. Start the conversation!
+          </p>
+        </div>
+      );
+    }
+
+    // Render comments grouped by date
+    return (
+      <>
+        {Object.entries(groupCommentsByDate(comments)).map(([dateKey, dayComments]) => (
+          <div key={dateKey}>
+            {renderDateSeparator(dateKey)}
+            {dayComments.map((comment, idx) => renderComment(comment, idx))}
+          </div>
+        ))}
+      </>
+    );
+  };
+
+  // Render date separator helper
+  const renderDateSeparator = (dateKey) => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      margin: '1.5rem 0',
+      gap: '1rem'
+    }}>
+      <div style={{ 
+        flex: 1, 
+        height: '2px', 
+        background: 'linear-gradient(to right, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
+        borderRadius: '1px'
+      }}></div>
+      <div style={{
+        padding: '0.5rem 1.3rem',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e8f0ff 100%)',
+        borderRadius: '2rem',
+        fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+        fontWeight: '600',
+        color: '#5e7bb3',
+        letterSpacing: '0.03em',
+        textTransform: 'uppercase',
+        boxShadow: '0 2px 8px rgba(94, 123, 179, 0.1)',
+        border: '1px solid rgba(94, 123, 179, 0.1)'
+      }}>
+        {dateKey === new Date().toDateString() ? 'Today' : dateKey}
+      </div>
+      <div style={{ 
+        flex: 1, 
+        height: '2px', 
+        background: 'linear-gradient(to left, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
+        borderRadius: '1px'
+      }}></div>
+    </div>
+  );
+
+  // Render individual comment helper
+  const renderComment = (comment, idx) => {
+    const isCurrentUser = comment.authorId === user.id;
+    const displayTime = new Date(comment.created_at).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return (
+      <div
+        key={idx}
+        style={{
+          display: 'flex',
+          justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+          marginBottom: '1rem',
+          animation: 'slideIn 0.3s ease-out'
+        }}
+      >
+        <div style={{
+          maxWidth: '75%',
+          background: isCurrentUser 
+            ? 'linear-gradient(135deg, #5e7bb3 0%, #4a5f8f 100%)'
+            : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          color: isCurrentUser ? '#fff' : '#1e293b',
+          padding: '1rem 1.3rem',
+          borderRadius: isCurrentUser
+            ? '1.5rem 1.5rem 0.3rem 1.5rem'
+            : '1.5rem 1.5rem 1.5rem 0.3rem',
+          boxShadow: isCurrentUser 
+            ? '0 6px 20px rgba(94, 123, 179, 0.3)'
+            : '0 4px 16px rgba(0, 0, 0, 0.08)',
+          border: isCurrentUser ? 'none' : '1px solid rgba(0, 0, 0, 0.05)',
+          position: 'relative',
+          wordBreak: 'break-word'
+        }}>
+          {!isCurrentUser && (
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              color: '#5e7bb3',
+              letterSpacing: '0.02em'
+            }}>
+              {comment.name} {comment.surname}
+              <span style={{
+                marginLeft: '0.5rem',
+                fontWeight: '500',
+                color: '#64748b',
+                fontSize: '0.7rem'
+              }}>
+                ({getCommentAuthorRole(comment.authorRole)})
+              </span>
+            </div>
+          )}
+          <div style={{
+            fontSize: '0.95rem',
+            lineHeight: '1.5',
+            marginBottom: '0.5rem'
+          }}>
+            {comment.comment}
+          </div>
+          <div style={{
+            fontSize: '0.7rem',
+            opacity: 0.8,
+            textAlign: 'right',
+            fontWeight: '500',
+            letterSpacing: '0.02em'
+          }}>
+            {displayTime}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Get role display name for comment author
   const getCommentAuthorRole = (role) => {
     const roleMap = {
@@ -1066,181 +1240,7 @@ export default function ExternalMaintainer({ user }) {
           }}
           className="messages-container"
           >
-            {loadingComments ? (
-              <div className="text-center py-5">
-                <Spinner animation="border" style={{ color: '#5e7bb3', width: '2.5rem', height: '2.5rem' }} />
-                <p className="mt-3 text-muted fw-medium">Loading messages...</p>
-              </div>
-            ) : commentError && comments.length === 0 ? (
-              <Alert variant="danger" style={{ 
-                borderRadius: '1rem',
-                border: 'none',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
-                background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
-              }}>
-                <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                {commentError}
-              </Alert>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-5">
-                <div style={{
-                  background: 'linear-gradient(135deg, #e8f0ff 0%, #d6e5ff 100%)',
-                  borderRadius: '50%',
-                  width: '120px',
-                  height: '120px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1.5rem',
-                  boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
-                }}>
-                  <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
-                </div>
-                <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
-                  No messages yet. Start the conversation!
-                </p>
-              </div>
-            ) : (
-              <>
-                {Object.entries(groupCommentsByDate(comments)).map(([dateKey, dayComments]) => (
-                  <div key={dateKey}>
-                    {/* Date Separator */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      margin: '1.5rem 0',
-                      gap: '1rem'
-                    }}>
-                      <div style={{ 
-                        flex: 1, 
-                        height: '2px', 
-                        background: 'linear-gradient(to right, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
-                        borderRadius: '1px'
-                      }}></div>
-                      <div style={{
-                        padding: '0.5rem 1.3rem',
-                        background: 'linear-gradient(135deg, #f8fafc 0%, #e8f0ff 100%)',
-                        borderRadius: '2rem',
-                        fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
-                        fontWeight: '700',
-                        color: '#5e7bb3',
-                        boxShadow: '0 3px 10px rgba(94, 123, 179, 0.15)',
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        border: '1px solid rgba(94, 123, 179, 0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem'
-                      }}>
-                        <i className="bi bi-calendar-check" style={{ fontSize: '1em' }}></i>
-                        {formatCommentDate(dayComments[0].created_at)}
-                      </div>
-                      <div style={{ 
-                        flex: 1, 
-                        height: '2px', 
-                        background: 'linear-gradient(to left, transparent, rgba(94, 123, 179, 0.3), rgba(94, 123, 179, 0.15))',
-                        borderRadius: '1px'
-                      }}></div>
-                    </div>
-
-                    {/* Messages for this day */}
-                    {dayComments.map((comment) => {
-                      const isOwnMessage = comment.authorId === user?.id;
-                      const isExternalMaintainer = comment.authorRole === 'external_maintainer';
-                      return (
-                        <div
-                          key={comment.id}
-                          style={{
-                            display: 'flex',
-                            justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
-                            marginBottom: '0.75rem',
-                            animation: 'slideIn 0.3s ease-out'
-                          }}
-                          className="message-wrapper"
-                        >
-                          <div 
-                            className="message-bubble"
-                            style={{
-                              maxWidth: '75%',
-                              background: isOwnMessage 
-                                ? 'linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 100%)' 
-                                : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                              color: isOwnMessage ? '#ffffff' : '#495057',
-                              borderRadius: isOwnMessage 
-                                ? '1.5rem 1.5rem 0.4rem 1.5rem' 
-                                : '1.5rem 1.5rem 1.5rem 0.4rem',
-                              padding: '1rem 1.3rem',
-                              boxShadow: isOwnMessage
-                                ? '0 6px 20px rgba(94, 123, 179, 0.35), 0 2px 6px rgba(0, 0, 0, 0.1)'
-                                : '0 3px 15px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06)',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              position: 'relative',
-                              backdropFilter: isOwnMessage ? 'none' : 'blur(10px)',
-                              border: isOwnMessage ? 'none' : '1px solid rgba(203, 213, 225, 0.3)'
-                            }}
-                          >
-                            {!isOwnMessage && (
-                              <div style={{ 
-                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
-                                fontWeight: '700',
-                                marginBottom: '0.5rem',
-                                color: '#5e7bb3',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.6rem',
-                                paddingBottom: '0.4rem',
-                                borderBottom: '1px solid rgba(94, 123, 179, 0.1)'
-                              }}>
-                                <i className="bi bi-person-circle" style={{ fontSize: '1.1em', opacity: 0.8 }}></i>
-                                <span>{comment.name} {comment.surname}</span>
-                                <Badge 
-                                  bg={isExternalMaintainer ? 'primary' : 'secondary'}
-                                  style={{ 
-                                    fontSize: '0.6rem', 
-                                    fontWeight: '700',
-                                    padding: '0.3rem 0.6rem',
-                                    borderRadius: '0.6rem',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    backgroundColor: isExternalMaintainer ? '#5e7bb3' : '',
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)'
-                                  }}
-                                >
-                                  {getCommentAuthorRole(comment.authorRole)}
-                                </Badge>
-                              </div>
-                            )}
-                            <div style={{ 
-                              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-                              wordWrap: 'break-word',
-                              lineHeight: '1.6',
-                              whiteSpace: 'pre-wrap',
-                              marginTop: isOwnMessage ? '0' : '0.3rem'
-                            }}>
-                              {comment.comment}
-                            </div>
-                            <div style={{ 
-                              fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
-                              marginTop: '0.6rem',
-                              opacity: isOwnMessage ? 0.9 : 0.65,
-                              textAlign: 'right',
-                              fontWeight: '600',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-end',
-                              gap: '0.3rem'
-                            }}>
-                              <i className="bi bi-clock" style={{ fontSize: '0.9em' }}></i>
-                              {formatCommentTime(comment.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </>
-            )}
+            {renderCommentsContent()}
           </div>
 
           {/* Message Input */}

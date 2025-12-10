@@ -493,4 +493,68 @@ describe("reportDao", () => {
     expect(mockDb.get).toHaveBeenCalled();
     restore();
   });
+
+  // getReportsByExternalMaintainerId tests
+  test("getReportsByExternalMaintainerId() should return rows", async () => {
+    const rows = [{ reportId: 1, maintainerId: 5 }];
+    const { dao, restore } = withDao({ allImpl: (_s, _p, cb) => cb(null, rows) });
+    const result = await dao.getReportsByExternalMaintainerId(5);
+    expect(result).toEqual(rows);
+    restore();
+  });
+
+  test("getReportsByExternalMaintainerId() should return [] when undefined", async () => {
+    const { dao, restore } = withDao({ allImpl: (_s, _p, cb) => cb(null, undefined) });
+    const result = await dao.getReportsByExternalMaintainerId(5);
+    expect(result).toEqual([]);
+    restore();
+  });
+
+  test("getReportsByExternalMaintainerId() should reject on error", async () => {
+    const { dao, restore } = withDao({ allImpl: (_s, _p, cb) => cb(new Error("Maintainer fail")) });
+    await expect(dao.getReportsByExternalMaintainerId(5)).rejects.toThrow("Maintainer fail");
+    restore();
+  });
+
+  // updateReportStatusByExternalMaintainer tests
+  test("updateReportStatusByExternalMaintainer() should reject on run error", async () => {
+    const { dao, mockDb, restore } = withDao();
+    mockDb.run.mockImplementation(function (_sql, _params, cb) { cb(new Error("Run error")); });
+    await expect(dao.updateReportStatusByExternalMaintainer(10, 20, "progress")).rejects.toThrow("Run error");
+    restore();
+  });
+
+  test("updateReportStatusByExternalMaintainer() should return null when no row updated", async () => {
+    const { dao, mockDb, restore } = withDao();
+    mockDb.run.mockImplementation(function (_sql, _params, cb) { cb.call({ changes: 0 }, null); });
+    const result = await dao.updateReportStatusByExternalMaintainer(10, 20, "progress");
+    expect(result).toBeNull();
+    restore();
+  });
+
+  test("updateReportStatusByExternalMaintainer() should reject on select error after successful run", async () => {
+    const { dao, mockDb, restore } = withDao();
+    mockDb.run.mockImplementation(function (_sql, _params, cb) { cb.call({ changes: 1 }, null); });
+    mockDb.get.mockImplementation((_sql, _params, cb) => cb(new Error("Select error")));
+    await expect(dao.updateReportStatusByExternalMaintainer(10, 20, "progress")).rejects.toThrow("Select error");
+    restore();
+  });
+
+  test("updateReportStatusByExternalMaintainer() should return updated report", async () => {
+    const updatedReport = { 
+      reportId: 10, 
+      external_maintainerId: 20, 
+      status: "progress",
+      officerId: 5,
+      officerName: "John"
+    };
+    const { dao, mockDb, restore } = withDao();
+    mockDb.run.mockImplementation(function (_sql, _params, cb) { cb.call({ changes: 1 }, null); });
+    mockDb.get.mockImplementation((_sql, _params, cb) => cb(null, updatedReport));
+    const result = await dao.updateReportStatusByExternalMaintainer(10, 20, "progress");
+    expect(result).toEqual(updatedReport);
+    expect(mockDb.run).toHaveBeenCalled();
+    expect(mockDb.get).toHaveBeenCalled();
+    restore();
+  });
 });

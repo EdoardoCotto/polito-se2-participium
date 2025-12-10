@@ -358,6 +358,16 @@ describe('userDao Functions', () => {
       );
     });
 
+    test('should return empty array when rows is null', async () => {
+      await withSqliteMock(
+        { allImpl: (_s, _p, cb) => cb(null, null) },
+        async (d) => {
+          const result = await d.findMunicipalityUsers();
+          expect(result).toEqual([]);
+        }
+      );
+    });
+
     // Skip: altri casi non forzabili senza mock del DB
   });
 
