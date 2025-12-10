@@ -620,8 +620,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <i className="bi bi-person-gear me-2" style={{ fontSize: '1.5rem' }}></i>
-            Assign to External Maintainer
+            <i className="bi bi-person-gear me-2" style={{ fontSize: '1.5rem' }}></i>Assign to External Maintainer
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
@@ -686,8 +685,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                   color: '#2c3e50',
                   marginBottom: '0.75rem'
                 }}>
-                  <i className="bi bi-person-gear me-2" style={{ color: '#5e7bb3' }}></i>
-                  Select External Maintainer *
+                  <i className="bi bi-person-gear me-2" style={{ color: '#5e7bb3' }}></i>Select External Maintainer *
                 </Form.Label>
                 {loadingMaintainers ? (
                   <div className="text-center py-3">

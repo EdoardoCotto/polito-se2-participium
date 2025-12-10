@@ -71,7 +71,7 @@ exports.isInternalStaffOrMaintainer = (req, res, next) => {
 
   const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
   const isTechnicalStaff = TECHNICAL_OFFICER_ROLES.includes(req.user.type);
-  const isExternalMaintainer = req.user.type === 'external_maintainer' || req.user.type === 'external_maintainer';
+  const isExternalMaintainer = req.user.type === 'external_maintainer';
 
   if (isTechnicalStaff || isExternalMaintainer) {
     return next();

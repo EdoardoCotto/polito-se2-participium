@@ -658,8 +658,7 @@ export default function ExternalMaintainer({ user }) {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>
-            Update Report Status
+            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>Update Report Status
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
@@ -724,8 +723,7 @@ export default function ExternalMaintainer({ user }) {
                   fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
                   color: '#2c3e50'
                 }}>
-                  <i className="bi bi-arrow-repeat me-2" style={{ color: '#5e7bb3' }}></i>
-                  Select New Status *
+                  <i className="bi bi-arrow-repeat me-2" style={{ color: '#5e7bb3' }}></i>Select New Status *
                 </Form.Label>
                 <div className="d-flex flex-column gap-3">
                   {statusOptions.map((option) => (
