@@ -286,6 +286,7 @@ router.get('/reports/approved', reportController.getApprovedReports);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/reports/citizen', isLoggedIn, reportController.getCitizenReports);
+
 /**
  * @swagger
  * /reports/assigned:
@@ -578,6 +579,40 @@ router.put(
   isLoggedIn, 
   isExternalMaintainer,
   reportController.updateMaintainerStatus
+);
+
+/**
+ * @swagger
+ * /reports/external/assigned:
+ *   get:
+ *     summary: Get reports assigned to the logged-in external maintainer
+ *     description: >
+ *       Returns all reports assigned to the authenticated external maintainer.
+ *       Only users with type 'external_maintainer' can access this endpoint.
+ *     tags: [Reports]
+ *     security:
+ *       - sessionAuth: []   # Se usi l'autenticazione di sessione
+ *     responses:
+ *       200:
+ *         description: List of assigned reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (user is not an external maintainer)
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+  '/reports/external/assigned', 
+  isLoggedIn, 
+  isExternalMaintainer,
+  reportController.getExternalAssignedReports
 );
 
 
