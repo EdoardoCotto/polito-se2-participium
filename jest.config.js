@@ -35,6 +35,7 @@ module.exports = {
       testMatch: ['<rootDir>/test/unit/**/*.test.js'],
       moduleNameMapper: {
         '^sqlite3$': '<rootDir>/__mock__/sqlite3.js',
+        '^bcrypt$': '<rootDir>/__mock__/bcrypt.js',
       },
     },
     {
