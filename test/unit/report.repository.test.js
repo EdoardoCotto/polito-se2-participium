@@ -746,7 +746,7 @@ describe("reportRepository.updateMaintainerStatus", () => {
   });
 
   test("throws if dao returns null and report not found", async () => {
-    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(null);
+    reportDao.updateReportStatusByExternalMaintainer = jest.fn().mockResolvedValue(null);
     reportDao.getReportById = jest.fn().mockResolvedValue(null);
     await expect(
       reportRepository.updateMaintainerStatus(10, 5, "progress")
@@ -754,11 +754,11 @@ describe("reportRepository.updateMaintainerStatus", () => {
   });
 
   test("throws if dao returns null and report exists (not assigned to maintainer)", async () => {
-    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(null);
+    reportDao.updateReportStatusByExternalMaintainer = jest.fn().mockResolvedValue(null);
     reportDao.getReportById = jest.fn().mockResolvedValue({ reportId: 10 });
     await expect(
       reportRepository.updateMaintainerStatus(10, 5, "progress")
-    ).rejects.toThrow(/You are not assigned to this report/);
+    ).rejects.toThrow(/You are not assigned to this report as external maintainer/);
   });
 
   test("success - returns mapped report", async () => {
@@ -784,8 +784,69 @@ describe("reportRepository.updateMaintainerStatus", () => {
       userEmail: "e@test.com",
       officerId: 5,
     };
-    reportDao.updateReportStatusByOfficer = jest.fn().mockResolvedValue(updatedRow);
+    reportDao.updateReportStatusByExternalMaintainer = jest.fn().mockResolvedValue(updatedRow);
     const result = await reportRepository.updateMaintainerStatus(10, 5, "progress");
     expect(result).toMatchObject({ id: 10, status: REPORT_STATUSES.PROGRESS });
+  });
+});
+
+// ----------------------------------------------------
+// getAssignedReportsForExternal
+// ----------------------------------------------------
+describe("reportRepository.getAssignedReportsForExternal", () => {
+  test("invalid maintainerId throws", async () => {
+    await expect(reportRepository.getAssignedReportsForExternal(undefined)).rejects.toThrow(/Maintainer ID is required/i);
+  });
+
+  test("non-integer maintainerId throws", async () => {
+    await expect(reportRepository.getAssignedReportsForExternal("5")).rejects.toThrow(/Maintainer ID must be a valid integer/i);
+  });
+
+  test("success maps with officer and maintainer details", async () => {
+    const row = {
+      reportId: 77,
+      userId: 10,
+      latitude: 45,
+      longitude: 7,
+      title: "Ext",
+      description: "Assigned to external",
+      category: REPORT_CATEGORIES[0],
+      status: REPORT_STATUSES.ASSIGNED,
+      rejection_reason: null,
+      technical_office: TECHNICAL_OFFICER_ROLES[0],
+      created_at: "2024-01-01",
+      updated_at: "2024-01-02",
+      image_path1: "a.jpg",
+      image_path2: null,
+      image_path3: null,
+      userUsername: "citizen10",
+      userName: "C10",
+      userSurname: "Surname",
+      userEmail: "c10@test.com",
+      // Officer details joined for external maintainer view
+      officerId: 3,
+      officerUsername: "officer3",
+      officerName: "O3",
+      officerSurname: "S3",
+      officerEmail: "o3@test.com",
+      // Maintainer details present as the assigned maintainer
+      maintainerId: 5,
+      maintainerUsername: "maint5",
+      maintainerName: "M5",
+      maintainerSurname: "MS5",
+      maintainerEmail: "m5@test.com",
+    };
+    reportDao.getReportsByExternalMaintainerId = jest.fn().mockResolvedValue([row]);
+    const res = await reportRepository.getAssignedReportsForExternal(5);
+    expect(reportDao.getReportsByExternalMaintainerId).toHaveBeenCalledWith(5);
+    expect(res[0].id).toBe(77);
+    expect(res[0].photos).toEqual(["a.jpg"]);
+    expect(res[0].officer).toEqual({ id: 3, username: "officer3", name: "O3", surname: "S3", email: "o3@test.com" });
+    expect(res[0].externalMaintainer).toEqual({ id: 5, username: "maint5", name: "M5", surname: "MS5", email: "m5@test.com" });
+  });
+
+  test("dao error propagates", async () => {
+    reportDao.getReportsByExternalMaintainerId = jest.fn().mockRejectedValue(new Error("Maintainer fail"));
+    await expect(reportRepository.getAssignedReportsForExternal(5)).rejects.toThrow(/Maintainer fail/);
   });
 });
