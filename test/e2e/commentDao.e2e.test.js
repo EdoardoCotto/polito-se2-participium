@@ -52,6 +52,7 @@ async function initializeDatabase() {
 let commentDao;
 let userDao;
 let reportDao;
+let sharedReportId;
 
 beforeAll(async () => {
   await initializeDatabase();
@@ -65,7 +66,7 @@ beforeAll(async () => {
   await userDao.createUser({ username: 'testuser3', email: 'test3@example.com', name: 'Test', surname: 'User3', password: 'password123', type: 'external_maintainer' });
 
   // Create a test report for comments
-  await reportDao.createReport({
+  const createdReport = await reportDao.createReport({
     userId: 1,
     latitude: 45.0703,
     longitude: 7.6869,
@@ -74,12 +75,21 @@ beforeAll(async () => {
     category: 'Roads and Urban Furnishings',
     photos: ['test1.jpg']
   });
+  sharedReportId = createdReport.id;
+
+  // Assign the report to the urban planner (authorId 2) and also to external maintainer (id 3)
+  await reportDao.updateReportReview(sharedReportId, {
+    status: 'assigned',
+    technicalOffice: 'urban_planner',
+    officerId: 2,
+  });
+  await reportDao.assignReportToExternalMaintainer(sharedReportId, 3);
 });
 
 describe('commentDao', () => {
   describe('createComment', () => {
     it('should create a comment and return it with author details', async () => {
-      const reportId = 1;
+      const reportId = sharedReportId;
       const authorId = 2; // urban_planner
       const commentText = 'This needs urgent attention';
 
@@ -96,18 +106,14 @@ describe('commentDao', () => {
       expect(result.created_at).toBeDefined();
     });
 
-    it('should allow creating comment even with non-existent reportId (FK not enforced)', async () => {
-      // Note: Foreign key constraints may not be enforced depending on SQLite configuration
-      // This test documents current behavior
-      const result = await commentDao.createComment(9999, 2, 'test');
-      expect(result).toBeDefined();
-      expect(result.reportId).toBe(9999);
+    it('should reject when creating comment for non-existent reportId', async () => {
+      await expect(commentDao.createComment(9999, 2, 'test')).rejects.toThrow('ReportNotFound');
     });
   });
 
   describe('getCommentsByReportId', () => {
     it('should return all comments for a report with author details', async () => {
-      const reportId = 1;
+      const reportId = sharedReportId;
       const authorId = 2;
 
       // First create a comment
@@ -136,7 +142,7 @@ describe('commentDao', () => {
     });
 
     it('should return comments ordered by created_at ASC', async () => {
-      const reportId = 1;
+      const reportId = sharedReportId;
 
       // Create multiple comments
       await commentDao.createComment(reportId, 2, 'First comment');
