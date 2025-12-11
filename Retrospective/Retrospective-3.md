@@ -18,10 +18,10 @@ sections:
 
 **Remember**  a story is done ONLY if it fits the Definition of Done:
  
-- Unit Tests passing
-- Code review completed
+- Unit Tests passing 455
+- Code review completed 3
 - Code present on VCS
-- End-to-End tests performed
+- End-to-End tests performed 22
 
 > Please refine your DoD 
 
@@ -52,23 +52,23 @@ sections:
 ## QUALITY MEASURES 
 
 - Unit Testing:
-  - Total hours estimated
-  - Total hours spent
-  - Nr of automated unit test cases 
-  - Coverage (if available)
+  - Total hours estimated 4,5
+  - Total hours spent 5,5
+  - Nr of automated unit test cases  455
+  - Coverage (if available) 98,3%
 - Integration testing:
   - Total hours estimated
   - Total hours spent
 - E2E testing:
-  - Total hours estimated
-  - Total hours spent
+  - Total hours estimated 7
+  - Total hours spent 6,5
 - Code review: 
   - Total hours estimated 3
   - Total hours spent 3
 - Technical Debt management:
-  - Strategy adopted
-  - Total hours estimated estimated at sprint planning
-  - Total hours spent
+  - Strategy adopted: we decide to obtain at least grade B across all analysis sections and focus on items with high impact.
+  - Total hours estimated at sprint planning 27,5h
+  - Total hours spent 28h
   
 
 
