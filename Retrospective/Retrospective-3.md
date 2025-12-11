@@ -75,26 +75,31 @@ sections:
 ## ASSESSMENT
 
 - What caused your errors in estimation (if any)?
+
   Our estimation error was very low this sprint (4%), which means our planning process is working very well. We planned 99 hours and spent 103 hours.
   The minor error: The small difference (4 hours total) came mostly from Story 24 and Story 25. In these stories, we encountered some small implementation details we did not expect.
   Why we were successful: The main reason our estimation was accurate is that we kept our tasks small. Our average task duration was 2.2 hours. When tasks are this small, it is much easier to predict how long they will take compared to large tasks of 8 or 10 hours.
 
 - What lessons did you learn (both positive and negative) in this sprint?
+
   Positive (Quality Strategy): We learned that investing heavily in Story #0 (Technical Infrastructure and Refactoring) pays off in stability. We spent 57.5 hours on this, which allowed us to reach 98.3% code coverage and pass 22 End-to-End tests. This confirms that high quality requires dedicated time.
 
   Negative (Velocity Trade-off): We learned that there is a trade-off between "Technical Tasks" and "User Stories." Because we spent more than 50% of our time on Story #0, we could only complete 23 Story Points of new features (compared to 51 points in the previous sprint). We learned we need to balance this better so the customer sees more new features.
 
 - Which improvement goals set in the previous retrospective were you able to achieve? 
+
   "Better task time estimation": We successfully achieved this goal. In Retrospective 2, we promised to discuss tasks more deeply to find hidden details. We did this, and the result is that our estimation error is now only 4%.
 
   "Better time management / Coordination": We improved our coordination between Backend and Frontend. The proof is that we successfully passed 22 End-to-End tests. In the previous sprint, we had issues with tasks depending on each other, but this time we managed the flow better.
   
 - Which ones you were not able to achieve? Why?
+
   While we improved our process, we were not able to maintain a high velocity (number of completed Story Points). We dropped from 51 points (Sprint 2) to 23 points (Sprint 3).
 
   Why? This happened because we underestimated how much effort the technical maintenance (Story #0) would require. We let the technical tasks take up too much of the sprint capacity, leaving less time for the actual user stories.
 
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
+
   Goal: Balance Technical Debt vs. New Features.
 
   How: In the next Sprint Planning, we will set a strict limit on Story #0. We will try to allocate maximum 30% of our hours to technical tasks and 70% to User Stories. This will help us deliver more value to the stakeholders.
@@ -106,4 +111,5 @@ sections:
 > Propose one or two
 
 - One thing you are proud of as a Team!!
+
   We are proud of our reliability. In this sprint, we proved that we can deliver exactly what we promise. We combined high-quality engineering (98% test coverage) with precise planning (only 4% estimation error), showing that we have successfully overcome the coordination struggles of the previous sprint.
