@@ -12,9 +12,9 @@ sections:
 
 ### Macro statistics
 
-- Number of stories committed vs done :
-- Total points committed vs done :
-- Nr of hours planned vs spent (as a team) :
+- Number of stories committed 3 vs done 3
+- Total points committed 23 vs done 23
+- Nr of hours planned 99h vs spent 103h 
 
 **Remember**  a story is done ONLY if it fits the Definition of Done:
  
@@ -29,14 +29,24 @@ sections:
 
 | Story  | # Tasks | Points | Hours est. | Hours actual |
 |--------|---------|--------|------------|--------------|
-| _#0_   |         |    -   |            |              |
-| n      |         |        |            |              |
+| _#0_   |   18    |    -   |     57     |      57,5    |
+|   24   |    9    |    5   |    12,5    |      14      |
+|   25   |    9    |    5   |    11,5    |      13      |
+|   26   |   10    |    13  |    18      |      18,5    |
    
 
 > place technical tasks corresponding to story `#0` and leave out story points (not applicable in this case)
 
 - Hours per task (average, standard deviation)
-- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1
+
+|            | Mean | StDev |
+|------------|------|-------|
+| Estimation | 2,15 | 1,799 | 
+| Actual     | 2,24 | 1,805 |
+
+- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1 = 0,0404
+
+  $$\frac{\sum_i spent_{task_i}}{\sum_i estimation_{task_i}} - 1$$
 
   
 ## QUALITY MEASURES 
@@ -53,8 +63,8 @@ sections:
   - Total hours estimated
   - Total hours spent
 - Code review: 
-  - Total hours estimated 
-  - Total hours spent
+  - Total hours estimated 3
+  - Total hours spent 3
 - Technical Debt management:
   - Strategy adopted
   - Total hours estimated estimated at sprint planning
