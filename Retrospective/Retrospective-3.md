@@ -70,7 +70,7 @@ sections:
   - Total hours estimated at sprint planning 27,5h
   - Total hours spent 28h
   
-
+  ![Graph](image.png)
 
 ## ASSESSMENT
 
