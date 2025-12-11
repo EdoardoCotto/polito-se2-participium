@@ -94,9 +94,8 @@ sections:
   
 - Which ones you were not able to achieve? Why?
 
-  While we improved our process, we were not able to maintain a high velocity (number of completed Story Points). We dropped from 51 points (Sprint 2) to 23 points (Sprint 3).
-
-  Why? This happened because we underestimated how much effort the technical maintenance (SonarQube) would require. We let the technical tasks take up too much of the sprint capacity, leaving less time for the actual user stories.
+  We actually achieved the main goals we set in the previous retrospective (Estimation and Coordination).
+  However, one area we are still perfecting is the optimization of technical tasks. We spent a lot of effort on infrastructure to ensure high quality. While this was necessary, we want to find a way to do these technical tasks faster in the future so we can spend even more time on user features.
 
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
 
@@ -108,7 +107,7 @@ sections:
 
   How: We want to keep our estimation accuracy high. We will continue the rule of breaking down tasks until they are smaller than 4 hours. If a task is bigger, we must split it during the planning meeting.
 
-> Propose one or two
+
 
 - One thing you are proud of as a Team!!
 
