@@ -27,13 +27,15 @@ const handleErrorResponse = async (response, defaultMessage) => {
 /**
  * User Registration
  * Registers a new citizen user
+ * A confirmation code will be sent to the provided email address
+ * The account must be confirmed within 30 minutes
  * @param {Object} userData - User registration data
  * @param {string} userData.username - Unique username
  * @param {string} userData.email - User email address
  * @param {string} userData.name - User's first name
  * @param {string} userData.surname - User's last name
  * @param {string} userData.password - User password
- * @returns {Promise<Object>} - Created user object
+ * @returns {Promise<Object>} - Created user object (unconfirmed)
  * @throws {Error} - If registration fails (validation error, conflict, etc.)
  */
 const register = async (userData) => {
@@ -48,6 +50,59 @@ const register = async (userData) => {
 
   if (!response.ok) {
     await handleErrorResponse(response, 'Registration failed');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Confirm Registration
+ * Confirms a citizen account using the confirmation code sent via email
+ * The code is valid for 30 minutes
+ * @param {Object} confirmData - Confirmation data
+ * @param {string} confirmData.email - User email address
+ * @param {string} confirmData.code - 6-digit confirmation code
+ * @returns {Promise<Object>} - Success response with message
+ * @throws {Error} - If confirmation fails (invalid or expired code, user not found, etc.)
+ */
+const confirmRegistration = async (confirmData) => {
+  const response = await fetch(`${SERVER_URL}/users/confirm`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(confirmData),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Confirmation failed');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Resend Confirmation Code
+ * Requests a new confirmation code if the previous one expired or was lost
+ * A new code will be sent to the email address
+ * @param {Object} emailData - Email data
+ * @param {string} emailData.email - User email address
+ * @returns {Promise<Object>} - Success response with message
+ * @throws {Error} - If request fails (user already confirmed, invalid request, user not found, etc.)
+ */
+const resendConfirmationCode = async (emailData) => {
+  const response = await fetch(`${SERVER_URL}/users/resend-confirmation`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(emailData),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to resend confirmation code');
   }
 
   return await response.json();
@@ -673,6 +728,8 @@ const API = {
   
   // User management
   register,
+  confirmRegistration,
+  resendConfirmationCode,
   createUserByAdmin,
   assignUserRole,
   getAllowedRoles,
