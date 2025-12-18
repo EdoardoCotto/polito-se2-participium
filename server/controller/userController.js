@@ -172,3 +172,48 @@ exports.getExternalMaintainers = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+/**
+ * Confirm user registration with confirmation code
+ */
+exports.confirmRegistration = async (req, res) => {
+  try {
+    const { email, code } = req.body || {};
+    
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and confirmation code are required' });
+    }
+    
+    const result = await userRepository.confirmUser(email, code);
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Account successfully confirmed. You can now log in.' 
+    });
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+/**
+ * Resend confirmation code
+ */
+exports.resendConfirmationCode = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    const result = await userRepository.resendConfirmationCode(email);
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

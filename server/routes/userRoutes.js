@@ -19,6 +19,7 @@ const { updateProfile } = require('../middlewares/uploadMiddleware')
  *   post:
  *     summary: Register a new user (citizen)
  *     tags: [Users]
+ *     description: Register a new citizen account. A confirmation code will be sent to the provided email address. The account must be confirmed within 30 minutes.
  *     requestBody:
  *       required: true
  *       content:
@@ -33,11 +34,105 @@ const { updateProfile } = require('../middlewares/uploadMiddleware')
  *               surname: { type: string, example: Neri }
  *               password: { type: string, example: strongPassword123! }
  *     responses:
- *       201: { description: User successfully registered }
+ *       201: 
+ *         description: User successfully registered. Confirmation code sent to email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer }
+ *                 username: { type: string }
+ *                 email: { type: string }
+ *                 name: { type: string }
+ *                 surname: { type: string }
+ *                 type: { type: string }
  *       400: { description: Validation error }
- *       409: { description: Username already taken }
+ *       409: { description: Username or email already taken }
  */
 router.post('/users', userController.createUser);
+
+/**
+ * @swagger
+ * /users/confirm:
+ *   post:
+ *     summary: Confirm user registration with code
+ *     tags: [Users]
+ *     description: Confirm a citizen account using the confirmation code sent via email. The code is valid for 30 minutes.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, code]
+ *             properties:
+ *               email: 
+ *                 type: string
+ *                 format: email
+ *                 example: newcitizen@example.org
+ *               code: 
+ *                 type: string
+ *                 example: "123456"
+ *                 description: 6-digit confirmation code
+ *     responses:
+ *       200: 
+ *         description: Account successfully confirmed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: "Account successfully confirmed. You can now log in." }
+ *       400: 
+ *         description: Invalid or expired confirmation code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error: { type: string }
+ *       404: 
+ *         description: User not found
+ */
+router.post('/users/confirm', userController.confirmRegistration);
+
+/**
+ * @swagger
+ * /users/resend-confirmation:
+ *   post:
+ *     summary: Resend confirmation code
+ *     tags: [Users]
+ *     description: Request a new confirmation code if the previous one expired or was lost. A new code will be sent to the email address.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email: 
+ *                 type: string
+ *                 format: email
+ *                 example: newcitizen@example.org
+ *     responses:
+ *       200: 
+ *         description: New confirmation code sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: "Confirmation code sent to your email" }
+ *       400: 
+ *         description: User already confirmed or invalid request
+ *       404: 
+ *         description: User not found
+ */
+router.post('/users/resend-confirmation', userController.resendConfirmationCode);
 
 /**
  * @swagger

@@ -15,7 +15,7 @@ const db = new sqlite.Database(dbPath, (err) => {
  * Get user by username (login)
  * @param {string} username - username dell'utente
  * @param {string} password - password in chiaro fornita al login
- * @returns {Promise<Object>} - utente autenticato o false se non valido
+ * @returns {Promise<Object|false|{error: string}>} - utente autenticato, false se non valido, o oggetto errore se non confermato
  */
 exports.getUser = (username, password) => {
   return new Promise((resolve, reject) => {
@@ -39,6 +39,12 @@ exports.getUser = (username, password) => {
         }
 
         if (isMatch) {
+          // Check if user needs confirmation (citizens only)
+          if (row.type === 'citizen' && row.is_confirmed === 0) {
+            resolve({ error: 'unconfirmed', email: row.email }); // Account not confirmed
+            return;
+          }
+
           // Rimuoviamo password e salt prima di restituire
           const user = {
             id: row.id,
@@ -111,11 +117,19 @@ exports.getUserByEmail = (email) => {
 };
 
 /**
- * Create a new user (registration)
- * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string }} newUser
- * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string }>}
+ * Generate a random 6-digit confirmation code
+ * @returns {string} 6-digit confirmation code
  */
-exports.createUser = ({ username, email, name, surname, password, type = 'citizen' }) => {
+function generateConfirmationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * Create a new user (registration)
+ * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, skipConfirmation?: boolean }} newUser
+ * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string, confirmationCode?: string }>}
+ */
+exports.createUser = ({ username, email, name, surname, password, type = 'citizen', skipConfirmation = false }) => {
 
   // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
   return new Promise((resolve, reject) => { 
@@ -130,18 +144,35 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
         const salt = await bcrypt.genSalt(saltRounds);
         const hash = await bcrypt.hash(password, salt);
 
-        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        // Generate confirmation code and expiry only for citizens who need confirmation
+        let confirmationCode = null;
+        let confirmationExpiresAt = null;
+        let isConfirmed = 1; // Default: confirmed (for non-citizens)
+
+        if (type === 'citizen' && !skipConfirmation) {
+          confirmationCode = generateConfirmationCode();
+          // Set expiry to 30 minutes from now
+          const expiryDate = new Date(Date.now() + 30 * 60 * 1000);
+          confirmationExpiresAt = expiryDate.toISOString();
+          isConfirmed = 0; // Citizen needs to confirm
+        }
+
+        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         // db.run usa una callback, quindi non serve await
-        db.run(insertSql, [username, email, name, surname, type, hash, salt], function (insertErr) {
+        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr); // Chiamiamo reject dalla Promise esterna
             return;
           }
 
-          resolve({ id: this.lastID, username, email, name, surname, type }); // Chiamiamo resolve dalla Promise esterna
+          const result = { id: this.lastID, username, email, name, surname, type };
+          if (confirmationCode) {
+            result.confirmationCode = confirmationCode;
+          }
+          resolve(result); // Chiamiamo resolve dalla Promise esterna
         });
 
       } catch (e) {
@@ -324,4 +355,140 @@ exports.updateUserProfile = (userId, updateData) => {
       });
     });
   });
-}
+};
+
+/**
+ * Verify confirmation code and activate user account
+ * @param {string} email - user email
+ * @param {string} code - confirmation code
+ * @returns {Promise<{ success: boolean, userId?: number, message?: string }>}
+ */
+exports.confirmUser = (email, code) => {
+  return new Promise((resolve, reject) => {
+    // First, find the user by email
+    const selectSql = `
+      SELECT id, username, email, name, is_confirmed, confirmation_code, confirmation_code_expires_at 
+      FROM Users 
+      WHERE email = ?
+    `;
+    
+    db.get(selectSql, [email], (err, user) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      if (!user) {
+        resolve({ success: false, message: 'User not found' });
+        return;
+      }
+      
+      if (user.is_confirmed === 1) {
+        resolve({ success: false, message: 'User is already confirmed' });
+        return;
+      }
+      
+      if (!user.confirmation_code) {
+        resolve({ success: false, message: 'No confirmation code found for this user' });
+        return;
+      }
+      
+      if (user.confirmation_code !== code) {
+        resolve({ success: false, message: 'Invalid confirmation code' });
+        return;
+      }
+      
+      // Check if code is expired
+      const now = new Date();
+      const expiresAt = new Date(user.confirmation_code_expires_at);
+      
+      if (now > expiresAt) {
+        resolve({ success: false, message: 'Confirmation code has expired' });
+        return;
+      }
+      
+      // Update user to set is_confirmed = 1 and clear confirmation code
+      const updateSql = `
+        UPDATE Users 
+        SET is_confirmed = 1, 
+            confirmation_code = NULL, 
+            confirmation_code_expires_at = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      
+      db.run(updateSql, [user.id], function (updateErr) {
+        if (updateErr) {
+          reject(updateErr);
+          return;
+        }
+        
+        resolve({ 
+          success: true, 
+          userId: user.id,
+          message: 'Account successfully confirmed' 
+        });
+      });
+    });
+  });
+};
+
+/**
+ * Resend confirmation code (generate a new one)
+ * @param {string} email - user email
+ * @returns {Promise<{ success: boolean, confirmationCode?: string, message?: string }>}
+ */
+exports.resendConfirmationCode = (email) => {
+  return new Promise((resolve, reject) => {
+    const selectSql = `
+      SELECT id, email, name, is_confirmed 
+      FROM Users 
+      WHERE email = ?
+    `;
+    
+    db.get(selectSql, [email], (err, user) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      if (!user) {
+        resolve({ success: false, message: 'User not found' });
+        return;
+      }
+      
+      if (user.is_confirmed === 1) {
+        resolve({ success: false, message: 'User is already confirmed' });
+        return;
+      }
+      
+      // Generate new confirmation code
+      const newCode = generateConfirmationCode();
+      const expiryDate = new Date(Date.now() + 30 * 60 * 1000);
+      const confirmationExpiresAt = expiryDate.toISOString();
+      
+      const updateSql = `
+        UPDATE Users 
+        SET confirmation_code = ?,
+            confirmation_code_expires_at = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      
+      db.run(updateSql, [newCode, confirmationExpiresAt, user.id], function (updateErr) {
+        if (updateErr) {
+          reject(updateErr);
+          return;
+        }
+        
+        resolve({ 
+          success: true, 
+          confirmationCode: newCode,
+          email: user.email,
+          name: user.name,
+          message: 'New confirmation code generated' 
+        });
+      });
+    });
+  });
+};
