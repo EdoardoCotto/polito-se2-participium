@@ -108,7 +108,7 @@ export default function RegistrationPage() {
         
         setShowSuccess(true);
         
-        // Reset form and redirect after successful submission
+        // Reset form and redirect to confirmation page after successful submission
         setTimeout(() => {
           setFormData({
             firstName: '',
@@ -119,7 +119,12 @@ export default function RegistrationPage() {
             confirmPassword: ''
           });
           setShowSuccess(false);
-          navigate('/'); // Redirect to home page
+          // Redirect to confirmation page with email
+          navigate('/confirm-registration', { 
+            state: { 
+              email: formData.email 
+            } 
+          });
         }, 2000);
       } catch (error) {
         console.error('Registration error:', error);
@@ -152,7 +157,10 @@ export default function RegistrationPage() {
               {showSuccess && (
                 <Alert variant="success" onClose={() => setShowSuccess(false)} dismissible className="register-alert register-alert-success d-flex align-items-center mb-3">
                   <i className="bi bi-check-circle-fill me-2"></i>
-                  <strong>Registration successful! Redirecting...</strong>
+                  <div>
+                    <strong>Registration successful!</strong>
+                    <div className="mt-1 small">Check your email for a confirmation code. Redirecting...</div>
+                  </div>
                 </Alert>
               )}
 

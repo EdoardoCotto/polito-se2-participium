@@ -8,6 +8,7 @@ import { LoginModal } from "./components/AuthComponents";
 import './components/styles/App.css'
 import NotFound from "./components/NotFound";
 import Registration from "./components/Registration.jsx";
+import ConfirmRegistration from "./components/ConfirmRegistration.jsx";
 import AdminPage from "./components/AdminPage.jsx";
 import MunicipalityPage from "./components/MunicipalityPage.jsx";
 import CitizenPage from "./components/CitizenPage.jsx";
@@ -91,6 +92,7 @@ function App() {
       <Route element={ <DefaultLayout loggedIn={loggedIn} user={user} message={message} setMessage={setMessage} handleLogout={handleLogout} onShowLogin={handleShowLogin} onProfileUpdate={handleProfileUpdate}/> }>
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
+       <Route path="/confirm-registration" element={ <ConfirmRegistration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />
        <Route path="/public-relations-officer" element={ <PublicRelationsOfficer user={user} handleLogin={handleLogin} handleLogout={handleLogout}/> } />
        <Route path="/municipality" element={ <MunicipalityPage user={user}handleLogin={handleLogin} handleLogout={handleLogout} /> } />
