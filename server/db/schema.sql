@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS Users (
   type TEXT NOT NULL,
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
+  is_confirmed INTEGER NOT NULL DEFAULT 0,
+  confirmation_code TEXT,
+  confirmation_code_expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   CHECK(type IN (

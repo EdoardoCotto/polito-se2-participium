@@ -11,6 +11,11 @@ passport.use(new LocalStrategy(
       .then(user => {
         if (!user)
           return done(null, false, { message: 'Invalid username or password' });
+        
+        // Check if user needs to confirm email
+        if (user.error === 'unconfirmed')
+          return done(null, false, { message: 'Please confirm your email address before logging in', email: user.email });
+        
         return done(null, user);
       })
       .catch(err => done(err));

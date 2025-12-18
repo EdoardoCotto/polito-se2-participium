@@ -5,6 +5,7 @@ const BadRequestError = require('../errors/BadRequestError')
 const UnauthorizedError = require('../errors/UnauthorizedError')
 const { ALLOWED_ROLES } = require('../constants/roles')
 const AppError = require('../errors/AppError')
+const emailService = require('../services/emailService')
 
 
 exports.getUserById = async (userId) => {
@@ -23,6 +24,10 @@ exports.getUser = async (username, password) => {
     if (!user) {
         throw new NotFoundError('Username or password incorrect');
     }
+    // Check if user needs confirmation
+    if (user.error === 'unconfirmed') {
+        throw new UnauthorizedError('Please confirm your email address before logging in');
+    }
     return user;
 };
 
@@ -40,7 +45,24 @@ exports.createUser = async (user) => {
             throw new ConflictError('Email already exists');
         }
         const result = await userDao.createUser(user);
-        return result;
+        
+        // Send confirmation email if a confirmation code was generated (citizens only)
+        if (result.confirmationCode) {
+            try {
+                await emailService.sendConfirmationEmail(
+                    result.email,
+                    result.name,
+                    result.confirmationCode
+                );
+            } catch (emailError) {
+                console.error('Error sending confirmation email:', emailError);
+                // Don't fail registration if email fails, just log it
+            }
+        }
+        
+        // Don't return the confirmation code to the client (it's sent via email)
+        const { confirmationCode, ...userWithoutCode } = result;
+        return userWithoutCode;
     }
     catch (err) {
         console.error('Error in createUser repository:', err);
@@ -148,4 +170,71 @@ exports.updateUserProfile = async (userId, updateData) => {
 exports.getExternalMaintainers = async () => {
     const maintainers = await userDao.getExternalMaintainers();
     return maintainers;
+}
+
+/**
+ * Confirm user registration with confirmation code
+ * @param {string} email - user email
+ * @param {string} code - confirmation code
+ * @returns {Promise<Object>}
+ */
+exports.confirmUser = async (email, code) => {
+    if (!email || !code) {
+        throw new BadRequestError('Email and confirmation code are required');
+    }
+    
+    const result = await userDao.confirmUser(email, code);
+    
+    if (!result.success) {
+        if (result.message === 'User not found') {
+            throw new NotFoundError('User not found');
+        } else if (result.message === 'Invalid confirmation code') {
+            throw new BadRequestError('Invalid confirmation code');
+        } else if (result.message === 'Confirmation code has expired') {
+            throw new BadRequestError('Confirmation code has expired. Please request a new one');
+        } else if (result.message === 'User is already confirmed') {
+            throw new BadRequestError('User is already confirmed');
+        } else {
+            throw new BadRequestError(result.message);
+        }
+    }
+    
+    return result;
+}
+
+/**
+ * Resend confirmation code
+ * @param {string} email - user email
+ * @returns {Promise<Object>}
+ */
+exports.resendConfirmationCode = async (email) => {
+    if (!email) {
+        throw new BadRequestError('Email is required');
+    }
+    
+    const result = await userDao.resendConfirmationCode(email);
+    
+    if (!result.success) {
+        if (result.message === 'User not found') {
+            throw new NotFoundError('User not found');
+        } else if (result.message === 'User is already confirmed') {
+            throw new BadRequestError('User is already confirmed');
+        } else {
+            throw new BadRequestError(result.message);
+        }
+    }
+    
+    // Send new confirmation email
+    try {
+        await emailService.sendConfirmationEmail(
+            result.email,
+            result.name,
+            result.confirmationCode
+        );
+    } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        throw new AppError('Failed to send confirmation email', 500);
+    }
+    
+    return { success: true, message: 'Confirmation code sent to your email' };
 }
