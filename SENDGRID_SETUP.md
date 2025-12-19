@@ -51,8 +51,15 @@ SendGrid requires you to verify a sender email address:
 Open your `.env` file and replace `YOUR_SENDGRID_API_KEY_HERE` with your actual API key:
 
 ```env
+PORT=3001
+NODE_ENV=development
+
+# Session Secret
+SESSION_SECRET=super-secret-key
+
+# Email Configuration - SendGrid
 EMAIL_PROVIDER=sendgrid
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SENDGRID_API_KEY=YOUR_SENDGRID_API_KEY_HERE
 EMAIL_FROM=neginmotaharifar79@gmail.com
 ```
 

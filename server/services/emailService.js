@@ -154,56 +154,171 @@ exports.sendConfirmationEmail = async (email, name, confirmationCode) => {
   
   const htmlContent = `
     <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background-color: #f9f9f9; }
-        .code-box { 
-          background-color: white; 
-          border: 2px solid #4CAF50; 
-          padding: 20px; 
-          text-align: center; 
-          margin: 20px 0;
-          border-radius: 5px;
-        }
-        .code { 
-          font-size: 36px; 
-          font-weight: bold; 
-          color: #4CAF50; 
-          letter-spacing: 5px;
-          font-family: 'Courier New', monospace;
-        }
-        .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
-        .warning { color: #ff9800; margin-top: 10px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🏛️ Participium</h1>
-        </div>
-        <div class="content">
-          <h2>Hello ${name},</h2>
-          <p>Thank you for registering with Participium!</p>
-          <p>To complete your registration, please use the following confirmation code:</p>
-          
-          <div class="code-box">
-            <div class="code">${confirmationCode}</div>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Confirm your Participium registration</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top left, #0b1220 0%, #111827 45%, #020617 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #0f172a;
+          }
+          .outer {
+            width: 100%;
+            padding: 24px 12px;
+          }
+          .card {
+            max-width: 640px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f6fb 100%);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+            border: 1px solid rgba(94, 123, 179, 0.18);
+          }
+          .header {
+            background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 50%, #1e3a5f 100%);
+            padding: 28px 32px;
+            text-align: center;
+            color: #f9fafb;
+          }
+          .logo-circle {
+            display: none;
+          }
+          .app-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #f9fafb;
+          }
+          .tagline {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.9;
+          }
+          .content {
+            padding: 28px 32px 10px 32px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          }
+          h2 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            color: #0f172a;
+          }
+          p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #4b5563;
+          }
+          .code-box {
+            margin: 24px 0 16px 0;
+            padding: 20px 24px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #e8f0ff 0%, #d6e4ff 45%, #edf2ff 100%);
+            border: 1px solid rgba(94, 123, 179, 0.5);
+            text-align: center;
+          }
+          .code-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #3d5a8f;
+            margin-bottom: 6px;
+          }
+          .code {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #5e7bb3 0%, #4a6fa5 45%, #0d6efd 100%);
+            color: #f9fafb;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: 0.4em;
+            font-family: 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono',
+              'Courier New', monospace;
+          }
+          .meta {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #6b7280;
+          }
+          .meta strong {
+            color: #b91c1c;
+          }
+          .warning {
+            margin-top: 18px;
+            font-size: 12px;
+            color: #b45309;
+          }
+          .footer {
+            padding: 14px 24px 20px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            background: #0f172a;
+          }
+          .footer span {
+            color: #e5e7eb;
+          }
+          @media (max-width: 480px) {
+            .card {
+              border-radius: 0;
+            }
+            .content {
+              padding: 20px 18px 8px 18px;
+            }
+            .header {
+              padding: 22px 18px;
+            }
+            .code {
+              font-size: 24px;
+              letter-spacing: 0.32em;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="outer">
+          <div class="card">
+            <div class="header">
+              <div class="logo-circle"></div>
+              <div class="app-name">PARTICIPIUM</div>
+              <div class="tagline">Modern citizen reporting for your city</div>
+            </div>
+            <div class="content">
+              <h2>Hello ${name},</h2>
+              <p>Thank you for registering with <strong>Participium</strong>.</p>
+              <p>To complete your registration, enter this confirmation code:</p>
+
+              <div class="code-box">
+                <div class="code-label">Your confirmation code</div>
+                <div class="code">${confirmationCode}</div>
+                <div class="meta">
+                  <strong>This code will expire in 30 minutes.</strong>
+                </div>
+              </div>
+
+              <p>
+                Paste this code into the confirmation screen in Participium to activate your account
+                and start using the system.
+              </p>
+              <p class="warning">
+                If you did not create an account, you can safely ignore this email and no changes
+                will be made.
+              </p>
+            </div>
+            <div class="footer">
+              <span>© ${new Date().getFullYear()} Participium.</span> All rights reserved.
+            </div>
           </div>
-          
-          <p><strong>⏰ This code will expire in 30 minutes.</strong></p>
-          <p>Please enter this code in the confirmation page to activate your account and start using the system.</p>
-          <p class="warning">⚠️ If you did not create an account, please ignore this email.</p>
         </div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} Participium. All rights reserved.</p>
-          <p>This is an automated message, please do not reply to this email.</p>
-        </div>
-      </div>
-    </body>
+      </body>
     </html>
   `;
 
