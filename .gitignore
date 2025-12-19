@@ -28,7 +28,6 @@ server/build/
 # Environment files
 .env.local
 .env.*.local
-server/.env
 
 # VSCode
 .vscode/
