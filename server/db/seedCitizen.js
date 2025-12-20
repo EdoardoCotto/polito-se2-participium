@@ -83,6 +83,17 @@ const reports = [
     image_path1: '/static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'citizen'
+  },
+   // 🔴 REPORT DI TEST IN VIA ROMA
+  {
+    title: 'Lampione rotto in Via Roma',
+    description: 'Lampione non funzionante davanti a un negozio in Via Roma.',
+    category: 'Public Lighting',
+    latitude: 45.0653,
+    longitude: 7.6809,
+    image_path1: 'static/uploads/lampione_rotto.jpg',
+    status: 'pending',
+    author_username: 'citizen'
   }
 ];
 

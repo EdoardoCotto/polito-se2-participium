@@ -615,5 +615,97 @@ router.get(
   reportController.getExternalAssignedReports
 );
 
+/**
+ * @swagger
+ * /streets:
+ *   get:
+ *     summary: Search for streets in the database (Autocomplete)
+ *     description: Returns a list of streets matching the query string for autocomplete purposes.
+ *     tags: [Streets]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Part of the street name to search for
+ *         example: Via Ro
+ *     responses:
+ *       200:
+ *         description: A list of matching streets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   city:
+ *                     type: string
+ *                   street_name:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/streets', reportController.getStreets);
+
+/**
+ * @swagger
+ * /streets/{name}/reports:
+ *   get:
+ *     summary: Get reports and map focus for a specific street
+ *     description: >
+ *       Given a street name, it returns the geographic boundaries (bounding box)
+ *       and all existing reports within that area. Use the mapFocus data to
+ *       center and zoom the map.
+ *     tags: [Streets]
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exact name of the street
+ *         example: Via Roma
+ *     responses:
+ *       200:
+ *         description: Map focus data and list of reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 mapFocus:
+ *                   type: object
+ *                   properties:
+ *                     center:
+ *                       type: object
+ *                       properties:
+ *                         lat:
+ *                           type: number
+ *                         lon:
+ *                           type: number
+ *                     boundingBox:
+ *                       type: object
+ *                       properties:
+ *                         north:
+ *                           type: number
+ *                         south:
+ *                           type: number
+ *                         east:
+ *                           type: number
+ *                         west:
+ *                           type: number
+ *                 reports:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Report'
+ *       404:
+ *         description: Street not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/streets/:name/reports', reportController.getReportsByStreet);
 
 module.exports = router;

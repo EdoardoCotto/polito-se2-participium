@@ -101,3 +101,28 @@ CREATE TABLE IF NOT EXISTS InternalComments (
   FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE,
   FOREIGN KEY (authorId) REFERENCES Users(id)
 );
+
+-- Tabella per l'autocompletamento e la cache geografica delle vie
+CREATE TABLE IF NOT EXISTS Streets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  city TEXT NOT NULL,
+  street_name TEXT NOT NULL,
+  
+  -- Coordinate centrali (utili per la ricerca a raggio)
+  latitude REAL,
+  longitude REAL,
+  
+  -- Confini dell'area (fondamentali per lo ZOOM richiesto dal PO)
+  min_lat REAL,
+  max_lat REAL,
+  min_lon REAL,
+  max_lon REAL,
+  
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Evita duplicati della stessa via nella stessa città
+  UNIQUE(city, street_name)
+);
+
+-- Indice per rendere l'autocompletamento istantaneo (fondamentale per LIKE 'via...')
+CREATE INDEX IF NOT EXISTS idx_street_search ON Streets(street_name);

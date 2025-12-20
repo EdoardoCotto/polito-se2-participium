@@ -2,6 +2,8 @@
 'use strict';
 
 const reportRepository = require('../repository/reportRepository');
+const streetRepository = require('../repository/streetRepository');
+
 const AppError = require('../errors/AppError');
 const path = require('node:path');
 
@@ -398,5 +400,52 @@ exports.getExternalAssignedReports = async (req, res) => {
     }
     console.error('Error in getExternalAssignedReports controller:', err);
     return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+
+// 1. Endpoint per l'autocomplete delle vie
+exports.getStreets = async (req, res) => {
+  try {
+    const query = req.query.q || '';
+    const streets = await streetRepository.getStreets(query);
+    res.json(streets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 2. Endpoint per ottenere i report di una via specifica
+exports.getReportsByStreet = async (req, res) => {
+  try {
+    const streetName = req.params.name;
+    
+    // Otteniamo coordinate e bounding box della via
+    const streetInfo = await streetRepository.getStreetDetailsAndReports(streetName);
+    
+    // Usiamo il bounding box della via per filtrare i report esistenti
+    const boundingBox = {
+      north: streetInfo.max_lat,
+      south: streetInfo.min_lat,
+      east: streetInfo.max_lon,
+      west: streetInfo.min_lon
+    };
+
+    const reports = await reportRepository.getCitizenReports({ boundingBox });
+    
+    // Risposta arricchita con info per il front-end (per lo zoom)
+    res.json({
+      mapFocus: {
+        center: { lat: streetInfo.latitude, lon: streetInfo.longitude },
+        boundingBox: boundingBox // Il front-end userà map.fitBounds()
+      },
+      reports: reports.map(r => ({
+        ...r,
+        photoUrls: buildPhotoUrls(r.photos, req)
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
