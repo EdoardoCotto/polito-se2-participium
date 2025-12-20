@@ -673,6 +673,64 @@ async function getCategories() {
 }
 
 /**
+ * Get Streets (Autocomplete)
+ * Searches for streets in the database for autocomplete purposes
+ * Public endpoint (no authentication required)
+ * @param {string} query - Part of the street name to search for
+ * @returns {Promise<Array>} - Array of street objects with id, city, street_name
+ * @throws {Error} - If request fails
+ */
+const getStreets = async (query = '') => {
+  const queryParams = new URLSearchParams();
+  if (query) {
+    queryParams.append('q', query);
+  }
+  
+  const queryString = queryParams.toString();
+  const url = queryString 
+    ? `${SERVER_URL}/streets?${queryString}` 
+    : `${SERVER_URL}/streets`;
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get streets');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Reports by Street Name
+ * Retrieves reports and map focus data for a specific street
+ * Given a street name, returns the geographic boundaries (bounding box)
+ * and all existing reports within that area
+ * Public endpoint (no authentication required)
+ * @param {string} streetName - Exact name of the street
+ * @returns {Promise<Object>} - Object containing mapFocus and reports
+ * @returns {Promise<Object.mapFocus>} - Map focus data with center and boundingBox
+ * @returns {Promise<Object.mapFocus.center>} - Center coordinates with lat and lon
+ * @returns {Promise<Object.mapFocus.boundingBox>} - Bounding box with north, south, east, west
+ * @returns {Promise<Object.reports>} - Array of report objects with photoUrls
+ * @throws {Error} - If request fails (street not found, etc.)
+ */
+const getReportsByStreet = async (streetName) => {
+  const response = await fetch(`${SERVER_URL}/streets/${encodeURIComponent(streetName)}/reports`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get reports by street');
+  }
+
+  return await response.json();
+};
+
+/**
  * Create Comment
  * Adds an internal comment to a report
  * Requires authentication and internal staff or maintainer role
@@ -756,6 +814,10 @@ const API = {
 
   // Constants
   getCategories,
+
+  // Streets
+  getStreets,
+  getReportsByStreet,
 };
 
 export default API;
