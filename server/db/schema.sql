@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS Streets (
   max_lat REAL,
   min_lon REAL,
   max_lon REAL,
+  -- geometria via formato json
+  geometry TEXT,
   
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   
