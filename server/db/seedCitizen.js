@@ -92,7 +92,7 @@ const reports = [
     latitude: 45.0653,
     longitude: 7.6809,
     image_path1: 'static/uploads/lampione_rotto.jpg',
-    status: 'pending',
+    status: 'assigned',
     author_username: 'citizen'
   }
 ];

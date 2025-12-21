@@ -5,36 +5,71 @@ const path = require('node:path');
 const dbPath = path.join(__dirname, '..', 'db', 'participium.db');
 const db = new sqlite.Database(dbPath);
 
-exports.searchStreets = (query) => {
+/**
+ * Ottiene una strada per nome
+ */
+exports.getStreetByName = (streetName) => {
   return new Promise((resolve, reject) => {
-    // Cerchiamo le vie che iniziano con la query (per autocomplete)
-    const sql = "SELECT * FROM Streets WHERE street_name LIKE ? LIMIT 10";
-    db.all(sql, [query + '%'], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+    db.get(
+      'SELECT * FROM Streets WHERE street_name = ? AND city = ?',
+      [streetName, 'Torino'],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      }
+    );
   });
 };
 
-exports.getStreetByName = (name) => {
+/**
+ * Aggiorna le coordinate e la geometria di una strada
+ */
+exports.updateStreetGeocoding = (streetId, geoData) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM Streets WHERE street_name = ?";
-    db.get(sql, [name], (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
+    db.run(
+      `UPDATE Streets 
+       SET latitude = ?, 
+           longitude = ?, 
+           min_lat = ?, 
+           max_lat = ?, 
+           min_lon = ?, 
+           max_lon = ?,
+           geometry = ?
+       WHERE id = ?`,
+      [
+        geoData.latitude,
+        geoData.longitude,
+        geoData.min_lat,
+        geoData.max_lat,
+        geoData.min_lon,
+        geoData.max_lon,
+        geoData.geometry || null,
+        streetId
+      ],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
   });
 };
 
-exports.updateStreetGeocoding = (id, data) => {
+/**
+ * Cerca vie per autocompletamento
+ */
+exports.searchStreets = (query, limit = 10) => {
   return new Promise((resolve, reject) => {
-    const sql = `UPDATE Streets SET latitude = ?, longitude = ?, 
-                 min_lat = ?, max_lat = ?, min_lon = ?, max_lon = ? 
-                 WHERE id = ?`;
-    db.run(sql, [data.lat, data.lon, data.minLat, data.maxLat, data.minLon, data.maxLon, id], 
-    (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
+    db.all(
+      `SELECT street_name, city, latitude, longitude 
+       FROM Streets 
+       WHERE city = 'Torino' AND street_name LIKE ? 
+       ORDER BY street_name 
+       LIMIT ?`,
+      [`${query}%`, limit],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      }
+    );
   });
 };

@@ -416,15 +416,14 @@ exports.getStreets = async (req, res) => {
   }
 };
 
-// 2. Endpoint per ottenere i report di una via specifica
 exports.getReportsByStreet = async (req, res) => {
   try {
     const streetName = req.params.name;
     
-    // Otteniamo coordinate e bounding box della via
+    // 1. Ottieni i dettagli della strada con geometria
     const streetInfo = await streetRepository.getStreetDetailsAndReports(streetName);
     
-    // Usiamo il bounding box della via per filtrare i report esistenti
+    // 2. Ottieni TUTTI i report nel bounding box (prima scrematura veloce)
     const boundingBox = {
       north: streetInfo.max_lat,
       south: streetInfo.min_lat,
@@ -432,20 +431,47 @@ exports.getReportsByStreet = async (req, res) => {
       west: streetInfo.min_lon
     };
 
-    const reports = await reportRepository.getCitizenReports({ boundingBox });
+    const candidateReports = await reportRepository.getCitizenReports({ boundingBox });
     
-    // Risposta arricchita con info per il front-end (per lo zoom)
+    // 3. Filtra i report che cadono EFFETTIVAMENTE sulla strada (check geometrico)
+    const filteredReports = streetRepository.filterReportsOnStreet(
+      candidateReports, 
+      streetInfo
+    );
+    
+    // 4. Risposta con dati per il front-end
     res.json({
       mapFocus: {
-        center: { lat: streetInfo.latitude, lon: streetInfo.longitude },
-        boundingBox: boundingBox // Il front-end userà map.fitBounds()
+        center: { 
+          lat: streetInfo.latitude, 
+          lon: streetInfo.longitude 
+        },
+        boundingBox: boundingBox
       },
-      reports: reports.map(r => ({
+      street: {
+        name: streetInfo.street_name,
+        geometry: streetInfo.geometry ? JSON.parse(streetInfo.geometry) : null
+      },
+      reports: filteredReports.map(r => ({
         ...r,
         photoUrls: buildPhotoUrls(r.photos, req)
-      }))
+      })),
+      stats: {
+        total: filteredReports.length,
+        inBoundingBox: candidateReports.length,
+        filtered: candidateReports.length - filteredReports.length
+      }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error getting reports by street:', err);
+    res.status(err.message === 'Street not found' ? 404 : 500)
+       .json({ error: err.message });
   }
 };
+
+// function buildPhotoUrls(photos, req) {
+//   if (!photos) return [];
+//   return photos.split(',').map(filename => 
+//     `${req.protocol}://${req.get('host')}/uploads/${filename}`
+//   );
+// }
