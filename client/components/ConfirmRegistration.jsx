@@ -36,7 +36,7 @@ export default function ConfirmRegistration() {
     
     // For code input, only allow digits and limit to 6 characters
     if (name === 'code') {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 6);
+      const digitsOnly = value.replaceAll(/\D/g, '').slice(0, 6);
       setFormData(prev => ({
         ...prev,
         [name]: digitsOnly

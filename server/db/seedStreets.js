@@ -55,14 +55,14 @@ async function fetchStreetsFromOSM(city) {
         const elements = response.data.elements;
         const streetNames = new Set();
         elements.forEach(el => {
-            if (el.tags && el.tags.name) {
+            if (el.tags?.name) {
                 streetNames.add(el.tags.name);
             }
         });
 
-        return Array.from(streetNames).sort();
+        return Array.from(streetNames).sort((a, b) => a.localeCompare(b));
     } catch (error) {
-        if (error.response && error.response.status === 504) {
+        if (error.response?.status === 504) {
             console.error("Il server Overpass è sovraccarico (504). Riprova tra qualche minuto.");
         } else {
             console.error("Errore durante il fetch:", error.message);

@@ -5,16 +5,10 @@ exports.getStreets = async (query) => {
   return await streetDao.searchStreets(query);
 };
 
-
-/**
- * Ottiene la geometria completa di una strada da Overpass API
- * @param {string} streetName - Nome della via
- * @returns {object} Oggetto con geometria e bounding box
- */
 async function fetchStreetGeometry(streetName) {
-  // Query Overpass per ottenere TUTTI i nodi della strada a Torino
+  // Query Overpass per ottenere TUTTI i segmenti (way) della strada
   const query = `
-    [out:json][timeout:10];
+    [out:json][timeout:300];
     area["name"="Torino"]["admin_level"="8"]->.city;
     (
       way["name"="${streetName}"]["highway"](area.city);
@@ -28,32 +22,56 @@ async function fetchStreetGeometry(streetName) {
       `data=${encodeURIComponent(query)}`,
       {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 10000
+        timeout: 30000 // Aumentato a 30 secondi
       }
     );
 
-    if (!response.data.elements || response.data.elements.length === 0) {
-      throw new Error('Street geometry not found in Overpass');
+    if (!response.data || !response.data.elements || response.data.elements.length === 0) {
+      console.warn(`Overpass: nessun risultato per ${streetName}, uso fallback Nominatim`);
+      return fetchStreetFromNominatim(streetName);
     }
 
-    // Combina tutti i segmenti della strada (può essere spezzata in più "way")
-    const allCoords = [];
+    // 1. Raggruppamento dei segmenti in cluster
+    const clusters = [];
     response.data.elements.forEach(way => {
-      if (way.geometry) {
-        way.geometry.forEach(node => {
-          allCoords.push([node.lon, node.lat]);
-        });
+      if (!way.geometry) return;
+      const coords = way.geometry.map(node => [node.lon, node.lat]);
+      
+      let addedToCluster = false;
+      const MAX_DISTANCE = 0.001; // ~100 metri
+
+      for (const cluster of clusters) {
+        const lastPoint = cluster[cluster.length - 1];
+        const firstNewPoint = coords[0];
+        
+        // Calcolo distanza euclidea semplice
+        const dist = Math.sqrt(
+          Math.pow(lastPoint[0] - firstNewPoint[0], 2) + 
+          Math.pow(lastPoint[1] - firstNewPoint[1], 2)
+        );
+        
+        if (dist < MAX_DISTANCE) {
+          cluster.push(...coords);
+          addedToCluster = true;
+          break;
+        }
       }
+      if (!addedToCluster) clusters.push(coords);
     });
 
-    if (allCoords.length === 0) {
-      throw new Error('No coordinates found for street');
+    if (clusters.length === 0) {
+      console.warn(`Nessun cluster valido per ${streetName}, uso fallback Nominatim`);
+      return fetchStreetFromNominatim(streetName);
     }
 
-    // Calcola il bounding box dai punti reali
+    // 2. Creazione dei buffer per TUTTI i cluster
+    const allPolygons = clusters.map(cluster => createLineBuffer(cluster, 0.0014));
+
+    // 3. Calcolo Bounding Box globale (unione di tutti i cluster)
+    const allCoords = clusters.flat();
     const lats = allCoords.map(c => c[1]);
     const lons = allCoords.map(c => c[0]);
-    
+
     const boundingBox = {
       min_lat: Math.min(...lats),
       max_lat: Math.max(...lats),
@@ -61,27 +79,30 @@ async function fetchStreetGeometry(streetName) {
       max_lon: Math.max(...lons)
     };
 
-    // Calcola il centro (media dei punti)
     const center = {
-      latitude: lats.reduce((a, b) => a + b) / lats.length,
-      longitude: lons.reduce((a, b) => a + b) / lons.length
+      latitude: (boundingBox.min_lat + boundingBox.max_lat) / 2,
+      longitude: (boundingBox.min_lon + boundingBox.max_lon) / 2
     };
 
-    // Crea un buffer poligonale di ~25 metri attorno alla linea
-    const bufferedPolygon = createLineBuffer(allCoords, 0.00025); // ~25m
-
+    // 4. Restituzione MultiPolygon
+    console.log(`✓ Geometria ottenuta per ${streetName}: ${clusters.length} cluster, ${allPolygons.length} poligoni`);
+    
     return {
       ...center,
       ...boundingBox,
       geometry: JSON.stringify({
-        type: 'Polygon',
-        coordinates: [bufferedPolygon]
+        type: 'MultiPolygon',
+        coordinates: allPolygons.map(poly => [poly])
       })
     };
 
   } catch (error) {
-    console.error('Overpass API error:', error.message);
-    // Fallback a Nominatim se Overpass fallisce
+    if (error.code === 'ECONNABORTED' || error.response?.status === 504) {
+      console.error(`Overpass timeout per ${streetName}, uso fallback Nominatim`);
+    } else {
+      console.error(`Overpass API error per ${streetName}:`, error.message);
+    }
+    // Fallback a Nominatim
     return fetchStreetFromNominatim(streetName);
   }
 }
@@ -90,52 +111,63 @@ async function fetchStreetGeometry(streetName) {
  * Fallback: usa Nominatim (meno preciso)
  */
 async function fetchStreetFromNominatim(streetName) {
-  const response = await axios.get('https://nominatim.openstreetmap.org/search', {
-    params: {
-      street: streetName,
-      city: 'Torino',
-      format: 'json',
-      limit: 1
-    },
-    headers: { 'User-Agent': 'TorinoReportsApp/1.0' },
-    timeout: 5000
-  });
+  try {
+    const response = await axios.get('https://nominatim.openstreetmap.org/search', {
+      params: {
+        street: streetName,
+        city: 'Torino',
+        format: 'json',
+        limit: 1
+      },
+      headers: { 'User-Agent': 'TorinoReportsApp/1.0' },
+      timeout: 10000
+    });
 
-  if (response.data.length === 0) {
-    throw new Error('Street not found');
+    if (response.data.length === 0) {
+      throw new Error('Street not found');
+    }
+
+    const geo = response.data[0];
+    const bbox = geo.boundingbox || [];
+    
+    // Aumenta il buffer per le strade lunghe (da 0.001 a 0.005 = ~500m)
+    const bufferSize = 0.005;
+    
+    const result = {
+      latitude: parseFloat(geo.lat),
+      longitude: parseFloat(geo.lon),
+      min_lat: bbox[0] ? parseFloat(bbox[0]) : parseFloat(geo.lat) - bufferSize,
+      max_lat: bbox[1] ? parseFloat(bbox[1]) : parseFloat(geo.lat) + bufferSize,
+      min_lon: bbox[2] ? parseFloat(bbox[2]) : parseFloat(geo.lon) - bufferSize,
+      max_lon: bbox[3] ? parseFloat(bbox[3]) : parseFloat(geo.lon) + bufferSize
+    };
+
+    // Crea un poligono rettangolare dal bounding box
+    result.geometry = JSON.stringify({
+      type: 'Polygon',
+      coordinates: [[
+        [result.min_lon, result.min_lat],
+        [result.max_lon, result.min_lat],
+        [result.max_lon, result.max_lat],
+        [result.min_lon, result.max_lat],
+        [result.min_lon, result.min_lat]
+      ]]
+    });
+
+    console.log(`✓ Geometria da Nominatim per ${streetName} (bounding box esteso)`);
+    console.log(`  BBox: [${result.min_lat}, ${result.max_lat}] x [${result.min_lon}, ${result.max_lon}]`);
+    return result;
+    
+  } catch (error) {
+    console.error(`Nominatim error per ${streetName}:`, error.message);
+    throw new Error(`Street not found: ${streetName}`);
   }
-
-  const geo = response.data[0];
-  const bbox = geo.boundingbox || [];
-  
-  const result = {
-    latitude: parseFloat(geo.lat),
-    longitude: parseFloat(geo.lon),
-    min_lat: bbox[0] ? parseFloat(bbox[0]) : parseFloat(geo.lat) - 0.001,
-    max_lat: bbox[1] ? parseFloat(bbox[1]) : parseFloat(geo.lat) + 0.001,
-    min_lon: bbox[2] ? parseFloat(bbox[2]) : parseFloat(geo.lon) - 0.001,
-    max_lon: bbox[3] ? parseFloat(bbox[3]) : parseFloat(geo.lon) + 0.001
-  };
-
-  // Crea un poligono rettangolare dal bounding box
-  result.geometry = JSON.stringify({
-    type: 'Polygon',
-    coordinates: [[
-      [result.min_lon, result.min_lat],
-      [result.max_lon, result.min_lat],
-      [result.max_lon, result.max_lat],
-      [result.min_lon, result.max_lat],
-      [result.min_lon, result.min_lat]
-    ]]
-  });
-
-  return result;
 }
 
 /**
  * Crea un buffer poligonale attorno a una linea
  * @param {Array} lineCoords - Array di [lon, lat]
- * @param {number} bufferDegrees - Distanza del buffer in gradi (~0.00025 = 25m)
+ * @param {number} bufferDegrees - Distanza del buffer in gradi (~0.0014 = 140m)
  * @returns {Array} Coordinate del poligono buffer
  */
 function createLineBuffer(lineCoords, bufferDegrees) {
@@ -175,33 +207,61 @@ function createLineBuffer(lineCoords, bufferDegrees) {
 }
 
 /**
- * Verifica se un punto è dentro un poligono (Ray Casting Algorithm)
- * @param {number} lat - Latitudine del punto
- * @param {number} lon - Longitudine del punto
- * @param {string} geometryJson - GeoJSON del poligono
- * @returns {boolean}
+ * Verifica se un punto è dentro un poligono o multipoligono
  */
 function isPointInPolygon(lat, lon, geometryJson) {
   try {
     const geometry = JSON.parse(geometryJson);
-    const polygon = geometry.coordinates[0];
     
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const xi = polygon[i][0], yi = polygon[i][1];
-      const xj = polygon[j][0], yj = polygon[j][1];
-      
-      const intersect = ((yi > lat) !== (yj > lat))
-        && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
-      
-      if (intersect) inside = !inside;
+    // Gestisci sia Polygon che MultiPolygon
+    if (geometry.type === 'MultiPolygon') {
+      // Per MultiPolygon, controlla se il punto è in ALMENO uno dei poligoni
+      return geometry.coordinates.some(polygonRings => {
+        const outerRing = polygonRings[0]; // Primo anello = contorno esterno
+        return raycastCheck(lat, lon, outerRing);
+      });
+    } else if (geometry.type === 'Polygon') {
+      const outerRing = geometry.coordinates[0];
+      return raycastCheck(lat, lon, outerRing);
     }
     
-    return inside;
+    return false;
   } catch (error) {
     console.error('Error checking point in polygon:', error);
     return false;
   }
+}
+
+/**
+ * Ray casting algorithm per verificare se un punto è dentro un poligono
+ */
+function raycastCheck(lat, lon, ring) {
+  // Filtra punti invalidi
+  const validRing = ring.filter(point => 
+    point && 
+    point[0] !== null && 
+    point[1] !== null &&
+    !isNaN(point[0]) && 
+    !isNaN(point[1])
+  );
+  
+  if (validRing.length < 3) {
+    console.warn('Anello invalido, troppo pochi punti validi');
+    return false;
+  }
+  
+  let inside = false;
+  for (let i = 0, j = validRing.length - 1; i < validRing.length; j = i++) {
+    const xi = validRing[i][0], yi = validRing[i][1];
+    const xj = validRing[j][0], yj = validRing[j][1];
+    
+    const intersect = ((yi > lat) !== (yj > lat))
+      && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+    
+    if (intersect) inside = !inside;
+  }
+  
+  return inside;
 }
 
 /**
@@ -228,20 +288,49 @@ exports.getStreetDetailsAndReports = async (streetName) => {
  * Filtra i report che cadono effettivamente sulla strada
  */
 exports.filterReportsOnStreet = (reports, street) => {
+  console.log(`\n=== Filtering per ${street.street_name} ===`);
+  console.log(`Total reports to check: ${reports.length}`);
+  console.log(`BBox: [${street.min_lat}, ${street.max_lat}] x [${street.min_lon}, ${street.max_lon}]`);
+  
+  // Filtro base con bounding box
+  const inBBox = reports.filter(r => {
+    const inBox = r.latitude >= street.min_lat &&
+                  r.latitude <= street.max_lat &&
+                  r.longitude >= street.min_lon &&
+                  r.longitude <= street.max_lon;
+    
+    if (!inBox) {
+      console.log(`  ✗ Report ${r.id} at [${r.latitude}, ${r.longitude}] FUORI dal bounding box`);
+    } else {
+      console.log(`  ✓ Report ${r.id} at [${r.latitude}, ${r.longitude}] DENTRO bounding box`);
+    }
+    return inBox;
+  });
+
+  console.log(`Reports in bounding box: ${inBBox.length}`);
+
+  // Se non c'è geometria, usa solo il bounding box
   if (!street.geometry) {
-    // Fallback: usa solo il bounding box
-    return reports.filter(r => 
-      r.latitude >= street.min_lat &&
-      r.latitude <= street.max_lat &&
-      r.longitude >= street.min_lon &&
-      r.longitude <= street.max_lon
-    );
+    console.warn(`⚠ Geometria mancante per ${street.street_name} - uso solo bounding box`);
+    return inBBox;
   }
 
-  // Metodo preciso: check point-in-polygon
-  return reports.filter(r => 
-    isPointInPolygon(r.latitude, r.longitude, street.geometry)
-  );
+  try {
+    const geometry = JSON.parse(street.geometry);
+    console.log(`Geometry type: ${geometry.type}`);
+    
+    // Filtro geometrico preciso usando isPointInPolygon
+    const filtered = inBBox.filter(r => {
+      const isInside = isPointInPolygon(r.latitude, r.longitude, street.geometry);
+      console.log(`  ${isInside ? '✓' : '✗'} Report ${r.id} è ${isInside ? 'DENTRO' : 'FUORI'} il poligono`);
+      return isInside;
+    });
+    
+    console.log(`✓ ${street.street_name}: ${filtered.length}/${inBBox.length} reports dopo filtro geometrico\n`);
+    return filtered;
+    
+  } catch (error) {
+    console.error(`Errore parsing geometria per ${street.street_name}:`, error.message);
+    return inBBox; // Fallback al bounding box
+  }
 };
-
-module.exports = exports;
