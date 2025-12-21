@@ -1,0 +1,5 @@
+start - Welcome message and help
+help - Show available commands
+newreport - Create a new report
+cancel - Cancel the current report creation
+

@@ -117,6 +117,26 @@ exports.getUserByEmail = (email) => {
 };
 
 /**
+ * Get user by Telegram nickname
+ * @param {string} telegramNickname - Telegram username (with or without @)
+ * @returns {Promise<Object|null>}
+ */
+exports.getUserByTelegramNickname = (telegramNickname) => {
+  return new Promise((resolve, reject) => {
+    // Normalize: remove @ if present, make case-insensitive
+    const normalized = telegramNickname.replace(/^@/, '').toLowerCase();
+    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname FROM Users WHERE LOWER(REPLACE(telegram_nickname, "@", "")) = ?';
+    db.get(sql, [normalized], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(row || null);
+    });
+  });
+};
+
+/**
  * Generate a random 6-digit confirmation code
  * @returns {string} 6-digit confirmation code
  */

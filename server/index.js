@@ -1,5 +1,7 @@
 // Load environment variables
-require('dotenv').config();
+// Load from project root, not server directory
+const path = require('node:path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -7,7 +9,6 @@ const session = require('express-session');
 const passport = require('./utils/passport');
 const { errorHandler } = require('./middlewares/errorMiddleware');
 const { swaggerUi, swaggerSpec, swaggerUiOptions } = require('./swagger');
-const path = require('node:path');
 const {isMunicipal_public_relations_officer, isAdmin} = require("./middlewares/authMiddleware");
 
 const sessionRoutes = require('./routes/sessionRoutes');
@@ -15,6 +16,8 @@ const userRoutes = require('./routes/userRoutes');
 const reportRoutes = require('./routes/reportRoutes')
 const constantRoutes = require('./routes/constantRoutes');
 const commentRoutes = require('./routes/commentRoutes');
+const telegramRoutes = require('./routes/telegramRoutes');
+const telegramBotService = require('./services/telegramBotService');
 const app = express();
 
 // Disable X-Powered-By header for security
@@ -48,12 +51,26 @@ app.use('/api', userRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', constantRoutes);
 app.use('/api', commentRoutes);
+app.use('/api', telegramRoutes);
 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 if (require.main === module && process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
-  console.log(`📚 Swagger docs available at http://localhost:${PORT}/api-docs`);
+  app.listen(PORT, () => {
+    console.log(`🚀 Server listening on port ${PORT}`);
+    console.log(`📚 Swagger docs available at http://localhost:${PORT}/api-docs`);
+    
+    // Initialize Telegram bot
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL;
+    
+    if (telegramToken) {
+      telegramBotService.initializeBot(telegramToken, webhookUrl);
+      console.log('✅ Telegram bot initialized');
+    } else {
+      console.log('⚠️ Telegram bot token not configured (TELEGRAM_BOT_TOKEN)');
+    }
+  });
 }
 module.exports = app;
