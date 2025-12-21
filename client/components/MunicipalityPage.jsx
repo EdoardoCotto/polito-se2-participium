@@ -722,8 +722,8 @@ export default function TechnicalOfficeStaffMember({ user }) {
       {/* Main Content - Map and Reports */}
       <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
         <Row className="g-3 h-100">
-          {/* Map Section - Left Side (1/3) */}
-          <Col lg={4} className="d-flex flex-column">
+          {/* Map Section */}
+          <Col lg={6} className="d-flex flex-column">
             <Card className="shadow-lg flex-grow-1" style={{ 
               borderRadius: 'clamp(0.5rem, 2vw, 1rem)', 
               border: 'none',
@@ -758,8 +758,8 @@ export default function TechnicalOfficeStaffMember({ user }) {
             </Card>
           </Col>
 
-          {/* Assigned Reports Section - Right Side (2/3) */}
-          <Col lg={8} className="d-flex flex-column">
+          {/* Assigned Reports Section  */}
+          <Col lg={6} className="d-flex flex-column">
             <Card className="shadow-lg flex-grow-1" style={{ 
               borderRadius: 'clamp(0.5rem, 2vw, 1rem)', 
               border: 'none'
@@ -1273,19 +1273,110 @@ export default function TechnicalOfficeStaffMember({ user }) {
           padding: '1.5rem 2rem',
           boxShadow: '0 4px 12px rgba(94, 123, 179, 0.15)'
         }}>
-          <Modal.Title style={{ 
-            fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
-            fontWeight: '700',
-            display: 'flex',
-            alignItems: 'center',
-            letterSpacing: '-0.02em'
-          }}>
-            <i className="bi bi-chat-dots-fill me-3" style={{ 
-              fontSize: '1.6rem',
-              animation: 'pulse 2s ease-in-out infinite'
-            }}></i>
-            Messages - {selectedReport?.title}
-          </Modal.Title>
+          <div style={{ width: '100%' }}>
+            <Modal.Title style={{ 
+              fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              letterSpacing: '-0.02em',
+              marginBottom: '0.75rem'
+            }}>
+              <i className="bi bi-chat-dots-fill me-3" style={{ 
+                fontSize: '1.6rem',
+                animation: 'pulse 2s ease-in-out infinite'
+              }}></i>
+              Messages
+            </Modal.Title>
+            {selectedReport && (
+              <div style={{ width: '100%' }}>
+                <div style={{ 
+                  fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+                  fontWeight: '600',
+                  opacity: 0.95,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  flexWrap: 'wrap',
+                  marginBottom: '0.75rem'
+                }}>
+                  <i className="bi bi-file-text me-1" style={{ fontSize: '1rem' }}></i>
+                  <span>{selectedReport.title}</span>
+                  <Badge 
+                    bg="light" 
+                    text="dark" 
+                    style={{ 
+                      fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                      padding: '0.35rem 0.6rem',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {selectedReport.category}
+                  </Badge>
+                  <Badge 
+                    bg={getStatusBadgeVariant(selectedReport.status)} 
+                    style={{ 
+                      fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                      padding: '0.35rem 0.6rem',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {selectedReport.status}
+                  </Badge>
+                </div>
+                {selectedReport.description && (
+                  <div style={{ 
+                    fontSize: 'clamp(0.85rem, 2.3vw, 0.95rem)',
+                    opacity: 0.9,
+                    lineHeight: '1.5',
+                    marginBottom: '0.75rem',
+                    fontStyle: 'italic'
+                  }}>
+                    <i className="bi bi-quote me-2"></i>
+                    {selectedReport.description}
+                    <i className="bi bi-quote ms-2" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}></i>
+                  </div>
+                )}
+                {hasPhotos(selectedReport) && (
+                  <div style={{ 
+                    display: 'flex',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap',
+                    marginTop: '0.5rem'
+                  }}>
+                    {selectedReport.photoUrls && selectedReport.photoUrls.slice(0, 3).map((photoUrl, index) => (
+                      <img 
+                        key={index}
+                        src={photoUrl}
+                        alt={`Photo ${index + 1}`}
+                        style={{ 
+                          width: '60px',
+                          height: '60px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s ease, border-color 0.2s ease'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenPhotos(selectedReport, e);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'scale(1.05)';
+                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1)';
+                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </Modal.Header>
         <Modal.Body style={{ 
           backgroundColor: '#f8fafc',
