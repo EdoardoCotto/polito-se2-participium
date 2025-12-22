@@ -51,6 +51,62 @@ describe('streetRepository', () => {
     expect(out.longitude).toBeDefined();
   });
 
+  test('getStreetDetailsAndReports: Overpass merges close ways into one cluster', async () => {
+    const repo = loadRepo();
+    daoMock.getStreetByName.mockResolvedValueOnce({ id: 5, street_name: 'Via Merge' });
+    // Two ways whose endpoints are within MAX_DISTANCE, triggering merge
+    axiosMock.post.mockResolvedValueOnce({
+      data: {
+        elements: [
+          { geometry: [ { lon: 7.0000, lat: 45.0000 }, { lon: 7.0005, lat: 45.0005 } ] },
+          { geometry: [ { lon: 7.0006, lat: 45.0006 }, { lon: 7.0010, lat: 45.0010 } ] }
+        ]
+      }
+    });
+    const out = await repo.getStreetDetailsAndReports('Via Merge');
+    const geom = JSON.parse(out.geometry);
+    expect(geom.type).toBe('MultiPolygon');
+    // Merged into a single cluster -> one polygon in multipolygon
+    expect(geom.coordinates.length).toBe(1);
+    expect(daoMock.updateStreetGeocoding).toHaveBeenCalledWith(
+      5,
+      expect.objectContaining({ geometry: expect.any(String), latitude: expect.any(Number), longitude: expect.any(Number) })
+    );
+  });
+
+  test('getStreetDetailsAndReports: elements present but no geometry -> Nominatim fallback', async () => {
+    const repo = loadRepo();
+    daoMock.getStreetByName.mockResolvedValueOnce({ id: 6, street_name: 'Via EmptyGeo' });
+    axiosMock.post.mockResolvedValueOnce({ data: { elements: [{}, {}] } });
+    axiosMock.get.mockResolvedValueOnce({
+      data: [ { lat: '45.10', lon: '7.60', boundingbox: ['45.09','45.11','7.59','7.61'] } ]
+    });
+    const out = await repo.getStreetDetailsAndReports('Via EmptyGeo');
+    expect(daoMock.updateStreetGeocoding).toHaveBeenCalledWith(
+      6,
+      expect.objectContaining({ geometry: expect.any(String) })
+    );
+    const geom = JSON.parse(daoMock.updateStreetGeocoding.mock.calls[0][1].geometry);
+    expect(geom.type).toBe('Polygon');
+    expect(out.latitude).toBeCloseTo(45.10, 2);
+    expect(out.longitude).toBeCloseTo(7.60, 2);
+  });
+
+  test('getStreetDetailsAndReports: Overpass API error -> Nominatim fallback', async () => {
+    const repo = loadRepo();
+    daoMock.getStreetByName.mockResolvedValueOnce({ id: 7, street_name: 'Via API Error' });
+    axiosMock.post.mockRejectedValueOnce({ response: { status: 400 }, message: 'bad' });
+    axiosMock.get.mockResolvedValueOnce({
+      data: [ { lat: '45.12', lon: '7.62', boundingbox: ['45.11','45.13','7.61','7.63'] } ]
+    });
+    const out = await repo.getStreetDetailsAndReports('Via API Error');
+    expect(daoMock.updateStreetGeocoding).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ geometry: expect.any(String) })
+    );
+    expect(out.max_lat).toBeGreaterThan(out.min_lat);
+  });
+
   test('getStreetDetailsAndReports: Overpass no elements -> Nominatim fallback', async () => {
     const repo = loadRepo();
     daoMock.getStreetByName.mockResolvedValueOnce({ id: 2, street_name: 'Via Po' });
@@ -90,6 +146,12 @@ describe('streetRepository', () => {
     expect(daoMock.updateStreetGeocoding).not.toHaveBeenCalled();
   });
 
+  test('getStreetDetailsAndReports: street not found in DB -> throws', async () => {
+    const repo = loadRepo();
+    daoMock.getStreetByName.mockResolvedValueOnce(null);
+    await expect(repo.getStreetDetailsAndReports('No Street')).rejects.toThrow('Street not found');
+  });
+
   test('filterReportsOnStreet: bounding box only', () => {
     const repo = loadRepo();
     const reports = [
@@ -117,6 +179,41 @@ describe('streetRepository', () => {
     ];
     const filtered = repo.filterReportsOnStreet(reports, street);
     expect(filtered.map(r => r.id)).toEqual([10]);
+  });
+
+  test('filterReportsOnStreet: Polygon geometry filter works', () => {
+    const repo = loadRepo();
+    const street = {
+      street_name: 'Via Box',
+      min_lat: 45.06, max_lat: 45.08, min_lon: 7.67, max_lon: 7.69,
+      geometry: JSON.stringify({
+        type: 'Polygon',
+        coordinates: [[
+          [7.67,45.06],[7.69,45.06],[7.69,45.08],[7.67,45.08],[7.67,45.06]
+        ]]
+      })
+    };
+    const reports = [
+      { id: 21, latitude: 45.07, longitude: 7.68 }, // inside
+      { id: 22, latitude: 45.07, longitude: 7.70 }, // bbox but outside polygon
+    ];
+    const filtered = repo.filterReportsOnStreet(reports, street);
+    expect(filtered.map(r => r.id)).toEqual([21]);
+  });
+
+  test('filterReportsOnStreet: unknown geometry type -> returns empty after polygon check', () => {
+    const repo = loadRepo();
+    const street = {
+      street_name: 'Via Unknown',
+      min_lat: 45.06, max_lat: 45.08, min_lon: 7.67, max_lon: 7.69,
+      geometry: JSON.stringify({ type: 'LineString', coordinates: [[7.67,45.06],[7.69,45.08]] })
+    };
+    const reports = [
+      { id: 23, latitude: 45.07, longitude: 7.68 },
+      { id: 24, latitude: 45.07, longitude: 7.68 },
+    ];
+    const filtered = repo.filterReportsOnStreet(reports, street);
+    expect(filtered).toEqual([]);
   });
 
   test('filterReportsOnStreet: invalid geometry JSON -> fallback to bbox', () => {

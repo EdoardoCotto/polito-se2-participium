@@ -11,8 +11,15 @@ jest.mock('../../server/repository/reportRepository', () => ({
   updateMaintainerStatus: jest.fn(),
 }));
 
+jest.mock('../../server/repository/streetRepository', () => ({
+  getStreets: jest.fn(),
+  getStreetDetailsAndReports: jest.fn(),
+  filterReportsOnStreet: jest.fn(),
+}));
+
 const controller = require('../../server/controller/reportController');
 const repo = require('../../server/repository/reportRepository');
+const streetRepo = require('../../server/repository/streetRepository');
 const AppError = require('../../server/errors/AppError');
 
 const mkRes = () => {
@@ -790,5 +797,122 @@ describe('reportController.getExternalAssignedReports', () => {
     await controller.getExternalAssignedReports(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+  });
+});
+
+// ──────────────────────────────────────────────
+//   TEST getStreets
+// ──────────────────────────────────────────────
+describe('reportController.getStreets', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('200 success returns streets list', async () => {
+    const req = { query: { q: 'via' } };
+    const res = mkRes();
+    const streets = [{ name: 'Via Roma' }, { name: 'Via Po' }];
+    streetRepo.getStreets.mockResolvedValue(streets);
+    await controller.getStreets(req, res);
+    expect(streetRepo.getStreets).toHaveBeenCalledWith('via');
+    expect(res.json).toHaveBeenCalledWith(streets);
+  });
+
+  it('500 on repository error', async () => {
+    const req = { query: { q: 'x' } };
+    const res = mkRes();
+    streetRepo.getStreets.mockRejectedValue(new Error('down'));
+    await controller.getStreets(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'down' });
+  });
+});
+
+// ──────────────────────────────────────────────
+//   TEST getReportsByStreet
+// ──────────────────────────────────────────────
+describe('reportController.getReportsByStreet', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const mkReq = () => ({
+    params: { name: 'Via Roma' },
+    protocol: 'http',
+    get: () => 'localhost:3000',
+  });
+
+  it('200 success with geometry and photoUrls mapping', async () => {
+    const req = mkReq();
+    const res = mkRes();
+    const streetInfo = {
+      street_name: 'Via Roma',
+      latitude: 45.07,
+      longitude: 7.68,
+      min_lat: 45.06,
+      max_lat: 45.08,
+      min_lon: 7.67,
+      max_lon: 7.69,
+      geometry: null
+    };
+    streetRepo.getStreetDetailsAndReports.mockResolvedValue(streetInfo);
+
+    const candidates = [
+      { id: 1, lat: 45.07, lon: 7.68, photos: ['/static/uploads/a.jpg'] },
+      { id: 2, lat: 45.2, lon: 7.9, photos: ['/static/uploads/b.png'] },
+    ];
+    repo.getCitizenReports.mockResolvedValue(candidates);
+
+    const filtered = [ candidates[0] ];
+    streetRepo.filterReportsOnStreet.mockReturnValue(filtered);
+
+    await controller.getReportsByStreet(req, res);
+
+    // Assert bounding box call
+    expect(repo.getCitizenReports).toHaveBeenCalledWith({
+      boundingBox: { north: 45.08, south: 45.06, east: 7.69, west: 7.67 }
+    });
+
+    // Success path should not set status explicitly
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledTimes(1);
+    // Ensure filtering was invoked on candidate reports
+    expect(streetRepo.filterReportsOnStreet).toHaveBeenCalledWith(candidates, streetInfo);
+  });
+
+  it('200 success with null geometry', async () => {
+    const req = mkReq();
+    const res = mkRes();
+    const streetInfo = {
+      street_name: 'Via Po',
+      latitude: 45.07,
+      longitude: 7.68,
+      min_lat: 45.06,
+      max_lat: 45.08,
+      min_lon: 7.67,
+      max_lon: 7.69,
+      geometry: null
+    };
+    streetRepo.getStreetDetailsAndReports.mockResolvedValue(streetInfo);
+    repo.getCitizenReports.mockResolvedValue([]);
+    streetRepo.filterReportsOnStreet.mockReturnValue([]);
+
+    await controller.getReportsByStreet(req, res);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledTimes(1);
+  });
+
+  it('404 when street not found', async () => {
+    const req = mkReq();
+    const res = mkRes();
+    streetRepo.getStreetDetailsAndReports.mockRejectedValue(new Error('Street not found'));
+    await controller.getReportsByStreet(req, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Street not found' });
+  });
+
+  it('500 on generic error', async () => {
+    const req = mkReq();
+    const res = mkRes();
+    streetRepo.getStreetDetailsAndReports.mockRejectedValue(new Error('oops'));
+    await controller.getReportsByStreet(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'oops' });
   });
 });

@@ -1,6 +1,4 @@
-const userRepository = require('../../server/repository/userRepository');
-
-// Mock the DAO used by the repository
+// Mock the DAO and email service used by the repository
 jest.mock('../../server/dao/userDao', () => ({
   getUserById: jest.fn(),
   getUser: jest.fn(),
@@ -11,13 +9,23 @@ jest.mock('../../server/dao/userDao', () => ({
   findMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
   getExternalMaintainers: jest.fn(),
+  confirmUser: jest.fn(),
+  resendConfirmationCode: jest.fn(),
 }));
 
+jest.mock('../../server/services/emailService', () => ({
+  sendConfirmationEmail: jest.fn(),
+}));
+
+const userRepository = require('../../server/repository/userRepository');
+
 const userDao = require('../../server/dao/userDao');
+const emailService = require('../../server/services/emailService');
 const NotFoundError = require('../../server/errors/NotFoundError');
 const BadRequestError = require('../../server/errors/BadRequestError');
 const ConflictError = require('../../server/errors/ConflictError');
 const UnauthorizedError = require('../../server/errors/UnauthorizedError');
+const AppError = require('../../server/errors/AppError');
 
 describe('userRepository.getUserById', () => {
   afterEach(() => {
@@ -63,6 +71,11 @@ describe('userRepository.getUser', () => {
     const result = await userRepository.getUser('foo', 'bar');
     expect(result).toEqual(mockUser);
   });
+
+  test('throws UnauthorizedError when user is unconfirmed', async () => {
+    userDao.getUser.mockResolvedValueOnce({ id: 1, error: 'unconfirmed' });
+    await expect(userRepository.getUser('foo', 'bar')).rejects.toThrow(UnauthorizedError);
+  });
 });
 
 describe('userRepository.createUser', () => {
@@ -106,6 +119,27 @@ describe('userRepository.createUser', () => {
     const err = new Error('DB down');
     userDao.createUser.mockRejectedValue(err);
     await expect(userRepository.createUser(input)).rejects.toThrow(/DB down/);
+  });
+
+  test('sends confirmation email when confirmationCode present and omits code', async () => {
+    const input = { username: 'ok', email: 'ok@example.com', name: 'N', surname: 'S', password: 'p' };
+    userDao.getUserByUsername.mockResolvedValueOnce(null);
+    userDao.getUserByEmail.mockResolvedValueOnce(null);
+    userDao.createUser.mockResolvedValueOnce({ id: 42, email: 'ok@example.com', name: 'N', confirmationCode: '123456' });
+    emailService.sendConfirmationEmail.mockResolvedValueOnce(true);
+    const res = await userRepository.createUser(input);
+    expect(emailService.sendConfirmationEmail).toHaveBeenCalledWith('ok@example.com', 'N', '123456');
+    expect(res).toEqual({ id: 42, email: 'ok@example.com', name: 'N' });
+  });
+
+  test('email sending failure is logged but does not fail registration', async () => {
+    const input = { username: 'ok', email: 'ok@example.com', name: 'N', surname: 'S', password: 'p' };
+    userDao.getUserByUsername.mockResolvedValueOnce(null);
+    userDao.getUserByEmail.mockResolvedValueOnce(null);
+    userDao.createUser.mockResolvedValueOnce({ id: 43, email: 'ok@example.com', name: 'N', confirmationCode: '999999' });
+    emailService.sendConfirmationEmail.mockRejectedValueOnce(new Error('smtp down'));
+    const res = await userRepository.createUser(input);
+    expect(res).toEqual({ id: 43, email: 'ok@example.com', name: 'N' });
   });
 });
 
@@ -233,6 +267,74 @@ describe('userRepository.getExternalMaintainers', () => {
     const res = await userRepository.getExternalMaintainers();
     expect(userDao.getExternalMaintainers).toHaveBeenCalledTimes(1);
     expect(res).toEqual(list);
+  });
+});
+
+// confirmUser
+describe('userRepository.confirmUser', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('throws BadRequestError when email or code missing', async () => {
+    await expect(userRepository.confirmUser('', 'c')).rejects.toThrow(BadRequestError);
+    await expect(userRepository.confirmUser('a@b.com', '')).rejects.toThrow(BadRequestError);
+  });
+
+  test('maps specific failure messages to proper errors', async () => {
+    userDao.confirmUser.mockResolvedValueOnce({ success: false, message: 'User not found' });
+    await expect(userRepository.confirmUser('a@b.com', 'c')).rejects.toThrow(NotFoundError);
+
+    userDao.confirmUser.mockResolvedValueOnce({ success: false, message: 'Invalid confirmation code' });
+    await expect(userRepository.confirmUser('a@b.com', 'c')).rejects.toThrow(BadRequestError);
+
+    userDao.confirmUser.mockResolvedValueOnce({ success: false, message: 'Confirmation code has expired' });
+    await expect(userRepository.confirmUser('a@b.com', 'c')).rejects.toThrow(BadRequestError);
+
+    userDao.confirmUser.mockResolvedValueOnce({ success: false, message: 'User is already confirmed' });
+    await expect(userRepository.confirmUser('a@b.com', 'c')).rejects.toThrow(BadRequestError);
+  });
+
+  test('unknown failure message -> BadRequestError', async () => {
+    userDao.confirmUser.mockResolvedValueOnce({ success: false, message: 'Other' });
+    await expect(userRepository.confirmUser('a@b.com', 'c')).rejects.toThrow(BadRequestError);
+  });
+
+  test('returns success result', async () => {
+    const ok = { success: true, message: 'Confirmed' };
+    userDao.confirmUser.mockResolvedValueOnce(ok);
+    await expect(userRepository.confirmUser('a@b.com', 'c')).resolves.toEqual(ok);
+  });
+});
+
+// resendConfirmationCode
+describe('userRepository.resendConfirmationCode', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  test('throws BadRequestError when email missing', async () => {
+    await expect(userRepository.resendConfirmationCode('')).rejects.toThrow(BadRequestError);
+  });
+
+  test('maps DAO failure messages', async () => {
+    userDao.resendConfirmationCode.mockResolvedValueOnce({ success: false, message: 'User not found' });
+    await expect(userRepository.resendConfirmationCode('a@b.com')).rejects.toThrow(NotFoundError);
+
+    userDao.resendConfirmationCode.mockResolvedValueOnce({ success: false, message: 'User is already confirmed' });
+    await expect(userRepository.resendConfirmationCode('a@b.com')).rejects.toThrow(BadRequestError);
+
+    userDao.resendConfirmationCode.mockResolvedValueOnce({ success: false, message: 'Other' });
+    await expect(userRepository.resendConfirmationCode('a@b.com')).rejects.toThrow(BadRequestError);
+  });
+
+  test('sends email and returns success payload', async () => {
+    userDao.resendConfirmationCode.mockResolvedValueOnce({ success: true, email: 'a@b.com', name: 'A', confirmationCode: '999' });
+    emailService.sendConfirmationEmail.mockResolvedValueOnce(true);
+    await expect(userRepository.resendConfirmationCode('a@b.com')).resolves.toEqual({ success: true, message: 'Confirmation code sent to your email' });
+    expect(emailService.sendConfirmationEmail).toHaveBeenCalledWith('a@b.com', 'A', '999');
+  });
+
+  test('throws AppError when email sending fails', async () => {
+    userDao.resendConfirmationCode.mockResolvedValueOnce({ success: true, email: 'a@b.com', name: 'A', confirmationCode: '999' });
+    emailService.sendConfirmationEmail.mockRejectedValueOnce(new Error('smtp'));
+    await expect(userRepository.resendConfirmationCode('a@b.com')).rejects.toBeInstanceOf(AppError);
   });
 });
 

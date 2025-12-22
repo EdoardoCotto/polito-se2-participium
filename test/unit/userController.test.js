@@ -8,6 +8,7 @@ jest.mock('../../server/repository/userRepository', () => ({
   getMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
   getExternalMaintainers: jest.fn(),
+  resendConfirmationCode: jest.fn(),
 }));
 
 const userController = require('../../server/controller/userController');
@@ -354,6 +355,62 @@ describe('userController', () => {
       const req = {};
       const res = makeRes();
       await userController.getExternalMaintainers(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
+    });
+  });
+
+  // confirmRegistration
+  describe('confirmRegistration', () => {
+    it('400 when email or code missing', async () => {
+      const res = makeRes();
+      await userController.confirmRegistration({ body: { email: '', code: '' } }, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Email and confirmation code are required' });
+    });
+
+    it('200 success response when both fields provided', async () => {
+      const res = makeRes();
+      await userController.confirmRegistration({ body: { email: 'a@b.com', code: '123' } }, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Account successfully confirmed. You can now log in.'
+      });
+    });
+  });
+
+  // resendConfirmationCode
+  describe('resendConfirmationCode', () => {
+    it('400 when email missing', async () => {
+      const res = makeRes();
+      await userController.resendConfirmationCode({ body: {} }, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Email is required' });
+    });
+
+    it('200 success with repository result', async () => {
+      const res = makeRes();
+      const result = { success: true, message: 'ok' };
+      userRepository.resendConfirmationCode.mockResolvedValueOnce(result);
+      await userController.resendConfirmationCode({ body: { email: 'a@b.com' } }, res);
+      expect(userRepository.resendConfirmationCode).toHaveBeenCalledWith('a@b.com');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(result);
+    });
+
+    it('AppError mapped to status', async () => {
+      const res = makeRes();
+      userRepository.resendConfirmationCode.mockRejectedValueOnce(new AppError('Denied', 403));
+      await userController.resendConfirmationCode({ body: { email: 'a@b.com' } }, res);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Denied' });
+    });
+
+    it('unknown error -> 500', async () => {
+      const res = makeRes();
+      userRepository.resendConfirmationCode.mockRejectedValueOnce(new Error('x'));
+      await userController.resendConfirmationCode({ body: { email: 'a@b.com' } }, res);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
     });
