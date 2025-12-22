@@ -1,5 +1,7 @@
 start - Welcome message and help
 help - Show available commands
 newreport - Create a new report
+myreports - List all your submitted reports
+reportstatus - Show details of a specific report
 cancel - Cancel the current report creation
 

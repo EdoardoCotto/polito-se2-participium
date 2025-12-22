@@ -45,8 +45,35 @@ function initializeBot(token, webhookUrl = null) {
     console.log(`✅ Telegram webhook set to: ${webhookUrl}`);
   }
 
+  // Register bot commands with Telegram (so they appear in the menu)
+  registerBotCommands();
+
   setupCommandHandlers();
   return bot;
+}
+
+/**
+ * Register bot commands with Telegram (so they appear in the menu)
+ */
+async function registerBotCommands() {
+  if (!bot) return;
+
+  const commands = [
+    { command: 'start', description: 'Welcome message and help' },
+    { command: 'help', description: 'Show available commands' },
+    { command: 'newreport', description: 'Create a new report' },
+    { command: 'myreports', description: 'List all your submitted reports' },
+    { command: 'reportstatus', description: 'Show details of a specific report (usage: /reportstatus <id>)' },
+    { command: 'cancel', description: 'Cancel the current report creation' }
+  ];
+
+  try {
+    await bot.setMyCommands(commands);
+    console.log('✅ Telegram bot commands registered');
+  } catch (error) {
+    console.error('⚠️ Failed to register bot commands:', error.message);
+    console.log('💡 You can manually register commands with BotFather using /setcommands');
+  }
 }
 
 /**
@@ -65,6 +92,8 @@ function setupCommandHandlers() {
       `I can help you create reports about issues in your area.\n\n` +
       `Available commands:\n` +
       `/newreport - Create a new report\n` +
+      `/myreports - List all your reports\n` +
+      `/reportstatus <id> - Check a report's status\n` +
       `/help - Show this help message`
     );
   });
@@ -75,6 +104,8 @@ function setupCommandHandlers() {
     await bot.sendMessage(chatId,
       `📋 Available Commands:\n\n` +
       `/newreport - Start creating a new report\n` +
+      `/myreports - List all your submitted reports\n` +
+      `/reportstatus <id> - Show details of a specific report\n` +
       `/cancel - Cancel the current report creation\n\n` +
       `The bot will guide you through:\n` +
       `1. 📍 Location selection\n` +
@@ -151,6 +182,177 @@ function setupCommandHandlers() {
     await bot.sendMessage(chatId, '❌ Report creation cancelled.', {
       reply_markup: { remove_keyboard: true }
     });
+  });
+
+  // Handle /myreports command
+  bot.onText(/\/myreports/, async (msg) => {
+    const chatId = msg.chat.id;
+    const telegramUsername = msg.from.username;
+
+    if (!telegramUsername) {
+      await bot.sendMessage(chatId,
+        `❌ Please set a username in your Telegram profile to use this bot.\n\n` +
+        `Go to Settings > Username to set one.`
+      );
+      return;
+    }
+
+    try {
+      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      
+      if (!user) {
+        await bot.sendMessage(chatId,
+          `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
+          `Please link your Telegram username in your Participium profile first.`
+        );
+        return;
+      }
+
+      const reports = await reportRepository.getUserReports(user.id);
+
+      if (reports.length === 0) {
+        await bot.sendMessage(chatId,
+          `📋 You haven't submitted any reports yet.\n\n` +
+          `Use /newreport to create your first report!`
+        );
+        return;
+      }
+
+      // Format status for display
+      const formatStatus = (status) => {
+        const statusMap = {
+          'pending': '⏳ Pending',
+          'assigned': '✅ Assigned',
+          'rejected': '❌ Rejected',
+          'progress': '🔧 In Progress',
+          'suspended': '⏸️ Suspended',
+          'resolved': '✅ Resolved'
+        };
+        return statusMap[status] || status;
+      };
+
+      let message = `📋 Your Reports (${reports.length}):\n\n`;
+      
+      reports.forEach((report, index) => {
+        const reportId = report.id || report.reportId || 'N/A';
+        const status = formatStatus(report.status);
+        const title = report.title || 'Untitled';
+        const date = report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A';
+        
+        message += `${index + 1}. Report #${reportId}\n`;
+        message += `   📝 ${title}\n`;
+        message += `   ${status}\n`;
+        message += `   📅 ${date}\n\n`;
+      });
+
+      message += `Use /reportstatus <id> to see details of a specific report.\n`;
+      message += `Example: /reportstatus ${reports[0].id || reports[0].reportId || '12345'}`;
+
+      await bot.sendMessage(chatId, message);
+    } catch (error) {
+      console.error('Error in /myreports:', error);
+      await bot.sendMessage(chatId, '❌ An error occurred. Please try again later.');
+    }
+  });
+
+  // Handle /reportstatus command
+  bot.onText(/\/reportstatus(?:\s+(\d+))?/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const telegramUsername = msg.from.username;
+    const reportId = match && match[1] ? parseInt(match[1], 10) : null;
+
+    if (!telegramUsername) {
+      await bot.sendMessage(chatId,
+        `❌ Please set a username in your Telegram profile to use this bot.\n\n` +
+        `Go to Settings > Username to set one.`
+      );
+      return;
+    }
+
+    if (!reportId || isNaN(reportId)) {
+      await bot.sendMessage(chatId,
+        `❌ Please provide a valid report ID.\n\n` +
+        `Usage: /reportstatus <id>\n` +
+        `Example: /reportstatus 12345\n\n` +
+        `Use /myreports to see your report IDs.`
+      );
+      return;
+    }
+
+    try {
+      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      
+      if (!user) {
+        await bot.sendMessage(chatId,
+          `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
+          `Please link your Telegram username in your Participium profile first.`
+        );
+        return;
+      }
+
+      // Get the report
+      const report = await reportRepository.getReportById(reportId);
+
+      // Check if the report belongs to the user (or is anonymous)
+      if (report.userId !== user.id) {
+        await bot.sendMessage(chatId,
+          `❌ You can only view your own reports.\n\n` +
+          `This report doesn't belong to your account.`
+        );
+        return;
+      }
+
+      // Format status for display
+      const formatStatus = (status) => {
+        const statusMap = {
+          'pending': '⏳ Pending',
+          'assigned': '✅ Assigned',
+          'rejected': '❌ Rejected',
+          'progress': '🔧 In Progress',
+          'suspended': '⏸️ Suspended',
+          'resolved': '✅ Resolved'
+        };
+        return statusMap[status] || status;
+      };
+
+      const status = formatStatus(report.status);
+      const createdDate = report.created_at ? new Date(report.created_at).toLocaleString() : 'N/A';
+      const updatedDate = report.updated_at ? new Date(report.updated_at).toLocaleString() : 'N/A';
+
+      let message = `📋 Report #${reportId}\n\n`;
+      message += `📝 Title: ${report.title || 'N/A'}\n`;
+      message += `📄 Description: ${report.description || 'N/A'}\n`;
+      message += `🏷️ Category: ${report.category || 'N/A'}\n`;
+      message += `${status}\n\n`;
+      message += `📍 Location: ${report.latitude?.toFixed(6) || 'N/A'}, ${report.longitude?.toFixed(6) || 'N/A'}\n`;
+      message += `📅 Created: ${createdDate}\n`;
+      message += `🔄 Updated: ${updatedDate}\n`;
+
+      if (report.status === 'rejected' && report.rejection_reason) {
+        message += `\n❌ Rejection Reason: ${report.rejection_reason}\n`;
+      }
+
+      if (report.technical_office) {
+        message += `\n🏢 Technical Office: ${report.technical_office}\n`;
+      }
+
+      if (report.photos && report.photos.length > 0) {
+        message += `\n📸 Photos: ${report.photos.length}\n`;
+      }
+
+      await bot.sendMessage(chatId, message);
+    } catch (error) {
+      console.error('Error in /reportstatus:', error);
+      
+      if (error.name === 'NotFoundError') {
+        await bot.sendMessage(chatId,
+          `❌ Report #${reportId} not found.\n\n` +
+          `Use /myreports to see your reports.`
+        );
+      } else {
+        await bot.sendMessage(chatId, '❌ An error occurred. Please try again later.');
+      }
+    }
   });
 
   // Handle location messages

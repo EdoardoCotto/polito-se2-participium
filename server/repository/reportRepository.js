@@ -473,3 +473,21 @@ exports.getAssignedReportsForExternal = async (maintainerId) => {
   // Riutilizziamo la stessa funzione mapReportRow aggiornata
   return rows.map(mapReportRow);
 };
+
+/**
+ * Get reports by user ID (for citizens to view their own reports)
+ * @param {number} userId
+ * @returns {Promise<Object[]>}
+ */
+exports.getUserReports = async (userId) => {
+  if (!userId) {
+    throw new BadRequestError('User ID is required');
+  }
+
+  if (!Number.isInteger(userId)) {
+    throw new BadRequestError('User ID must be a valid integer');
+  }
+
+  const rows = await reportDao.getReportsByUserId(userId);
+  return rows.map(mapReportRow);
+};
