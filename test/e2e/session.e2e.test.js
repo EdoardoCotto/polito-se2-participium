@@ -41,6 +41,17 @@ jest.doMock('node:fs', () => {
   const real = jest.requireActual('node:fs');
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
+// Stub Telegram service to avoid importing external dependency
+jest.mock('../../server/services/telegramBotService', () => ({
+  initializeBot: () => null,
+  getBot: () => null,
+  processWebhookUpdate: () => {}
+}));
+// Mock Telegram controller to avoid requiring bot service during app load
+jest.mock('../../server/controller/telegramController', () => ({
+  handleWebhook: (_req, res) => res.status(200).json({ ok: true }),
+  getBotInfo: (_req, res) => res.status(503).json({ error: 'Telegram bot not initialized' }),
+}));
 const request = require('supertest');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -77,7 +88,8 @@ describe('Session API End-to-End Tests', () => {
       email: `${uname}@example.com`,
       name: 'E2E',
       surname: 'User',
-      password: 'Password123!'
+      password: 'Password123!',
+      skipConfirmation: true
     });
 
     const loginRes = await agent.post('/api/sessions').send({ username: uname, password: 'Password123!' });

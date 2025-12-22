@@ -41,6 +41,17 @@ jest.doMock('node:fs', () => {
   const real = jest.requireActual('node:fs');
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
+// Stub Telegram service to avoid importing external dependency
+jest.mock('../../server/services/telegramBotService', () => ({
+  initializeBot: () => null,
+  getBot: () => null,
+  processWebhookUpdate: () => {}
+}));
+// Mock Telegram controller to avoid requiring bot service during app load
+jest.mock('../../server/controller/telegramController', () => ({
+  handleWebhook: (_req, res) => res.status(200).json({ ok: true }),
+  getBotInfo: (_req, res) => res.status(503).json({ error: 'Telegram bot not initialized' }),
+}));
 const request = require('supertest');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -90,6 +101,7 @@ describe('User API End-to-End Tests', () => {
       name: 'Admin',
       surname: 'E2E',
       password: 'Password123!',
+      skipConfirmation: true,
       type: 'admin'
     });
 
@@ -151,7 +163,8 @@ describe('User API End-to-End Tests', () => {
       email: `${cU}@example.com`,
       name: 'Cit',
       surname: 'Forbidden',
-      password: 'Password123!'
+      password: 'Password123!',
+      skipConfirmation: true
     });
     const target = await userDao.createUser({
       username: targetU,
@@ -187,14 +200,16 @@ describe('User API End-to-End Tests', () => {
       email: `${aliceU}@example.com`,
       name: 'Alice',
       surname: 'E2E',
-      password: 'Password123!'
+      password: 'Password123!',
+      skipConfirmation: true
     });
     const bob = await userDao.createUser({
       username: bobU,
       email: `${bobU}@example.com`,
       name: 'Bob',
       surname: 'E2E',
-      password: 'Password123!'
+      password: 'Password123!',
+      skipConfirmation: true
     });
 
     const loginRes = await agent.post('/api/sessions').send({ username: aliceU, password: 'Password123!' });

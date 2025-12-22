@@ -12,6 +12,25 @@ jest.mock('swagger-ui-express', () => ({
   serve: [(_req, _res, next) => next()],
   setup: () => (_req, _res, next) => next(),
 }));
+// Stub Telegram service to avoid importing external dependency
+jest.mock('../../server/services/telegramBotService', () => ({
+  initializeBot: () => null,
+  getBot: () => null,
+  processWebhookUpdate: () => {}
+}));
+// Stub Telegram controller to prevent bot service import during app load
+jest.mock('../../server/controller/telegramController', () => ({
+  handleWebhook: (_req, res) => res.status(200).json({ ok: true }),
+  getBotInfo: (_req, res) => res.status(503).json({ error: 'Telegram bot not initialized' }),
+}));
+// Stub reportRoutes to avoid unrelated handler issues when mounting all routes
+jest.mock('../../server/routes/reportRoutes', () => {
+  const express = require('express');
+  const router = express.Router();
+  router.get('/reports/pending', (_req, res) => res.json([]));
+  router.get('/streets', (_req, res) => res.json([]));
+  return router;
+});
 
 // Mock auth middleware
 jest.mock('../../server/middlewares/authMiddleware', () => ({
@@ -76,6 +95,21 @@ jest.mock('../../server/controller/userController', () => ({
       { id: 10, username: 'maintainer1', type: 'external_maintainer' }
     ]);
   },
+  // Ensure routes mount without handler errors
+  confirmRegistration: (req, res) => {
+    const { email, code } = req.body || {};
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and confirmation code are required' });
+    }
+    return res.status(200).json({ success: true, message: 'Account successfully confirmed. You can now log in.' });
+  },
+  resendConfirmationCode: (req, res) => {
+    const { email } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    return res.status(200).json({ success: true, message: 'Confirmation code sent to your email' });
+  },
 }));
 
 // Mock other controllers
@@ -90,6 +124,8 @@ jest.mock('../../server/controller/reportController', () => ({
   reviewReport: (_req, res) => res.json({ ok: true }),
   assignReportToExternalMaintainer: (_req, res) => res.status(200).json({ ok: true }),
   updateMaintainerStatus: (_req, res) => res.status(200).json({ ok: true }),
+  // Needed by /streets route in reportRoutes
+  getStreets: (_req, res) => res.json([]),
 }));
 
 jest.mock('../../server/controller/commentController', () => ({

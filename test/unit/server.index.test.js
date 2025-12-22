@@ -12,6 +12,26 @@ jest.mock('swagger-ui-express', () => ({
   serve: [(_req, _res, next) => next()],
   setup: () => (_req, _res, next) => next(),
 }));
+// Stub Telegram service to avoid importing external dependency
+jest.mock('../../server/services/telegramBotService', () => ({
+  initializeBot: () => null,
+  getBot: () => null,
+  processWebhookUpdate: () => {}
+}));
+// Stub Telegram controller to prevent bot service import during app load
+jest.mock('../../server/controller/telegramController', () => ({
+  handleWebhook: (_req, res) => res.status(200).json({ ok: true }),
+  getBotInfo: (_req, res) => res.status(503).json({ error: 'Telegram bot not initialized' }),
+}));
+// Stub reportRoutes with minimal endpoints used by this suite
+jest.mock('../../server/routes/reportRoutes', () => {
+  const express = require('express');
+  const router = express.Router();
+  router.get('/reports/pending', (_req, res) => res.json([]));
+  router.get('/approved', (_req, res) => res.json([]));
+  router.get('/streets', (_req, res) => res.json([]));
+  return router;
+});
 
 // Mock all middlewares before requiring the app
 jest.mock('../../server/middlewares/authMiddleware', () => ({
@@ -36,6 +56,8 @@ jest.mock('../../server/controller/reportController', () => ({
   reviewReport: (_req, res) => res.json({ ok: true }),
   assignReportToExternalMaintainer: (_req, res) => res.status(200).json({ ok: true }),
   updateMaintainerStatus: (_req, res) => res.status(200).json({ ok: true }),
+  // Needed by /streets route in reportRoutes
+  getStreets: (_req, res) => res.json([]),
 }));
 
 jest.mock('../../server/controller/commentController', () => ({
@@ -51,6 +73,9 @@ jest.mock('../../server/controller/userController', () => ({
   getMunicipalityUsers: (_req, res) => res.json([]),
   updateUserProfile: (_req, res) => res.json({ ok: true }),
   getExternalMaintainers: (_req, res) => res.json([]),
+  // Needed by /users/confirm and /users/resend-confirmation routes
+  confirmRegistration: (_req, res) => res.status(200).json({ success: true }),
+  resendConfirmationCode: (_req, res) => res.status(200).json({ success: true }),
 }));
 
 jest.mock('../../server/controller/sessionController', () => ({

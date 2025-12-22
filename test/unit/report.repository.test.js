@@ -35,7 +35,7 @@ describe("reportRepository.createReport", () => {
     const data = { ...validData, userId: null };
 
     await expect(reportRepository.createReport(data, false)).rejects.toThrow(
-      /User ID, latitude, and longitude are required/i
+      /User ID is required for non-anonymous reports/i
     );
   });
 
@@ -43,14 +43,14 @@ describe("reportRepository.createReport", () => {
     const data = { ...validData, latitude: undefined };
 
     await expect(reportRepository.createReport(data, false)).rejects.toThrow(
-      /User ID, latitude, and longitude are required/i
+      /Latitude and longitude are required/i
     );
   });
 
   test("throws if missing longitude (right side of OR)", async () => {
     const data = { ...validData, longitude: undefined };
     await expect(reportRepository.createReport(data, false)).rejects.toThrow(
-      /User ID, latitude, and longitude are required/i
+      /Latitude and longitude are required/i
     );
   });
 
@@ -104,8 +104,9 @@ describe("reportRepository.createReport", () => {
 
   test("returns mapped report on success", async () => {
     jest.spyOn(userDao, 'getUserById').mockResolvedValue({ id: 1, type: 'citizen' });
+    // Repository maps from DAO result.id -> reportId and expects image_path fields
     const daoRow = {
-      reportId: 10,
+      id: 10,
       userId: 1,
       latitude: 45,
       longitude: 7,
@@ -120,10 +121,6 @@ describe("reportRepository.createReport", () => {
       image_path1: "p1.jpg",
       image_path2: null,
       image_path3: null,
-      userUsername: "u",
-      userName: "n",
-      userSurname: "s",
-      userEmail: "e@test.com",
     };
 
     reportDao.createReport.mockResolvedValue(daoRow);
@@ -148,10 +145,10 @@ describe("reportRepository.createReport", () => {
       photos: ["p1.jpg"],
       user: {
         id: 1,
-        username: "u",
-        name: "n",
-        surname: "s",
-        email: "e@test.com",
+        username: null,
+        name: null,
+        surname: null,
+        email: null,
       },
     });
   });

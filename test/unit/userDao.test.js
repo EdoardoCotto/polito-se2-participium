@@ -209,7 +209,8 @@ describe('userDao Functions', () => {
           const result = await d.createUser(newUser);
           expect(mods.bcrypt.genSalt).toHaveBeenCalled();
           expect(mods.bcrypt.hash).toHaveBeenCalledWith('password123', 'mock_salt');
-          expect(result).toEqual({ id: 201, username: newUser.username, email: newUser.email, name: 'Jane', surname: 'Smith', type: 'citizen' });
+          // Current DAO returns a confirmationCode along with user data
+          expect(result).toEqual({ id: 201, username: newUser.username, email: newUser.email, name: 'Jane', surname: 'Smith', type: 'citizen', confirmationCode: expect.any(String) });
         }
       );
     });

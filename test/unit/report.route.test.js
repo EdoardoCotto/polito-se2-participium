@@ -12,6 +12,18 @@ jest.mock('../../server/middlewares/authMiddleware', () => ({
   // Needed by userRoutes: provide a no-op middleware so route mounting succeeds.
   updateProfile: (_req, _res, next) => next(),
 }));
+// Stub Telegram service to avoid importing external dependency
+jest.mock('../../server/services/telegramBotService', () => ({
+  initializeBot: () => null,
+  getBot: () => null,
+  processWebhookUpdate: () => {}
+}));
+
+// Stub Telegram controller to prevent bot service import during app load
+jest.mock('../../server/controller/telegramController', () => ({
+  handleWebhook: (_req, res) => res.status(200).json({ ok: true }),
+  getBotInfo: (_req, res) => res.status(503).json({ error: 'Telegram bot not initialized' }),
+}));
 
 // Mock controller to simplify success/error paths and avoid DB dependency.
 jest.mock('../../server/controller/reportController', () => ({
@@ -52,7 +64,11 @@ jest.mock('../../server/controller/reportController', () => ({
       return res.status(400).json({ error: 'Status is required' });
     }
     return res.status(200).json({ id: Number.parseInt(req.params.id, 10), status });
-  }
+  },
+  // Needed by /streets route in reportRoutes
+  getStreets: (_req, res) => res.json([]),
+  // Needed by /streets/:name/reports route in reportRoutes
+  getReportsByStreet: (_req, res) => res.json([]),
 }));
 
 // Mock upload: usa memoryStorage così non scriviamo su disco
