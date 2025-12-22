@@ -16,7 +16,7 @@ const setup = () => {
         this._verify = verify;
       },
     };
-    jest.doMock('passport-local', () => passportLocalMock, { virtual: true });
+    jest.doMock('passport-local', () => passportLocalMock);
 
     // Mock DAO used by passport utils
     const daoMock = {
@@ -34,10 +34,9 @@ const setup = () => {
       serializeUser: jest.fn((fn) => { passportMock._lastSerialize = fn; }),
       deserializeUser: jest.fn((fn) => { passportMock._lastDeserialize = fn; }),
     };
-    jest.doMock('passport', () => passportMock, { virtual: true });
-    // Some modules inside server resolve passport from its local node_modules
-    // Ensure that resolution is mocked there too
-    jest.doMock('../../server/node_modules/passport', () => passportMock, { virtual: true });
+    jest.doMock('passport', () => passportMock);
+    // Ensure nested resolution points to our mock as well
+    jest.doMock('../../server/node_modules/passport', () => passportMock);
 
     // Load SUT: this will register strategy, serialize, deserialize on mocked passport
     const exportedPassport = require('../../server/utils/passport');
@@ -136,5 +135,16 @@ describe('utils/passport.js', () => {
       verify('u', 'p', done);
     });
     expect(received[0]).toBe(err);
+  });
+
+  test('LocalStrategy verify: unconfirmed user blocked', async () => {
+    const { passport, dao } = setup();
+    const strategy = passport._lastStrategy;
+    const verify = strategy._verify;
+    const user = { id: 2, username: 'u', error: 'unconfirmed', email: 'u@example.com' };
+    dao.getUser.mockResolvedValueOnce(user);
+    const done = jest.fn();
+    await verify('u', 'p', done);
+    expect(done).toHaveBeenCalledWith(null, false, expect.objectContaining({ message: expect.any(String), email: 'u@example.com' }));
   });
 });
