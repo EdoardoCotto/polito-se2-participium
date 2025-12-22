@@ -78,11 +78,13 @@ exports.createReport = async (reportData, anonymous) => {
       photos,
     } = reportData || {};
 
-    if (!anonymous && userId == null){
-      throw new BadRequestError('User ID, latitude, and longitude are required');
+    // For non-anonymous reports, userId is required
+    if (!anonymous && userId == null) {
+      throw new BadRequestError('User ID is required for non-anonymous reports');
     }
+    // Latitude and longitude are always required
     if (latitude === undefined || longitude === undefined) {
-      throw new BadRequestError('User ID, latitude, and longitude are required');
+      throw new BadRequestError('Latitude and longitude are required');
     }
 
     // Validate latitude range (-90 to 90)
@@ -122,9 +124,15 @@ exports.createReport = async (reportData, anonymous) => {
       return photo.trim();
     });
 
-    const user = await userDao.getUserById(userId);
-    if (user.type != 'citizen') {
-      throw new UnauthorizedError('Only citizens can create reports');
+    // Only check user type if not anonymous
+    if (!anonymous && userId != null) {
+      const user = await userDao.getUserById(userId);
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+      if (user.type != 'citizen') {
+        throw new UnauthorizedError('Only citizens can create reports');
+      }
     }
 
     const result = await reportDao.createReport({
@@ -140,7 +148,20 @@ exports.createReport = async (reportData, anonymous) => {
       throw new BadRequestError('Unable to create report');
     }
 
-    return mapReportRow(result);
+    // When creating a report, DAO returns a row with 'id', but mapReportRow expects 'reportId'
+    // So we need to map it correctly
+    const mappedRow = {
+      ...result,
+      reportId: result.id,
+      userId: result.userId,
+      // Add default user fields if not present (for anonymous reports)
+      userUsername: null,
+      userName: null,
+      userSurname: null,
+      userEmail: null
+    };
+
+    return mapReportRow(mappedRow);
   } catch (err) {
     console.error('Error in createReport repository:', err);
     throw err;
