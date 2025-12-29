@@ -38,6 +38,13 @@ export default function CitizenPage({ user }) {
   const [showReportPhotosModal, setShowReportPhotosModal] = useState(false);
   const [selectedReportPhotos, setSelectedReportPhotos] = useState([]);
 
+  // Street area state
+  const [selectedStreetArea, setSelectedStreetArea] = useState(null);
+  const [searchingStreet, setSearchingStreet] = useState(false);
+  const [streetSearchQuery, setStreetSearchQuery] = useState(''); // Nuovo stato separato per la ricerca via
+  const [streetSuggestions, setStreetSuggestions] = useState([]); // Nuovo stato per i suggerimenti delle vie
+  const [showSuggestions, setShowSuggestions] = useState(false); // Stato per mostrare/nascondere i suggerimenti
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -52,6 +59,23 @@ export default function CitizenPage({ user }) {
 
     fetchCategories();
   }, []);
+
+  // Nuovo useEffect per il debounce della ricerca delle vie
+  useEffect(() => {
+    const delayTimer = setTimeout(async () => {
+      if (streetSearchQuery.trim().length >= 3) {
+        try {
+          const streets = await API.getStreets(streetSearchQuery);
+          setStreetSuggestions(streets); // Nuovo state
+          setShowSuggestions(true);
+        } catch (err) {
+          console.error('Error fetching streets:', err);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(delayTimer);
+  }, [streetSearchQuery]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -162,8 +186,12 @@ export default function CitizenPage({ user }) {
         setLoadingReports(false);
       }
     } else if (mode === 'create') {
-      // Clear reports when switching to create mode
+      // Clear reports and street area when switching to create mode
       setAllReports([]);
+      setSelectedStreetArea(null); 
+      setStreetSearchQuery(''); 
+      setStreetSuggestions([]); 
+      setShowSuggestions(false); 
       setTimeout(() => setSelectedLocation(null), 100);
     }
   };
@@ -210,7 +238,7 @@ export default function CitizenPage({ user }) {
     }
   };
   
-  // Filtered reports
+  // Modified filtered reports to include street search
   const filteredReports = useMemo(() => {
     let filtered = [...allReports];
     
@@ -219,7 +247,8 @@ export default function CitizenPage({ user }) {
       filtered = filtered.filter(report => 
         report.title.toLowerCase().includes(query) ||
         report.description?.toLowerCase().includes(query) ||
-        report.category.toLowerCase().includes(query)
+        report.category.toLowerCase().includes(query) ||
+        report.address?.toLowerCase().includes(query)
       );
     }
     
@@ -402,6 +431,84 @@ export default function CitizenPage({ user }) {
     return viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye';
   };
 
+  // Search for street when user types and presses Enter
+  const handleSearchKeyPress = async (e) => {
+    if (e.key === 'Enter' && searchQuery.trim().length >= 3) {
+      e.preventDefault();
+      await handleStreetSearch();
+    }
+  };
+
+  // Handle street suggestion selection
+  const handleStreetSuggestionClick = (streetName) => {
+    setStreetSearchQuery(streetName);
+    setShowSuggestions(false);
+    // Automatically trigger search when selecting a suggestion
+    setTimeout(() => {
+      handleStreetSearchWithName(streetName);
+    }, 100);
+  };
+
+  // Search for street area with specific name
+  const handleStreetSearchWithName = async (name) => {
+    const searchName = name || streetSearchQuery.trim();
+    
+    if (!searchName || searchName.length < 3) {
+      return;
+    }
+    
+    try {
+      setSearchingStreet(true);
+      const data = await API.getReportsByStreet(searchName);
+      console.log('Street search data:', data);
+      
+      if (data.mapFocus) {
+        setSelectedStreetArea({
+          center: data.mapFocus.center,
+          boundingBox: data.mapFocus.boundingBox,
+          geometry: data.street.geometry,
+          streetName: searchName
+        });
+        
+        setSelectedLocation(null);
+      }
+      
+      setAllReports(data.reports || []);
+      
+      // Hide suggestions
+      setShowSuggestions(false);
+      
+    } catch (err) {
+      console.log('Street search did not return results');
+      setReportsError(err.message || 'Street not found or no reports in this area');
+    } finally {
+      setSearchingStreet(false);
+    }
+  };
+
+  // Search for street area
+  const handleStreetSearch = async () => {
+    await handleStreetSearchWithName();
+  };
+
+  // Clear street area filter
+  const handleClearStreetArea = () => {
+    setSelectedStreetArea(null);
+    setStreetSearchQuery('');
+    setStreetSuggestions([]);
+    setShowSuggestions(false);
+    // Reload all reports
+    handleViewModeChange('view');
+  };
+
+  // Handle closing report detail modal and deselecting report
+  const handleCloseReportDetail = () => {
+    setShowReportDetailModal(false);
+    setSelectedReportDetail(null);
+    setHighlightedReportId(null);
+    setSelectedLocation(null);
+  };
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
       <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
@@ -410,14 +517,31 @@ export default function CitizenPage({ user }) {
           <Col lg={8} className="order-1 order-lg-1">
             <Card className="citizen-card map-card shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '750px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                <Card.Title className="mb-0 d-flex align-items-center" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
-                  <i className="bi bi-pin-map me-2"></i>
-                  <span className="d-none d-sm-inline">{getMapTitle()}</span>
-                  <span className="d-inline d-sm-none">{getMapTitleMobile()}</span>
-                  {getReportCountBadge() && (
-                    <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
-                      {getReportCountBadge()}
-                    </span>
+                <Card.Title className="mb-0 d-flex align-items-center justify-content-between flex-wrap" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
+                  <div className="d-flex align-items-center">
+                    <i className="bi bi-pin-map me-2"></i>
+                    <span className="d-none d-sm-inline">{getMapTitle()}</span>
+                    <span className="d-inline d-sm-none">{getMapTitleMobile()}</span>
+                    {getReportCountBadge() && (
+                      <span className="badge bg-light text-dark ms-2" style={{ fontSize: 'clamp(0.7rem, 2vw, 0.8rem)' }}>
+                        {getReportCountBadge()}
+                      </span>
+                    )}
+                  </div>
+                  {selectedStreetArea && (
+                    <Badge bg="warning" text="dark" className="mt-2 mt-lg-0">
+                      <i className="bi bi-geo-alt-fill me-1"></i>
+                      Area: {selectedStreetArea.streetName}
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="text-dark p-0 ms-2"
+                        onClick={handleClearStreetArea}
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <i className="bi bi-x-circle"></i>
+                      </Button>
+                    </Badge>
                   )}
                 </Card.Title>
               </Card.Header>
@@ -431,6 +555,7 @@ export default function CitizenPage({ user }) {
                     onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
                     highlightedReportId={highlightedReportId}
                     shouldZoomToSelection={viewMode === 'view' && highlightedReportId !== null}
+                    streetArea={selectedStreetArea}
                   />
                 </div>
               </Card.Body>
@@ -512,13 +637,124 @@ export default function CitizenPage({ user }) {
                   <div>
                     {/* Search and Filters */}
                     <div className="mb-3">
+                      {/* Street Search - Separate field */}
+                      <Form.Label className="fw-semibold mb-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                        <i className="bi bi-signpost-2 me-2"></i>Search by Street
+                      </Form.Label>
+                      <div className="position-relative">
+                        <InputGroup className="mb-3 report-street-search-input-group">
+                          <InputGroup.Text>
+                            <i className={`bi ${searchingStreet ? 'bi-hourglass-split' : 'bi-signpost'}`}></i>
+                          </InputGroup.Text>
+                          <Form.Control
+                            type="text"
+                            placeholder="e.g., Via Roma, Corso Vittorio..."
+                            value={streetSearchQuery}
+                            onChange={(e) => setStreetSearchQuery(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && streetSearchQuery.trim().length >= 3) {
+                                e.preventDefault();
+                                handleStreetSearch();
+                              }
+                            }}
+                            onFocus={() => streetSuggestions.length > 0 && setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            disabled={searchingStreet}
+                            className="report-street-search-input"
+                            style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', borderLeft: 'none' }}
+                          />
+                          {streetSearchQuery && !searchingStreet && (
+                            <Button
+                              variant="outline-secondary"
+                              onClick={() => {
+                                setStreetSearchQuery('');
+                                setStreetSuggestions([]);
+                                setShowSuggestions(false);
+                                if (selectedStreetArea) {
+                                  handleClearStreetArea();
+                                }
+                              }}
+                              style={{ borderLeft: 'none' }}
+                            >
+                              <i className="bi bi-x"></i>
+                            </Button>
+                          )}
+                          <Button
+                            variant="primary"
+                            onClick={handleStreetSearch}
+                            disabled={searchingStreet || streetSearchQuery.trim().length < 3}
+                            title="Search for street area"
+                            style={{ borderLeft: 'none' }}
+                          >
+                            <i className="bi bi-search"></i>
+                          </Button>
+                        </InputGroup>
+                        
+                        {/* Street Suggestions Dropdown */}
+                        {showSuggestions && streetSuggestions.length > 0 && (
+                          <ListGroup
+                            className="position-absolute w-100 shadow-lg"
+                            style={{
+                              zIndex: 1000,
+                              maxHeight: '250px',
+                              overflowY: 'auto',
+                              borderRadius: '8px',
+                              marginTop: '-12px',
+                              border: '1px solid #dee2e6'
+                            }}
+                          >
+                            {streetSuggestions.map((street, index) => (
+                              <ListGroup.Item
+                                key={index}
+                                action
+                                onClick={() => handleStreetSuggestionClick(street.street_name)}
+                                className="d-flex align-items-center"
+                                style={{
+                                  cursor: 'pointer',
+                                  fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                                  padding: '0.75rem 1rem',
+                                  borderLeft: 'none',
+                                  borderRight: 'none',
+                                  borderTop: index === 0 ? 'none' : '1px solid #dee2e6'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'white';
+                                }}
+                              >
+                                <i className="bi bi-signpost-2-fill me-2 text-primary"></i>
+                                <div>
+                                  <div className="fw-semibold">{street.street_name}</div>
+                                  {street.city && (
+                                    <small className="text-muted">{street.city}</small>
+                                  )}
+                                </div>
+                              </ListGroup.Item>
+                            ))}
+                          </ListGroup>
+                        )}
+                        
+                        {streetSearchQuery.trim().length >= 3 && !searchingStreet && streetSuggestions.length === 0 && (
+                          <small className="text-muted d-block mt-1">
+                            <i className="bi bi-info-circle me-1"></i>
+                            No streets found. Press Enter to search anyway.
+                          </small>
+                        )}
+                      </div>
+                      
+                      {/* Text Search */}
+                      <Form.Label className="fw-semibold mb-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                        <i className="bi bi-search me-2"></i>Search by Text
+                      </Form.Label>
                       <InputGroup className="mb-2 report-search-input-group">
                         <InputGroup.Text>
                           <i className="bi bi-search"></i>
                         </InputGroup.Text>
                         <Form.Control
                           type="text"
-                          placeholder="Search reports..."
+                          placeholder="Search by title, description, category..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           className="report-search-input"
@@ -566,10 +802,20 @@ export default function CitizenPage({ user }) {
                         </Col>
                       </Row>
                       
-                      {filteredReports.length !== allReports.length && (
+                      {(filteredReports.length !== allReports.length || selectedStreetArea) && (
                         <Alert variant="info" className="py-2 mt-2 mb-0 report-filter-alert" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
                           <i className="bi bi-funnel me-2"></i>
-                          Showing {filteredReports.length} of {allReports.length} reports
+                          {selectedStreetArea && (
+                            <div>
+                              Showing reports in area: <strong>{selectedStreetArea.streetName}</strong>
+                              {filteredReports.length !== allReports.length && (
+                                <> ({filteredReports.length} of {allReports.length} reports)</>
+                              )}
+                            </div>
+                          )}
+                          {!selectedStreetArea && filteredReports.length !== allReports.length && (
+                            <div>Showing {filteredReports.length} of {allReports.length} reports</div>
+                          )}
                         </Alert>
                       )}
                     </div>
@@ -681,10 +927,26 @@ export default function CitizenPage({ user }) {
                     <div className="report-empty-icon mb-3">
                       <i className="bi bi-inbox"></i>
                     </div>
-                    <h5 className="mt-3 mb-2 fw-bold">No Reports Available</h5>
+                    <h5 className="mt-3 mb-2 fw-bold">
+                      {selectedStreetArea ? 'No Reports in This Area' : 'No Reports Available'}
+                    </h5>
                     <p className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      There are no approved reports to display at the moment.
+                      {selectedStreetArea 
+                        ? `No reports found in the area of ${selectedStreetArea.streetName}.`
+                        : 'There are no approved reports to display at the moment.'
+                      }
                     </p>
+                    {selectedStreetArea && (
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={handleClearStreetArea}
+                        className="mt-2"
+                      >
+                        <i className="bi bi-arrow-left me-2"></i>
+                        View All Reports
+                      </Button>
+                    )}
                   </div>
                 )}
 
@@ -908,10 +1170,7 @@ export default function CitizenPage({ user }) {
       </Modal>
 
       {/* Report Detail Modal */}
-      <Modal show={showReportDetailModal} onHide={() => {
-        setShowReportDetailModal(false);
-        setSelectedReportDetail(null);
-      }} size="lg" centered className="report-detail-modal">
+      <Modal show={showReportDetailModal} onHide={handleCloseReportDetail} size="lg" centered className="report-detail-modal">
         <Modal.Header closeButton className="report-detail-header">
           <Modal.Title>
             <i className="bi bi-file-text me-2"></i>Report Details
@@ -1004,10 +1263,7 @@ export default function CitizenPage({ user }) {
           )}
         </Modal.Body>
         <Modal.Footer className="report-detail-footer">
-          <Button variant="secondary" onClick={() => {
-            setShowReportDetailModal(false);
-            setSelectedReportDetail(null);
-          }}>
+          <Button variant="secondary" onClick={handleCloseReportDetail}>
             Close
           </Button>
         </Modal.Footer>

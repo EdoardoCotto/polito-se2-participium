@@ -307,7 +307,16 @@ LocationMarker.propTypes = {
   })
 };
 
-export default function TurinMap({ onLocationSelected, selectedLocation, readOnly = false, allReports = [], onReportMarkerClick, highlightedReportId, shouldZoomToSelection = false }) {
+export default function TurinMap({ 
+  onLocationSelected, 
+  selectedLocation, 
+  readOnly = false,
+  allReports = [],
+  onReportMarkerClick,
+  highlightedReportId,
+  shouldZoomToSelection = false,
+  streetArea = null
+}) {
   // Turin coordinates
   const turinPosition = [45.0703, 7.6869];
   const [mapKey, setMapKey] = useState(0);
@@ -362,6 +371,119 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
     shouldZoom: PropTypes.bool
   };
 
+  // Component to draw street area using geometry
+  function StreetAreaCircle({ streetArea }) {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!streetArea) return;
+
+      const { geometry, center, boundingBox } = streetArea;
+      let layer = null;
+
+      // Se c'è la geometria, usala per disegnare l'area
+      if (geometry && geometry.type && geometry.coordinates) {
+        console.log('Drawing street area with geometry:', geometry.type);
+        console.log('Geometry coordinates structure:', geometry.coordinates);
+        
+        try {
+          // Crea un GeoJSON Feature dalla geometria
+          // La struttura deve essere: { type: 'Feature', geometry: {...}, properties: {...} }
+          const geoJsonFeature = {
+            type: 'Feature',
+            geometry: {
+              type: geometry.type, // 'MultiPolygon'
+              coordinates: geometry.coordinates // Array di Polygon, ogni Polygon è array di LinearRing
+            },
+            properties: {
+              name: streetArea.streetName
+            }
+          };
+          
+          console.log('GeoJSON Feature:', JSON.stringify(geoJsonFeature, null, 2));
+          
+          layer = L.geoJSON(geoJsonFeature, {
+            style: {
+              color: '#ffc107',
+              fillColor: '#ffc107',
+              fillOpacity: 0.15,
+              weight: 2,
+              dashArray: '5, 10'
+            },
+            // Filter out null coordinates
+            filter: function(feature) {
+              if (feature.geometry.type === 'MultiPolygon') {
+                feature.geometry.coordinates = feature.geometry.coordinates.map(polygon => 
+                  polygon.map(ring => 
+                    ring.filter(coord => coord[0] !== null && coord[1] !== null)
+                  )
+                );
+              }
+              return true;
+            }
+          }).addTo(map);
+
+          // Fit bounds alla geometria
+          map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+        } catch (error) {
+          console.error('Error creating GeoJSON layer:', error);
+          // Fallback al cerchio se la geometria fallisce
+          useFallbackCircle();
+        }
+      } else {
+        // Fallback: usa il cerchio con bounding box
+        useFallbackCircle();
+      }
+
+      function useFallbackCircle() {
+        console.log('Using fallback circle with bounding box');
+        
+        const centerPoint = turf.point([center.lon, center.lat]);
+        const cornerPoint = turf.point([boundingBox.east, boundingBox.north]);
+        const radius = turf.distance(centerPoint, cornerPoint, { units: 'meters' });
+
+        layer = L.circle(
+          [center.lat, center.lon],
+          {
+            color: '#ffc107',
+            fillColor: '#ffc107',
+            fillOpacity: 0.15,
+            weight: 2,
+            dashArray: '5, 10',
+            radius: radius
+          }
+        ).addTo(map);
+
+        map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+      }
+
+      return () => {
+        if (layer) {
+          map.removeLayer(layer);
+        }
+      };
+    }, [map, streetArea]);
+
+    return null;
+  }
+
+  StreetAreaCircle.propTypes = {
+    streetArea: PropTypes.shape({
+      center: PropTypes.shape({
+        lat: PropTypes.number.isRequired,
+        lon: PropTypes.number.isRequired
+      }).isRequired,
+      boundingBox: PropTypes.shape({
+        north: PropTypes.number.isRequired,
+        south: PropTypes.number.isRequired,
+        east: PropTypes.number.isRequired,
+        west: PropTypes.number.isRequired
+      }).isRequired,
+      geometry: PropTypes.object, // GeoJSON geometry (Polygon o MultiPolygon)
+      streetName: PropTypes.string.isRequired
+    })
+  };
+
   useEffect(() => {
     setMapKey(1);
     
@@ -401,9 +523,9 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
     fillColor: '#0d6efd',
     fillOpacity: 0.1
   };
-  
-  
-  
+
+  // Remove the old useEffect for street area circle - it's now in StreetAreaCircle component
+
   if (isLoading) {
     return (
       <div className="map-loading-container">
@@ -480,6 +602,9 @@ export default function TurinMap({ onLocationSelected, selectedLocation, readOnl
         {/* Componente per centrare e zoomare sulla posizione selezionata */}
         <MapCenterZoom selectedLocation={selectedLocation} shouldZoom={shouldZoomToSelection} />
         
+        {/* Componente per disegnare il cerchio dell'area della strada */}
+        <StreetAreaCircle streetArea={streetArea} />
+        
        {geoJsonData && (
           <GeoJSON 
             data={geoJsonData} 
@@ -515,6 +640,20 @@ TurinMap.propTypes = {
   allReports: PropTypes.array,
   onReportMarkerClick: PropTypes.func,
   highlightedReportId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  shouldZoomToSelection: PropTypes.bool
+  shouldZoomToSelection: PropTypes.bool,
+  streetArea: PropTypes.shape({
+    center: PropTypes.shape({
+      lat: PropTypes.number.isRequired,
+      lon: PropTypes.number.isRequired
+    }).isRequired,
+    boundingBox: PropTypes.shape({
+      north: PropTypes.number.isRequired,
+      south: PropTypes.number.isRequired,
+      east: PropTypes.number.isRequired,
+      west: PropTypes.number.isRequired
+    }).isRequired,
+    geometry: PropTypes.object, // Aggiungi geometry ai PropTypes
+    streetName: PropTypes.string.isRequired
+  })
 };
 
