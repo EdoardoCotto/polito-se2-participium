@@ -3510,6 +3510,262 @@
   background: #f8f9fa;
 }
 
+/* Street Area Search Styles - Beautiful Enhanced Styling when search is active */
+/* Target Leaflet paths and circles with yellow color (street area) */
+/* Multiple selectors to catch different ways Leaflet might render colors */
+.street-search-active .leaflet-container .street-area-layer,
+.street-search-active .leaflet-container path[stroke="#ffc107"],
+.street-search-active .leaflet-container path[stroke="rgb(255, 193, 7)"],
+.street-search-active .leaflet-container path[fill="#ffc107"],
+.street-search-active .leaflet-container path[fill="rgb(255, 193, 7)"],
+.street-search-active .leaflet-container path[style*="#ffc107"],
+.street-search-active .leaflet-container path[style*="rgb(255, 193, 7)"],
+.street-search-active .leaflet-container path[style*="255, 193, 7"] {
+  animation: streetAreaPulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+             streetAreaShimmer 3s linear infinite !important;
+  filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.9)) 
+          drop-shadow(0 0 20px rgba(255, 193, 7, 0.6))
+          drop-shadow(0 0 30px rgba(255, 193, 7, 0.3)) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+@keyframes streetAreaPulse {
+  0%, 100% {
+    opacity: 0.35;
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.7)) 
+            drop-shadow(0 0 20px rgba(255, 193, 7, 0.4))
+            drop-shadow(0 0 30px rgba(255, 193, 7, 0.2));
+  }
+  50% {
+    opacity: 0.5;
+    stroke-width: 4.5px;
+    filter: drop-shadow(0 0 15px rgba(255, 193, 7, 1)) 
+            drop-shadow(0 0 30px rgba(255, 193, 7, 0.7))
+            drop-shadow(0 0 45px rgba(255, 193, 7, 0.4))
+            drop-shadow(0 0 60px rgba(255, 193, 7, 0.2));
+  }
+}
+
+@keyframes streetAreaShimmer {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.9)) 
+            drop-shadow(0 0 20px rgba(255, 193, 7, 0.6))
+            drop-shadow(0 0 30px rgba(255, 193, 7, 0.3))
+            hue-rotate(0deg);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(255, 193, 7, 1)) 
+            drop-shadow(0 0 30px rgba(255, 193, 7, 0.7))
+            drop-shadow(0 0 45px rgba(255, 193, 7, 0.4))
+            hue-rotate(5deg) brightness(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.9)) 
+            drop-shadow(0 0 20px rgba(255, 193, 7, 0.6))
+            drop-shadow(0 0 30px rgba(255, 193, 7, 0.3))
+            hue-rotate(0deg);
+  }
+}
+
+/* Enhanced street area circle when search is active */
+.street-search-active .leaflet-container .street-area-layer,
+.street-search-active .leaflet-container circle[stroke="#ffc107"],
+.street-search-active .leaflet-container circle[stroke="rgb(255, 193, 7)"],
+.street-search-active .leaflet-container circle[style*="#ffc107"],
+.street-search-active .leaflet-container circle[style*="rgb(255, 193, 7)"],
+.street-search-active .leaflet-container circle[style*="255, 193, 7"] {
+  animation: streetAreaCirclePulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+             streetAreaCircleShimmer 3s linear infinite !important;
+  filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8)) 
+          drop-shadow(0 0 24px rgba(255, 193, 7, 0.5))
+          drop-shadow(0 0 36px rgba(255, 193, 7, 0.3)) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes streetAreaCirclePulse {
+  0%, 100% {
+    opacity: 0.35;
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.7)) 
+            drop-shadow(0 0 24px rgba(255, 193, 7, 0.4))
+            drop-shadow(0 0 36px rgba(255, 193, 7, 0.2));
+  }
+  50% {
+    opacity: 0.5;
+    stroke-width: 5px;
+    filter: drop-shadow(0 0 18px rgba(255, 193, 7, 1)) 
+            drop-shadow(0 0 36px rgba(255, 193, 7, 0.7))
+            drop-shadow(0 0 54px rgba(255, 193, 7, 0.4))
+            drop-shadow(0 0 72px rgba(255, 193, 7, 0.2));
+  }
+}
+
+@keyframes streetAreaCircleShimmer {
+  0% {
+    filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8)) 
+            drop-shadow(0 0 24px rgba(255, 193, 7, 0.5))
+            drop-shadow(0 0 36px rgba(255, 193, 7, 0.3))
+            hue-rotate(0deg);
+  }
+  50% {
+    filter: drop-shadow(0 0 18px rgba(255, 193, 7, 1)) 
+            drop-shadow(0 0 36px rgba(255, 193, 7, 0.7))
+            drop-shadow(0 0 54px rgba(255, 193, 7, 0.4))
+            hue-rotate(5deg) brightness(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8)) 
+            drop-shadow(0 0 24px rgba(255, 193, 7, 0.5))
+            drop-shadow(0 0 36px rgba(255, 193, 7, 0.3))
+            hue-rotate(0deg);
+  }
+}
+
+/* Beautiful map border with animated glow when search is active */
+.street-search-active .leaflet-container {
+  border-color: #ffc107 !important;
+  border-width: 3px !important;
+  border-style: solid !important;
+  box-shadow: 
+    0 0 0 4px rgba(255, 193, 7, 0.5),
+    0 0 20px rgba(255, 193, 7, 0.6),
+    0 0 40px rgba(255, 193, 7, 0.4),
+    0 0 60px rgba(255, 193, 7, 0.2),
+    inset 0 0 30px rgba(255, 193, 7, 0.15),
+    inset 0 0 60px rgba(255, 193, 7, 0.05) !important;
+  animation: mapBorderGlow 3s ease-in-out infinite,
+             mapBorderShimmer 4s linear infinite !important;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 193, 7, 0.01) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  ) !important;
+}
+
+@keyframes mapBorderGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 4px rgba(255, 193, 7, 0.5),
+      0 0 20px rgba(255, 193, 7, 0.6),
+      0 0 40px rgba(255, 193, 7, 0.4),
+      0 0 60px rgba(255, 193, 7, 0.2),
+      inset 0 0 30px rgba(255, 193, 7, 0.15),
+      inset 0 0 60px rgba(255, 193, 7, 0.05);
+    border-color: #ffc107;
+  }
+  50% {
+    box-shadow: 
+      0 0 0 5px rgba(255, 193, 7, 0.7),
+      0 0 30px rgba(255, 193, 7, 0.8),
+      0 0 60px rgba(255, 193, 7, 0.6),
+      0 0 90px rgba(255, 193, 7, 0.4),
+      inset 0 0 40px rgba(255, 193, 7, 0.2),
+      inset 0 0 80px rgba(255, 193, 7, 0.1);
+    border-color: #ffd700;
+  }
+}
+
+@keyframes mapBorderShimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+/* Add a beautiful radial overlay effect to highlight the search area */
+.street-search-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 193, 7, 0.08) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      rgba(255, 193, 7, 0.06) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(255, 193, 7, 0.04) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+  z-index: 1;
+  animation: overlayPulse 4s ease-in-out infinite,
+             overlayShimmer 6s linear infinite;
+  border-radius: 1rem;
+  mix-blend-mode: overlay;
+}
+
+@keyframes overlayPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes overlayShimmer {
+  0% {
+    background-position: 0% 0%, 0% 0%, 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%, 100% 100%, 50% 50%;
+  }
+  100% {
+    background-position: 0% 0%, 0% 0%, 0% 0%;
+  }
+}
+
+/* Add a subtle corner accent effect */
+.street-search-active::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 193, 7, 0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 200%;
+  pointer-events: none;
+  z-index: 0;
+  animation: cornerShine 3s linear infinite;
+  border-radius: 1rem;
+  opacity: 0.5;
+}
+
+@keyframes cornerShine {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
 /* ============================================
    MESSAGES/COMMENTS MODAL STYLES
    ============================================ */

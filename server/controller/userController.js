@@ -184,12 +184,14 @@ exports.confirmRegistration = async (req, res) => {
       return res.status(400).json({ error: 'Email and confirmation code are required' });
     }
     
-    //const result = await userRepository.confirmUser(email, code);
+    const result = await userRepository.confirmUser(email, code);
+    
     return res.status(200).json({ 
       success: true, 
       message: 'Account successfully confirmed. You can now log in.' 
     });
   } catch (err) {
+    console.error('Error in confirmRegistration:', err);
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });
     }

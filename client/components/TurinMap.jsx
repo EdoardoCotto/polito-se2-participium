@@ -406,9 +406,19 @@ export default function TurinMap({
             style: {
               color: '#ffc107',
               fillColor: '#ffc107',
-              fillOpacity: 0.15,
-              weight: 2,
-              dashArray: '5, 10'
+              fillOpacity: 0.3,
+              weight: 3,
+              dashArray: '10, 5',
+              opacity: 0.9
+            },
+            onEachFeature: function(feature, layer) {
+              // Add class to path elements after they're created
+              if (layer.setStyle) {
+                const element = layer.getElement();
+                if (element) {
+                  element.classList.add('street-area-layer');
+                }
+              }
             },
             // Filter out null coordinates
             filter: function(feature) {
@@ -422,6 +432,16 @@ export default function TurinMap({
               return true;
             }
           }).addTo(map);
+          
+          // Add class to all path elements in the GeoJSON layer
+          setTimeout(() => {
+            layer.eachLayer(function(layer) {
+              const element = layer.getElement();
+              if (element) {
+                element.classList.add('street-area-layer');
+              }
+            });
+          }, 100);
 
           // Fit bounds alla geometria
           map.fitBounds(layer.getBounds(), { padding: [50, 50] });
@@ -447,12 +467,22 @@ export default function TurinMap({
           {
             color: '#ffc107',
             fillColor: '#ffc107',
-            fillOpacity: 0.15,
-            weight: 2,
-            dashArray: '5, 10',
-            radius: radius
+            fillOpacity: 0.3,
+            weight: 3,
+            dashArray: '10, 5',
+            radius: radius,
+            opacity: 0.9,
+            className: 'street-area-layer'
           }
         ).addTo(map);
+        
+        // Add class to the circle's path element after it's added to map
+        setTimeout(() => {
+          const circleElement = layer.getElement();
+          if (circleElement) {
+            circleElement.classList.add('street-area-layer');
+          }
+        }, 100);
 
         map.fitBounds(layer.getBounds(), { padding: [50, 50] });
       }
@@ -535,7 +565,10 @@ export default function TurinMap({
   }
   
   return (
-    <div style={{ height: '100%', width: '100%' }}>
+    <div 
+      style={{ height: '100%', width: '100%' }}
+      className={streetArea ? 'street-search-active' : ''}
+    >
       {/* Out of bounds alert */}
       {!readOnly && showOutOfBoundsAlert && (
         <Alert 

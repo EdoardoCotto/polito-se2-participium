@@ -394,6 +394,7 @@ exports.confirmUser = (email, code) => {
     
     db.get(selectSql, [email], (err, user) => {
       if (err) {
+        console.error('Database error in confirmUser:', err);
         reject(err);
         return;
       }
@@ -413,7 +414,13 @@ exports.confirmUser = (email, code) => {
         return;
       }
       
-      if (user.confirmation_code !== code) {
+      // Compare codes as strings, trimming whitespace
+      const dbCode = String(user.confirmation_code).trim();
+      const inputCode = String(code).trim();
+      
+      console.log(`[DEBUG] Confirming user ${email}: dbCode="${dbCode}", inputCode="${inputCode}", match=${dbCode === inputCode}`);
+      
+      if (dbCode !== inputCode) {
         resolve({ success: false, message: 'Invalid confirmation code' });
         return;
       }
@@ -439,10 +446,12 @@ exports.confirmUser = (email, code) => {
       
       db.run(updateSql, [user.id], function (updateErr) {
         if (updateErr) {
+          console.error('Database error updating user confirmation:', updateErr);
           reject(updateErr);
           return;
         }
         
+        console.log(`[DEBUG] Successfully confirmed user ${email} (ID: ${user.id})`);
         resolve({ 
           success: true, 
           userId: user.id,

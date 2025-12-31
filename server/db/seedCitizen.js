@@ -143,10 +143,11 @@ function runQuery(query, params = []) {
       const salt = await bcrypt.genSalt(saltRounds);
       const hash = await bcrypt.hash(testCredential, salt);
 
+      // Seeded users are pre-confirmed (is_confirmed = 1) for testing purposes
       const result = await runQuery(
-        `INSERT INTO Users (username, email, name, surname, type, password, salt)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [w.username, w.email, w.name, w.surname, w.type, hash, salt]
+        `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [w.username, w.email, w.name, w.surname, w.type, hash, salt, 1]
       );
       
       // Salviamo l'ID generato
