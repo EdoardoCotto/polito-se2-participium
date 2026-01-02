@@ -8,6 +8,7 @@ jest.mock('../../server/repository/userRepository', () => ({
   getMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
   getExternalMaintainers: jest.fn(),
+  confirmUser: jest.fn(),
   resendConfirmationCode: jest.fn(),
 }));
 
@@ -328,6 +329,20 @@ describe('userController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
     });
+
+    it('photo_action upload without file -> no photo update', async () => {
+      const okReq = {
+        user: { id: 10 },
+        params: { id: '10' },
+        body: { photo_action: 'upload' },
+      };
+      const updated = { id: 10 };
+      userRepository.updateUserProfile.mockResolvedValueOnce(updated);
+      await userController.updateUserProfile(okReq, res);
+      expect(userRepository.updateUserProfile).toHaveBeenCalledWith(10, {});
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
   });
 
   describe('getExternalMaintainers', () => {
@@ -377,6 +392,22 @@ describe('userController', () => {
         success: true,
         message: 'Account successfully confirmed. You can now log in.'
       });
+    });
+
+    it('AppError mapped to status', async () => {
+      const res = makeRes();
+      userRepository.confirmUser.mockRejectedValueOnce(new AppError('Invalid confirmation code', 400));
+      await userController.confirmRegistration({ body: { email: 'a@b.com', code: 'bad' } }, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid confirmation code' });
+    });
+
+    it('unknown error -> 500', async () => {
+      const res = makeRes();
+      userRepository.confirmUser.mockRejectedValueOnce(new Error('db'));
+      await userController.confirmRegistration({ body: { email: 'a@b.com', code: '123' } }, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
     });
   });
 

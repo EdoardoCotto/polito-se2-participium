@@ -112,6 +112,22 @@ describe('userDao Functions', () => {
 
     
   });
+  
+  describe('getUser (unconfirmed citizen)', () => {
+    test('returns unconfirmed error object when citizen not confirmed', async () => {
+      const username = unique('u');
+      const email = `${unique('e')}@example.com`;
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, email, name: 'A', surname: 'B', type: 'citizen', is_confirmed: 0, password: 'stored_hash' }) },
+        async (d, mods) => {
+          const bcryptMod = mods.bcrypt;
+          bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, true));
+          const res = await d.getUser(username, 'password123');
+          expect(res).toEqual({ error: 'unconfirmed', email });
+        }
+      );
+    });
+  });
 
   describe('getUserById', () => {
     test('should return user by id', async () => {
@@ -190,6 +206,28 @@ describe('userDao Functions', () => {
     });
 
     // Skip: non forziamo errori DB qui
+  });
+
+  describe('getUserByTelegramNickname', () => {
+    test('normalizes @ and case-insensitivity and returns row', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 2, username: 'u', email: 'e@example.com', name: 'N', surname: 'S', type: 'citizen', telegram_nickname: '@Nick' }) },
+        async (d) => {
+          const user = await d.getUserByTelegramNickname('@NICK');
+          expect(user).toMatchObject({ id: 2, username: 'u' });
+        }
+      );
+    });
+
+    test('returns null when not found', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const user = await d.getUserByTelegramNickname('missing');
+          expect(user).toBeNull();
+        }
+      );
+    });
   });
 
   describe('createUser', () => {
@@ -474,6 +512,154 @@ describe('userDao Functions', () => {
     });
 
     // Note: DB schema forbids NULL on mail_notifications; skipping null test
+  });
+
+  describe('confirmUser', () => {
+    test('resolves with not found when user missing', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const res = await d.confirmUser('x@example.com', '123456');
+          expect(res).toEqual({ success: false, message: 'User not found' });
+        }
+      );
+    });
+
+    test('resolves already confirmed', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 10, email: 'x@example.com', username: 'u', name: 'N', is_confirmed: 1, confirmation_code: null, confirmation_code_expires_at: null }) },
+        async (d) => {
+          const res = await d.confirmUser('x@example.com', '123456');
+          expect(res).toEqual({ success: false, message: 'User is already confirmed' });
+        }
+      );
+    });
+
+    test('resolves no confirmation code', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 11, email: 'x@example.com', username: 'u', name: 'N', is_confirmed: 0, confirmation_code: null, confirmation_code_expires_at: null }) },
+        async (d) => {
+          const res = await d.confirmUser('x@example.com', '123456');
+          expect(res).toEqual({ success: false, message: 'No confirmation code found for this user' });
+        }
+      );
+    });
+
+    test('resolves invalid confirmation code', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 12, email: 'x@example.com', username: 'u', name: 'N', is_confirmed: 0, confirmation_code: '111111', confirmation_code_expires_at: new Date(Date.now() + 10000).toISOString() }) },
+        async (d) => {
+          const res = await d.confirmUser('x@example.com', '222222');
+          expect(res).toEqual({ success: false, message: 'Invalid confirmation code' });
+        }
+      );
+    });
+
+    test('resolves expired confirmation code', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 13, email: 'x@example.com', username: 'u', name: 'N', is_confirmed: 0, confirmation_code: '123456', confirmation_code_expires_at: new Date(Date.now() - 10000).toISOString() }) },
+        async (d) => {
+          const res = await d.confirmUser('x@example.com', '123456');
+          expect(res).toEqual({ success: false, message: 'Confirmation code has expired' });
+        }
+      );
+    });
+
+    test('updates and resolves success on valid code', async () => {
+      const email = 'x@example.com';
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { id: 14, email, username: 'u', name: 'N', is_confirmed: 0, confirmation_code: '123456', confirmation_code_expires_at: new Date(Date.now() + 60000).toISOString() }),
+          runImpl: (_s, _p, cb) => cb(null),
+        },
+        async (d) => {
+          const res = await d.confirmUser(email, '123456');
+          expect(res).toEqual({ success: true, userId: 14, message: 'Account successfully confirmed' });
+        }
+      );
+    });
+
+    test('rejects on select error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('Select Err')) },
+        async (d) => {
+          await expect(d.confirmUser('x@example.com', '123456')).rejects.toThrow('Select Err');
+        }
+      );
+    });
+
+    test('rejects on update error', async () => {
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { id: 15, email: 'x@example.com', username: 'u', name: 'N', is_confirmed: 0, confirmation_code: '123456', confirmation_code_expires_at: new Date(Date.now() + 60000).toISOString() }),
+          runImpl: (_s, _p, cb) => cb(new Error('Update Err')),
+        },
+        async (d) => {
+          await expect(d.confirmUser('x@example.com', '123456')).rejects.toThrow('Update Err');
+        }
+      );
+    });
+  });
+
+  describe('resendConfirmationCode', () => {
+    test('resolves not found when user missing', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        async (d) => {
+          const res = await d.resendConfirmationCode('x@example.com');
+          expect(res).toEqual({ success: false, message: 'User not found' });
+        }
+      );
+    });
+
+    test('resolves already confirmed', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(null, { id: 20, email: 'x@example.com', name: 'N', is_confirmed: 1 }) },
+        async (d) => {
+          const res = await d.resendConfirmationCode('x@example.com');
+          expect(res).toEqual({ success: false, message: 'User is already confirmed' });
+        }
+      );
+    });
+
+    test('generates new code and resolves success', async () => {
+      const email = 'x@example.com';
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { id: 21, email, name: 'N', is_confirmed: 0 }),
+          runImpl: (_s, _p, cb) => cb(null),
+        },
+        async (d) => {
+          const res = await d.resendConfirmationCode(email);
+          expect(res.success).toBe(true);
+          expect(res.email).toBe(email);
+          expect(res.name).toBe('N');
+          expect(res.message).toBe('New confirmation code generated');
+          expect(res.confirmationCode).toMatch(/^\d{6}$/);
+        }
+      );
+    });
+
+    test('rejects on select error', async () => {
+      await withSqliteMock(
+        { getImpl: (_s, _p, cb) => cb(new Error('DB Select')) },
+        async (d) => {
+          await expect(d.resendConfirmationCode('x@example.com')).rejects.toThrow('DB Select');
+        }
+      );
+    });
+
+    test('rejects on update error', async () => {
+      await withSqliteMock(
+        {
+          getImpl: (_s, _p, cb) => cb(null, { id: 22, email: 'x@example.com', name: 'N', is_confirmed: 0 }),
+          runImpl: (_s, _p, cb) => cb(new Error('DB Update')),
+        },
+        async (d) => {
+          await expect(d.resendConfirmationCode('x@example.com')).rejects.toThrow('DB Update');
+        }
+      );
+    });
   });
 
   describe('error branches with mocked sqlite3', () => {
