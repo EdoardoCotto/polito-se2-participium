@@ -14,6 +14,7 @@ import MunicipalityPage from "./components/MunicipalityPage.jsx";
 import CitizenPage from "./components/CitizenPage.jsx";
 import PublicRelationsOfficer from "./components/PublicRelationsOfficer.jsx";
 import ExternalMaintainer from "./components/ExternalMaintainers.jsx";
+import Map from "./components/Map.jsx";
 import API from "./API/API.js";
 
 function App() {
@@ -28,8 +29,10 @@ function App() {
     const checkAuth = async () => {
     try { 
       const user = await API.getCurrentUser();
+      if (user) {
       setLoggedIn(true);
       setUser(user);
+      }
       
       // Auto-redirect based on user type if on home page
       const currentPath = globalThis.location.pathname;
@@ -91,6 +94,7 @@ function App() {
     <Routes>
       <Route element={ <DefaultLayout loggedIn={loggedIn} user={user} message={message} setMessage={setMessage} handleLogout={handleLogout} onShowLogin={handleShowLogin} onProfileUpdate={handleProfileUpdate}/> }>
        <Route path="/" element={ <Body loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
+       <Route path="/map" element={ <Map user={user} loggedIn={loggedIn} onShowLogin={handleShowLogin}/> }></Route>
        <Route path="/registration" element={ <Registration/> } />
        <Route path="/confirm-registration" element={ <ConfirmRegistration/> } />
        <Route path="/admin" element={ <AdminPage user={user} handleLogin={handleLogin} handleLogout={handleLogout} /> } />

@@ -1,6 +1,6 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Button, Navbar, Image, Nav, Modal, Form, Alert } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { LogoutButton } from './AuthComponents';
@@ -10,7 +10,9 @@ import { getCroppedImg } from '../utils/cropImage';
 
 function NavHeader(props) {
   const location = useLocation();
+  const navigate = useNavigate();
   const hideLogin = location.pathname === '/registration' || location.pathname.startsWith('/registration/');
+  const isHomePage = location.pathname === '/';
   
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -269,55 +271,69 @@ function NavHeader(props) {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
         <Navbar.Collapse id="main-navbar-nav" className="justify-content-end">
-          {props.loggedIn && props.user ? (
-            <Nav className="align-items-lg-center">
-              {/* Profile Button (only for citizens) */}
-              {isCitizen && (
-                <Button
-                  variant="outline-primary"
-                  onClick={handleOpenProfile}
-                  className="profile-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
-                >
-                  <Image
-                    src={getProfileImageUrl()}
-                    alt="User Icon"
-                    className="profile-avatar me-2"
-                    roundedCircle
-                  />
-                  <span className = "d-none d-md-inline">{props.user.username}</span>
-                  <i
-                    className="bi bi-chevron-down ms-2"
-                    style={{ fontSize: '0.8em' }}
-                  ></i>
-                </Button>
-              )}
-
-              {/* Username display (for non-citizens) */}
-              {!isCitizen && (
-                <div className="username-display me-3 my-2 my-lg-0">
-                  <Image
-                    src="http://localhost:3001/static/user.png"
-                    alt="User Icon"
-                    roundedCircle
-                  />
-                  <span>{props.user.username}</span>
-                </div>
-              )}
-
-              <LogoutButton handleLogout={props.handleLogout}/>
-            </Nav>
-          ) : (
-            !hideLogin && (
+          <Nav className="align-items-lg-center">
+            {/* Public Map Button - Show only on homepage when not logged in */}
+            {!props.loggedIn && isHomePage && (
               <Button
-                variant="primary"
-                onClick={props.onShowLogin}
-                className="login-button d-flex align-items-center my-2 my-lg-0"
+                variant="outline-primary"
+                onClick={() => navigate('/map')}
+                className="map-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
               >
-                <i className="bi bi-box-arrow-in-right me-2"></i>
-                <span>Login</span>
+                <i className="bi bi-map me-2"></i>
+                <span>View Map</span>
               </Button>
-            )
-          )}
+            )}
+
+            {props.loggedIn && props.user ? (
+              <>
+                {/* Profile Button (only for citizens) */}
+                {isCitizen && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleOpenProfile}
+                    className="profile-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
+                  >
+                    <Image
+                      src={getProfileImageUrl()}
+                      alt="User Icon"
+                      className="profile-avatar me-2"
+                      roundedCircle
+                    />
+                    <span className="d-none d-md-inline">{props.user.username}</span>
+                    <i
+                      className="bi bi-chevron-down ms-2"
+                      style={{ fontSize: '0.8em' }}
+                    ></i>
+                  </Button>
+                )}
+
+                {/* Username display (for non-citizens) */}
+                {!isCitizen && (
+                  <div className="username-display me-3 my-2 my-lg-0">
+                    <Image
+                      src="http://localhost:3001/static/user.png"
+                      alt="User Icon"
+                      roundedCircle
+                    />
+                    <span>{props.user.username}</span>
+                  </div>
+                )}
+
+                <LogoutButton handleLogout={props.handleLogout}/>
+              </>
+            ) : (
+              !hideLogin && (
+                <Button
+                  variant="primary"
+                  onClick={props.onShowLogin}
+                  className="login-button d-flex align-items-center my-2 my-lg-0"
+                >
+                  <i className="bi bi-box-arrow-in-right me-2"></i>
+                  <span>Login</span>
+                </Button>
+              )
+            )}
+          </Nav>
         </Navbar.Collapse>
       </Navbar>
 
