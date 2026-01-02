@@ -281,4 +281,10 @@ describe('Reports API End-to-End', () => {
     expect(match).toBeDefined();
     expect(match.userId === null || match.userId === undefined).toBe(true);
   });
+
+  test('Visibility of reports for unlogged users (200)', async () => {
+    const res = await request(app).get('/api/reports/approved');
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
 });
