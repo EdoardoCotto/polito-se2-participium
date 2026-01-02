@@ -34,7 +34,7 @@ export default function Map() {
       try {
         setLoadingReports(true);
         setReportsError('');
-        const reports = await API.getCitizenReports();
+        const reports = await API.getApprovedReports();
         setAllReports(reports);
       } catch (err) {
         setReportsError(err.message || 'Failed to load reports');
@@ -194,7 +194,7 @@ export default function Map() {
     
     try {
       setLoadingReports(true);
-      const reports = await API.getCitizenReports();
+      const reports = await API.getApprovedReports();
       setAllReports(reports);
     } catch (err) {
       setReportsError(err.message || 'Failed to load reports');
