@@ -14,6 +14,13 @@ describe('streetRepository', () => {
     jest.resetModules();
     jest.clearAllMocks();
     jest.doMock('axios', () => axiosMock);
+    // Ensure mock also applies if repository resolves axios from its own node_modules
+    const path = require('path');
+    const repoDir = path.join(__dirname, '../../server/repository');
+    try {
+      const axiosPath = require.resolve('axios', { paths: [repoDir] });
+      jest.doMock(axiosPath, () => axiosMock);
+    } catch {}
     jest.doMock('../../server/dao/streetDao', () => daoMock);
     return require('../../server/repository/streetRepository');
   };
