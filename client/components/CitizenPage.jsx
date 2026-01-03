@@ -431,14 +431,6 @@ export default function CitizenPage({ user }) {
     return viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye';
   };
 
-  // Search for street when user types and presses Enter
-  const handleSearchKeyPress = async (e) => {
-    if (e.key === 'Enter' && searchQuery.trim().length >= 3) {
-      e.preventDefault();
-      await handleStreetSearch();
-    }
-  };
-
   // Handle street suggestion selection
   const handleStreetSuggestionClick = (streetName) => {
     setStreetSearchQuery(streetName);
@@ -705,7 +697,7 @@ export default function CitizenPage({ user }) {
                           >
                             {streetSuggestions.map((street, index) => (
                               <ListGroup.Item
-                                key={index}
+                                key={`${street.street_name}-${street.city || index}`}
                                 action
                                 onClick={() => handleStreetSuggestionClick(street.street_name)}
                                 className="d-flex align-items-center"
@@ -746,7 +738,7 @@ export default function CitizenPage({ user }) {
                       
                       {/* Text Search */}
                       <Form.Label className="fw-semibold mb-2" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                        <i className="bi bi-search me-2"></i>Search by Text
+                        <i className="bi bi-search me-2"></i>{' '}Search by Text
                       </Form.Label>
                       <InputGroup className="mb-2 report-search-input-group">
                         <InputGroup.Text>
@@ -943,7 +935,7 @@ export default function CitizenPage({ user }) {
                         onClick={handleClearStreetArea}
                         className="mt-2"
                       >
-                        <i className="bi bi-arrow-left me-2"></i>
+                        <i className="bi bi-arrow-left me-2"></i>{' '}
                         View All Reports
                       </Button>
                     )}

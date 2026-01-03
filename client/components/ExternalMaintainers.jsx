@@ -266,17 +266,17 @@ export default function ExternalMaintainer({ user }) {
   };
 
   // Format comment date - only time
-  const formatCommentTime = (dateString) => {
+  /*const formatCommentTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     });
-  };
+  };*/
 
   // Format comment date - full date for separators
-  const formatCommentDate = (dateString) => {
+  /*const formatCommentDate = (dateString) => {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -299,7 +299,7 @@ export default function ExternalMaintainer({ user }) {
         year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric'
       });
     }
-  };
+  };*/
 
   // Group comments by date
   const groupCommentsByDate = (comments) => {
@@ -1218,7 +1218,7 @@ export default function ExternalMaintainer({ user }) {
               <i className="bi bi-chat-dots-fill me-3" style={{ 
                 fontSize: '1.6rem',
                 animation: 'pulse 2s ease-in-out infinite'
-              }}></i>
+              }}></i>{' '}
               Messages
             </Modal.Title>
             {selectedReport && (
@@ -1281,7 +1281,7 @@ export default function ExternalMaintainer({ user }) {
                       <img 
                         key={index}
                         src={photoUrl}
-                        alt={`Photo ${index + 1}`}
+                        //alt={`Report detail ${index + 1}`} 
                         style={{ 
                           width: '60px',
                           height: '60px',
