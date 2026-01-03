@@ -1345,32 +1345,43 @@ export default function TechnicalOfficeStaffMember({ user }) {
                     marginTop: '0.5rem'
                   }}>
                     {selectedReport.photoUrls && selectedReport.photoUrls.slice(0, 3).map((photoUrl, index) => (
-                      <img 
+                      <button
                         key={index}
-                        src={photoUrl}
-                        //alt={`Photo ${index + 1}`}
-                        style={{ 
-                          width: '60px',
-                          height: '60px',
-                          objectFit: 'cover',
-                          borderRadius: '8px',
-                          border: '2px solid rgba(255, 255, 255, 0.3)',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s ease, border-color 0.2s ease'
-                        }}
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenPhotos(selectedReport, e);
                         }}
+                        style={{
+                          padding: 0,
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          transition: 'transform 0.2s ease, border-color 0.2s ease',
+                          overflow: 'hidden'
+                        }}
                         onMouseEnter={(e) => {
-                          e.target.style.transform = 'scale(1.05)';
-                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.transform = 'scale(1)';
-                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                         }}
-                      />
+                        aria-label={`View photo ${index + 1} of ${selectedReport.title}`}
+                      >
+                        <img 
+                          src={photoUrl}
+                          alt={`Report photo ${index + 1}`}
+                          style={{ 
+                            width: '60px',
+                            height: '60px',
+                            objectFit: 'cover',
+                            display: 'block'
+                          }}
+                        />
+                      </button>
                     ))}
                   </div>
                 )}

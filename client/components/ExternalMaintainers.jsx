@@ -1278,32 +1278,34 @@ export default function ExternalMaintainer({ user }) {
                     marginTop: '0.5rem'
                   }}>
                     {selectedReport.photoUrls && selectedReport.photoUrls.slice(0, 3).map((photoUrl, index) => (
-                      <img 
-                        key={index}
-                        src={photoUrl}
-                        //alt={`Report detail ${index + 1}`} 
-                        style={{ 
-                          width: '60px',
-                          height: '60px',
-                          objectFit: 'cover',
-                          borderRadius: '8px',
-                          border: '2px solid rgba(255, 255, 255, 0.3)',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s ease, border-color 0.2s ease'
-                        }}
+                      <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenPhotos(selectedReport, e);
                         }}
-                        onMouseEnter={(e) => {
-                          e.target.style.transform = 'scale(1.05)';
-                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+                        style={{
+                          padding: 0,
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer'
                         }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'scale(1)';
-                          e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                        }}
-                      />
+                        aria-label={`View report photo ${index + 1}`}
+                      >
+                        <img 
+                          key={index}
+                          src={photoUrl}
+                          alt={`Report detail ${index + 1}`}
+                          style={{ 
+                            width: '60px',
+                            height: '60px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                            transition: 'transform 0.2s ease, border-color 0.2s ease'
+                          }}
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
