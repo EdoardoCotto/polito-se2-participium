@@ -595,7 +595,8 @@ function setupCommandHandlers() {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      const fileName = `telegram-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
+      const uniqueId = crypto.randomBytes(8).toString('hex');
+      const fileName = `telegram-${Date.now()}-${uniqueId}.jpg`;
       const filePath = path.join(uploadsDir, fileName);
       fs.writeFileSync(filePath, buffer);
 
