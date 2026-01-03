@@ -40,35 +40,35 @@ const highlightIcon = new L.Icon({
   shadowSize: [57, 57] 
 });
 
-// Component to handle map clicks and add markers
-function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick, highlightedReportId, selectedLocation }) {
-   const isPointInsideBoundary = (lat, lng) => {
-    if (!geoJsonData) return true; // Se non ci sono confini, permetti tutto
-    
-    const point = turf.point([lng, lat]);
-    
-    // Controlla tutte le geometrie nel GeoJSON
-    if (geoJsonData.type === 'FeatureCollection') {
-      return geoJsonData.features.some(feature => {
-        try {
-          return turf.booleanPointInPolygon(point, feature);
-        } catch (error) {
-          console.error('Error checking point in polygon:', error);
-          return false;
-        }
-      });
-    } else if (geoJsonData.type === 'Feature') {
+// Helper function moved outside component to reduce nesting
+const isPointInsideBoundary = (lat, lng, geoJsonData) => {
+  if (!geoJsonData) return true;
+  
+  const point = turf.point([lng, lat]);
+  
+  if (geoJsonData.type === 'FeatureCollection') {
+    return geoJsonData.features.some(feature => {
       try {
-        return turf.booleanPointInPolygon(point, geoJsonData);
+        return turf.booleanPointInPolygon(point, feature);
       } catch (error) {
         console.error('Error checking point in polygon:', error);
         return false;
       }
+    });
+  } else if (geoJsonData.type === 'Feature') {
+    try {
+      return turf.booleanPointInPolygon(point, geoJsonData);
+    } catch (error) {
+      console.error('Error checking point in polygon:', error);
+      return false;
     }
-    
-    return false;
-  };
+  }
+  
+  return false;
+};
 
+// Component to handle map clicks and add markers
+function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLocationSelected, readOnly, allReports, onReportMarkerClick, highlightedReportId, selectedLocation }) {
   const map = useMapEvents({
     click(e) {
       // Don't allow clicks if in read-only mode
@@ -77,7 +77,7 @@ function LocationMarker({ markers, setMarkers , geoJsonData , onOutOfBounds,onLo
       const { lat, lng } = e.latlng;
       
       // Check if point is inside boundary
-      if (!isPointInsideBoundary(lat, lng)) {
+      if (!isPointInsideBoundary(lat, lng, geoJsonData)) {
         onOutOfBounds();
         return;
       }
@@ -307,6 +307,185 @@ LocationMarker.propTypes = {
   })
 };
 
+// Component to handle map centering and zooming to selected location
+function MapCenterZoom({ selectedLocation, shouldZoom }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (selectedLocation?.lat && selectedLocation?.lng && shouldZoom) {
+      const currentZoom = map.getZoom();
+      const clusterThreshold = 18; // Zoom level dove i cluster si separano
+      const targetZoom = 15; // Zoom moderato
+      
+      // Zoom solo se siamo sotto il livello dove i cluster si separano
+      if (currentZoom < clusterThreshold) {
+        map.setView([selectedLocation.lat, selectedLocation.lng], targetZoom, {
+          animate: true,
+          duration: 1
+        });
+      } else {
+        // Se già abbastanza zoomato, centra solo senza cambiare zoom
+        map.setView([selectedLocation.lat, selectedLocation.lng], currentZoom, {
+          animate: true,
+          duration: 0.5
+        });
+      }
+    }
+  }, [selectedLocation, shouldZoom, map]);
+
+  return null;
+}
+
+MapCenterZoom.propTypes = {
+  selectedLocation: PropTypes.shape({
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+    title: PropTypes.string
+  }),
+  shouldZoom: PropTypes.bool
+};
+
+// Helper function for creating fallback circle - moved outside to reduce nesting
+const createFallbackCircle = (map, center, boundingBox) => {
+  console.log('Using fallback circle with bounding box');
+  
+  const centerPoint = turf.point([center.lon, center.lat]);
+  const cornerPoint = turf.point([boundingBox.east, boundingBox.north]);
+  const radius = turf.distance(centerPoint, cornerPoint, { units: 'meters' });
+
+  const layer = L.circle(
+    [center.lat, center.lon],
+    {
+      color: '#ffc107',
+      fillColor: '#ffc107',
+      fillOpacity: 0.3,
+      weight: 3,
+      dashArray: '10, 5',
+      radius: radius,
+      opacity: 0.9,
+      className: 'street-area-layer'
+    }
+  ).addTo(map);
+  
+  // Add class to the circle's path element after it's added to map
+  setTimeout(() => {
+    const circleElement = layer.getElement();
+    if (circleElement) {
+      circleElement.classList.add('street-area-layer');
+    }
+  }, 100);
+
+  map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+  return layer;
+};
+
+// Component to draw street area using geometry
+function StreetAreaCircle({ streetArea }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!streetArea) return;
+
+    const { geometry, center, boundingBox } = streetArea;
+    let layer = null;
+
+    // Se c'è la geometria, usala per disegnare l'area
+    if (geometry && geometry.type && geometry.coordinates) {
+      
+      try {
+        // Crea un GeoJSON Feature dalla geometria
+        // La struttura deve essere: { type: 'Feature', geometry: {...}, properties: {...} }
+        const geoJsonFeature = {
+          type: 'Feature',
+          geometry: {
+            type: geometry.type, // 'MultiPolygon'
+            coordinates: geometry.coordinates // Array di Polygon, ogni Polygon è array di LinearRing
+          },
+          properties: {
+            name: streetArea.streetName
+          }
+        };             
+        
+        layer = L.geoJSON(geoJsonFeature, {
+          style: {
+            color: '#ffc107',
+            fillColor: '#ffc107',
+            fillOpacity: 0.3,
+            weight: 3,
+            dashArray: '10, 5',
+            opacity: 0.9
+          },
+          onEachFeature: function(feature, layer) {
+            // Add class to path elements after they're created
+            if (layer.setStyle) {
+              const element = layer.getElement();
+              if (element) {
+                element.classList.add('street-area-layer');
+              }
+            }
+          },
+          // Filter out null coordinates
+          filter: function(feature) {
+            if (feature.geometry.type === 'MultiPolygon') {
+              feature.geometry.coordinates = feature.geometry.coordinates.map(polygon => 
+                polygon.map(ring => 
+                  ring.filter(coord => coord[0] !== null && coord[1] !== null)
+                )
+              );
+            }
+            return true;
+          }
+        }).addTo(map);
+        
+        // Add class to all path elements in the GeoJSON layer
+        setTimeout(() => {
+          layer.eachLayer(function(layer) {
+            const element = layer.getElement();
+            if (element) {
+              element.classList.add('street-area-layer');
+            }
+          });
+        }, 100);
+
+        // Fit bounds alla geometria
+        map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+      } catch (error) {
+        console.error('Error creating GeoJSON layer:', error);
+        // Fallback al cerchio se la geometria fallisce
+        layer = createFallbackCircle(map, center, boundingBox);
+      }
+    } else {
+      // Fallback: usa il cerchio con bounding box
+      layer = createFallbackCircle(map, center, boundingBox);
+    }
+
+    return () => {
+      if (layer) {
+        map.removeLayer(layer);
+      }
+    };
+  }, [map, streetArea]);
+
+  return null;
+}
+
+StreetAreaCircle.propTypes = {
+  streetArea: PropTypes.shape({
+    center: PropTypes.shape({
+      lat: PropTypes.number.isRequired,
+      lon: PropTypes.number.isRequired
+    }).isRequired,
+    boundingBox: PropTypes.shape({
+      north: PropTypes.number.isRequired,
+      south: PropTypes.number.isRequired,
+      east: PropTypes.number.isRequired,
+      west: PropTypes.number.isRequired
+    }).isRequired,
+    geometry: PropTypes.object, // GeoJSON geometry (Polygon o MultiPolygon)
+    streetName: PropTypes.string.isRequired
+  })
+};
+
 export default function TurinMap({ 
   onLocationSelected, 
   selectedLocation, 
@@ -331,184 +510,6 @@ export default function TurinMap({
     console.log('TurinMap - Received reports:', allReports?.length);
     console.log('TurinMap - Reports data:', allReports);
   }, [allReports]);
-
-
-  // Component to handle map centering and zooming to selected location
-  function MapCenterZoom({ selectedLocation, shouldZoom }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (selectedLocation?.lat && selectedLocation?.lng && shouldZoom) {
-        const currentZoom = map.getZoom();
-        const clusterThreshold = 18; // Zoom level dove i cluster si separano
-        const targetZoom = 15; // Zoom moderato
-        
-        // Zoom solo se siamo sotto il livello dove i cluster si separano
-        if (currentZoom < clusterThreshold) {
-          map.setView([selectedLocation.lat, selectedLocation.lng], targetZoom, {
-            animate: true,
-            duration: 1
-          });
-        } else {
-          // Se già abbastanza zoomato, centra solo senza cambiare zoom
-          map.setView([selectedLocation.lat, selectedLocation.lng], currentZoom, {
-            animate: true,
-            duration: 0.5
-          });
-        }
-      }
-    }, [selectedLocation, shouldZoom, map]);
-
-    return null;
-  }
-
-  MapCenterZoom.propTypes = {
-    selectedLocation: PropTypes.shape({
-      lat: PropTypes.number.isRequired,
-      lng: PropTypes.number.isRequired,
-      title: PropTypes.string
-    }),
-    shouldZoom: PropTypes.bool
-  };
-
-  // Component to draw street area using geometry
-  function StreetAreaCircle({ streetArea }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!streetArea) return;
-
-      const { geometry, center, boundingBox } = streetArea;
-      let layer = null;
-
-      // Se c'è la geometria, usala per disegnare l'area
-      if (geometry && geometry.type && geometry.coordinates) {
-        
-        try {
-          // Crea un GeoJSON Feature dalla geometria
-          // La struttura deve essere: { type: 'Feature', geometry: {...}, properties: {...} }
-          const geoJsonFeature = {
-            type: 'Feature',
-            geometry: {
-              type: geometry.type, // 'MultiPolygon'
-              coordinates: geometry.coordinates // Array di Polygon, ogni Polygon è array di LinearRing
-            },
-            properties: {
-              name: streetArea.streetName
-            }
-          };             
-          
-          layer = L.geoJSON(geoJsonFeature, {
-            style: {
-              color: '#ffc107',
-              fillColor: '#ffc107',
-              fillOpacity: 0.3,
-              weight: 3,
-              dashArray: '10, 5',
-              opacity: 0.9
-            },
-            onEachFeature: function(feature, layer) {
-              // Add class to path elements after they're created
-              if (layer.setStyle) {
-                const element = layer.getElement();
-                if (element) {
-                  element.classList.add('street-area-layer');
-                }
-              }
-            },
-            // Filter out null coordinates
-            filter: function(feature) {
-              if (feature.geometry.type === 'MultiPolygon') {
-                feature.geometry.coordinates = feature.geometry.coordinates.map(polygon => 
-                  polygon.map(ring => 
-                    ring.filter(coord => coord[0] !== null && coord[1] !== null)
-                  )
-                );
-              }
-              return true;
-            }
-          }).addTo(map);
-          
-          // Add class to all path elements in the GeoJSON layer
-          setTimeout(() => {
-            layer.eachLayer(function(layer) {
-              const element = layer.getElement();
-              if (element) {
-                element.classList.add('street-area-layer');
-              }
-            });
-          }, 100);
-
-          // Fit bounds alla geometria
-          map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-        } catch (error) {
-          console.error('Error creating GeoJSON layer:', error);
-          // Fallback al cerchio se la geometria fallisce
-          useFallbackCircle();
-        }
-      } else {
-        // Fallback: usa il cerchio con bounding box
-        useFallbackCircle();
-      }
-
-      function useFallbackCircle() {
-        console.log('Using fallback circle with bounding box');
-        
-        const centerPoint = turf.point([center.lon, center.lat]);
-        const cornerPoint = turf.point([boundingBox.east, boundingBox.north]);
-        const radius = turf.distance(centerPoint, cornerPoint, { units: 'meters' });
-
-        layer = L.circle(
-          [center.lat, center.lon],
-          {
-            color: '#ffc107',
-            fillColor: '#ffc107',
-            fillOpacity: 0.3,
-            weight: 3,
-            dashArray: '10, 5',
-            radius: radius,
-            opacity: 0.9,
-            className: 'street-area-layer'
-          }
-        ).addTo(map);
-        
-        // Add class to the circle's path element after it's added to map
-        setTimeout(() => {
-          const circleElement = layer.getElement();
-          if (circleElement) {
-            circleElement.classList.add('street-area-layer');
-          }
-        }, 100);
-
-        map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-      }
-
-      return () => {
-        if (layer) {
-          map.removeLayer(layer);
-        }
-      };
-    }, [map, streetArea]);
-
-    return null;
-  }
-
-  StreetAreaCircle.propTypes = {
-    streetArea: PropTypes.shape({
-      center: PropTypes.shape({
-        lat: PropTypes.number.isRequired,
-        lon: PropTypes.number.isRequired
-      }).isRequired,
-      boundingBox: PropTypes.shape({
-        north: PropTypes.number.isRequired,
-        south: PropTypes.number.isRequired,
-        east: PropTypes.number.isRequired,
-        west: PropTypes.number.isRequired
-      }).isRequired,
-      geometry: PropTypes.object, // GeoJSON geometry (Polygon o MultiPolygon)
-      streetName: PropTypes.string.isRequired
-    })
-  };
 
   useEffect(() => {
     setMapKey(1);
@@ -549,8 +550,6 @@ export default function TurinMap({
     fillColor: '#0d6efd',
     fillOpacity: 0.1
   };
-
-  // Remove the old useEffect for street area circle - it's now in StreetAreaCircle component
 
   if (isLoading) {
     return (

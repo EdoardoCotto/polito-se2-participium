@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
 
-export default function Map() {
+export default function UnregisteredMap() {
   const [allReports, setAllReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [reportsError, setReportsError] = useState('');
