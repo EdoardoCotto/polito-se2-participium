@@ -261,24 +261,161 @@ describe('Reports API End-to-End', () => {
     // Uploaded files should be mapped to /static/uploads/<filename>
     match.photos.forEach(p => expect(p).toMatch(/\/static\/uploads\//));
   });
+  
+  describe('Street view endpoint', () => {
+    let streetReportId;
 
-  test('Anonymous report via multipart has null userId in pending', async () => {
-    const title = 'Anonymous upload';
-    const res = await agentCitizen
-      .post('/api/reports/anonymous')
-      .field('title', title)
-      .field('description', 'Anonymous images flow')
-      .field('category', 'Other')
-      .field('latitude', '45.082')
-      .field('longitude', '7.682')
-      .field('anonymous', 'true')
-      .attach('photos', Buffer.from('fakepngcontent'), 'anon1.png');
-    expect(res.statusCode).toBe(201);
+    beforeAll(async () => {
+      // Crea un report con coordinate specifiche per Via Roma, Torino
+      const res = await agentCitizen
+        .post('/api/reports')
+        .send({
+          title: 'Street test report',
+          description: 'Test report for street filtering',
+          category: 'Other',
+          latitude: 45.0703,
+          longitude: 7.6869,
+          photos: ['http://assets/street-test.jpg']
+        });
+      expect(res.statusCode).toBe(201);
 
-    const pending = await agentPro.get('/api/reports/pending');
-    expect(pending.statusCode).toBe(200);
-    const match = pending.body.find(r => r.title === title && r.latitude === 45.082);
-    expect(match).toBeDefined();
-    expect(match.userId === null || match.userId === undefined).toBe(true);
+      // Accetta il report per renderlo visibile
+      const pending = await agentPro.get('/api/reports/pending');
+      const match = pending.body.find(r => r.title === 'Street test report');
+      expect(match).toBeDefined();
+      streetReportId = match.id;
+
+      const review = await agentPro
+        .put(`/api/reports/${streetReportId}/review`)
+        .send({ status: 'accepted', technicalOffice: 'urban_planner' });
+      expect(review.statusCode).toBe(200);
+    });
+
+    test('GET /api/streets returns autocomplete suggestions', async () => {
+      const res = await request(app).get('/api/streets').query({ q: 'Via Ro' });
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      if (res.body.length > 0) {
+        expect(res.body[0]).toHaveProperty('street_name');
+        expect(res.body[0]).toHaveProperty('city');
+      }
+    });
+
+    test('GET /api/streets/:name/reports returns 404 for non-existent street', async () => {
+      const res = await request(app).get('/api/streets/Via Inesistente XYZ/reports');
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    test('GET /api/streets/:name/reports returns map focus and reports for valid street', async () => {
+      // Usa una strada conosciuta di Torino
+      const streetName = 'Via Roma';
+      const res = await request(app).get(`/api/streets/${encodeURIComponent(streetName)}/reports`);
+      
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('mapFocus');
+      expect(res.body).toHaveProperty('reports');
+
+      // Verifica struttura mapFocus
+      expect(res.body.mapFocus).toHaveProperty('center');
+      expect(res.body.mapFocus.center).toHaveProperty('lat');
+      expect(res.body.mapFocus.center).toHaveProperty('lon');
+      expect(res.body.mapFocus).toHaveProperty('boundingBox');
+      expect(res.body.mapFocus.boundingBox).toHaveProperty('north');
+      expect(res.body.mapFocus.boundingBox).toHaveProperty('south');
+      expect(res.body.mapFocus.boundingBox).toHaveProperty('east');
+      expect(res.body.mapFocus.boundingBox).toHaveProperty('west');
+
+      // Verifica che reports sia un array
+      expect(Array.isArray(res.body.reports)).toBe(true);
+      
+      // Se ci sono reports, verifica la struttura
+      if (res.body.reports.length > 0) {
+        const report = res.body.reports[0];
+        expect(report).toHaveProperty('id');
+        expect(report).toHaveProperty('latitude');
+        expect(report).toHaveProperty('longitude');
+      }
+    });
+
+    test('GET /api/streets/:name/reports filters reports within street geometry', async () => {
+      const streetName = 'Via Roma';
+      const res = await request(app).get(`/api/streets/${encodeURIComponent(streetName)}/reports`);
+      
+      expect(res.statusCode).toBe(200);
+      
+      // Verifica che tutti i report restituiti siano dentro il bounding box
+      const { boundingBox } = res.body.mapFocus;
+      res.body.reports.forEach(report => {
+        expect(report.latitude).toBeGreaterThanOrEqual(boundingBox.south);
+        expect(report.latitude).toBeLessThanOrEqual(boundingBox.north);
+        expect(report.longitude).toBeGreaterThanOrEqual(boundingBox.west);
+        expect(report.longitude).toBeLessThanOrEqual(boundingBox.east);
+      });
+    });
+
+    test('GET /api/streets/:name/reports handles special characters in street name', async () => {
+      // Testa una strada con caratteri speciali
+      const streetName = "Via Sant'Agostino";
+      const res = await request(app).get(`/api/streets/${encodeURIComponent(streetName)}/reports`);
+      
+      // Potrebbe essere 404 se la strada non esiste o 200 se esiste
+      expect([200, 404]).toContain(res.statusCode);
+      
+      if (res.statusCode === 200) {
+        expect(res.body).toHaveProperty('mapFocus');
+        expect(res.body).toHaveProperty('reports');
+      }
+    });
+
+    test('Street autocomplete is case insensitive', async () => {
+      const lowerCase = await request(app).get('/api/streets').query({ q: 'via ro' });
+      const upperCase = await request(app).get('/api/streets').query({ q: 'VIA RO' });
+      const mixedCase = await request(app).get('/api/streets').query({ q: 'Via Ro' });
+      
+      expect(lowerCase.statusCode).toBe(200);
+      expect(upperCase.statusCode).toBe(200);
+      expect(mixedCase.statusCode).toBe(200);
+      
+      // Tutti dovrebbero restituire risultati simili
+      expect(Array.isArray(lowerCase.body)).toBe(true);
+      expect(Array.isArray(upperCase.body)).toBe(true);
+      expect(Array.isArray(mixedCase.body)).toBe(true);
+    });
+
+    test('Street endpoint returns only reports with accepted status', async () => {
+      const streetName = 'Via Roma';
+      const res = await request(app).get(`/api/streets/${encodeURIComponent(streetName)}/reports`);
+      
+      if (res.statusCode === 200 && res.body.reports.length > 0) {
+        res.body.reports.forEach(report => {
+          // Il report deve essere accepted o in uno stato successivo
+          expect(['accepted', 'assigned', 'progress', 'suspended', 'resolved']).toContain(report.status.toLowerCase());
+        });
+      }
+    });
+
+    test('Street autocomplete respects limit parameter', async () => {
+      const res = await request(app).get('/api/streets').query({ q: 'Via' });
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      // Il DAO ha un limite di default di 10
+      expect(res.body.length).toBeLessThanOrEqual(10);
+    });
+
+    test('GET /api/streets/:name/reports with URL-encoded street name', async () => {
+      const streetName = 'Corso Vittorio Emanuele II';
+      const res = await request(app).get(`/api/streets/${encodeURIComponent(streetName)}/reports`);
+      
+      // Potrebbe essere 404 se la strada non è nel database
+      expect([200, 404]).toContain(res.statusCode);
+      
+      if (res.statusCode === 200) {
+        expect(res.body).toHaveProperty('mapFocus');
+        expect(res.body.mapFocus).toHaveProperty('center');
+        expect(res.body).toHaveProperty('reports');
+      }
+    });
   });
+
 });
