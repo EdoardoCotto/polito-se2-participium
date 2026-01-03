@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767373634599" clover="3.2.0">
-  <project timestamp="1767373634599" name="All files">
+<coverage generated="1767437129620" clover="3.2.0">
+  <project timestamp="1767437129620" name="All files">
     <metrics statements="1589" coveredstatements="603" conditionals="795" coveredconditionals="180" methods="247" coveredmethods="95" elements="2631" coveredelements="878" complexity="0" loc="1589" ncloc="1589" packages="11" files="34" classes="34"/>
     <package name="server">
       <metrics statements="49" coveredstatements="40" conditionals="8" coveredconditionals="4" methods="1" coveredmethods="0"/>
@@ -945,9 +945,9 @@
       <metrics statements="24" coveredstatements="15" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="2"/>
       <file name="AppError.js" path="C:\Users\edoar\Desktop\polito-se2-participium\server\errors\AppError.js">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="6" count="4" type="stmt"/>
-        <line num="7" count="4" type="stmt"/>
-        <line num="8" count="4" type="stmt"/>
+        <line num="6" count="7" type="stmt"/>
+        <line num="7" count="7" type="stmt"/>
+        <line num="8" count="7" type="stmt"/>
         <line num="12" count="1" type="stmt"/>
       </file>
       <file name="BadRequestError.js" path="C:\Users\edoar\Desktop\polito-se2-participium\server\errors\BadRequestError.js">
@@ -977,9 +977,9 @@
       <file name="UnauthorizedError.js" path="C:\Users\edoar\Desktop\polito-se2-participium\server\errors\UnauthorizedError.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="1" count="1" type="stmt"/>
-        <line num="5" count="3" type="stmt"/>
-        <line num="6" count="3" type="stmt"/>
-        <line num="7" count="3" type="stmt"/>
+        <line num="5" count="6" type="stmt"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="7" count="6" type="stmt"/>
         <line num="11" count="1" type="stmt"/>
       </file>
     </package>
@@ -992,9 +992,9 @@
         <line num="3" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>
         <line num="6" count="1" type="stmt"/>
-        <line num="7" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="7" count="21" type="cond" truecount="2" falsecount="0"/>
         <line num="8" count="17" type="stmt"/>
-        <line num="10" count="1" type="stmt"/>
+        <line num="10" count="4" type="stmt"/>
         <line num="14" count="1" type="stmt"/>
         <line num="15" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="16" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -1032,8 +1032,8 @@
         <metrics statements="7" coveredstatements="4" conditionals="2" coveredconditionals="1" methods="1" coveredmethods="1"/>
         <line num="1" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
-        <line num="4" count="3" type="cond" truecount="1" falsecount="1"/>
-        <line num="5" count="3" type="stmt"/>
+        <line num="4" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="5" count="6" type="stmt"/>
         <line num="8" count="0" type="stmt"/>
         <line num="9" count="0" type="stmt"/>
         <line num="10" count="0" type="stmt"/>

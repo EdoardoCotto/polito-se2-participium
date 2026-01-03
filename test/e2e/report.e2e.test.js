@@ -287,4 +287,20 @@ describe('Reports API End-to-End', () => {
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
+
+  test('Unlogged user cannot access pending reports (401)', async () => {
+    const res = await request(app).get('/api/reports/pending');
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('Unlogged user cannot access citizen reports (401)', async () => {
+    const res = await request(app).get('/api/reports/citizen');
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('Unlogged user cannot access report by id (401)', async () => {
+    const res = await request(app).get(`/api/reports/${reportIdAccepted}`);
+    expect(res.statusCode).toBe(401);
+  });
+  
 });
