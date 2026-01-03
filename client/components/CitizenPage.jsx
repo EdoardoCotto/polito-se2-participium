@@ -697,7 +697,7 @@ export default function CitizenPage({ user }) {
                           >
                             {streetSuggestions.map((street, index) => (
                               <ListGroup.Item
-                                key={index}
+                                key={`${street.street_name}-${street.city || index}`}
                                 action
                                 onClick={() => handleStreetSuggestionClick(street.street_name)}
                                 className="d-flex align-items-center"
