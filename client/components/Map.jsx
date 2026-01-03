@@ -344,7 +344,7 @@ export default function Map() {
             <Card className="shadow h-100" style={{ border: '1px solid #e0e0e0', minHeight: '750px' }}>
               <Card.Header style={{ backgroundColor: '#5e7bb3', color: 'white', padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                 <h5 className="mb-0">
-                  <i className="bi bi-list-ul me-2"></i>
+                  <i className="bi bi-list-ul me-2"></i>{' '}
                   Reports
                 </h5>
               </Card.Header>
@@ -471,7 +471,7 @@ export default function Map() {
                         
                         {streetSearchQuery.trim().length >= 3 && !searchingStreet && streetSuggestions.length === 0 && (
                           <small className="text-muted d-block mt-1">
-                            <i className="bi bi-info-circle me-1"></i>
+                            <i className="bi bi-info-circle me-1"></i>{' '}
                             No streets found. Press Enter to search anyway.
                           </small>
                         )}
@@ -674,7 +674,7 @@ export default function Map() {
                         onClick={handleClearStreetArea}
                         className="mt-2"
                       >
-                        <i className="bi bi-arrow-left me-2"></i>
+                        <i className="bi bi-arrow-left me-2"></i>{' '}
                         View All Reports
                       </Button>
                     )}

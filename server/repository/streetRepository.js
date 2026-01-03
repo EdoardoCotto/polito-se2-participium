@@ -134,12 +134,12 @@ async function fetchStreetFromNominatim(streetName) {
     const bufferSize = 0.005;
     
     const result = {
-      latitude: parseFloat(geo.lat),
-      longitude: parseFloat(geo.lon),
-      min_lat: bbox[0] ? parseFloat(bbox[0]) : parseFloat(geo.lat) - bufferSize,
-      max_lat: bbox[1] ? parseFloat(bbox[1]) : parseFloat(geo.lat) + bufferSize,
-      min_lon: bbox[2] ? parseFloat(bbox[2]) : parseFloat(geo.lon) - bufferSize,
-      max_lon: bbox[3] ? parseFloat(bbox[3]) : parseFloat(geo.lon) + bufferSize
+      latitude: Number.parseFloat(geo.lat),
+      longitude: Number.parseFloat(geo.lon),
+      min_lat: bbox[0] ? Number.parseFloat(bbox[0]) : Number.parseFloat(geo.lat) - bufferSize,
+      max_lat: bbox[1] ? Number.parseFloat(bbox[1]) : Number.parseFloat(geo.lat) + bufferSize,
+      min_lon: bbox[2] ? Number.parseFloat(bbox[2]) : Number.parseFloat(geo.lon) - bufferSize,
+      max_lon: bbox[3] ? Number.parseFloat(bbox[3]) : Number.parseFloat(geo.lon) + bufferSize
     };
 
     // Crea un poligono rettangolare dal bounding box
@@ -241,8 +241,8 @@ function raycastCheck(lat, lon, ring) {
     point && 
     point[0] !== null && 
     point[1] !== null &&
-    !isNaN(point[0]) && 
-    !isNaN(point[1])
+    !Number.isNaN(point[0]) && 
+    !Number.isNaN(point[1])
   );
   
   if (validRing.length < 3) {

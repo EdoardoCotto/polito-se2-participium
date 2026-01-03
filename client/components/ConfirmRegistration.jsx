@@ -276,7 +276,7 @@ export default function ConfirmRegistration() {
                       >
                         {isResending ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{' '}
                             Sending...
                           </>
                         ) : countdown > 0 ? (
@@ -286,7 +286,7 @@ export default function ConfirmRegistration() {
                           </>
                         ) : (
                           <>
-                            <i className="bi bi-arrow-clockwise me-2"></i>
+                            <i className="bi bi-arrow-clockwise me-2"></i>{' '}
                             Resend Code
                           </>
                         )}

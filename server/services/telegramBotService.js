@@ -239,7 +239,7 @@ function setupCommandHandlers() {
   bot.onText(/\/reportstatus (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const telegramUsername = msg.from.username;
-    const reportId = parseInt(match[1], 10);
+    const reportId = Number.parseInt(match[1], 10);
 
     if (!telegramUsername) {
       await bot.sendMessage(chatId,
@@ -249,7 +249,7 @@ function setupCommandHandlers() {
       return;
     }
 
-    if (isNaN(reportId)) {
+    if (Number.isNaN(reportId)) {
       await bot.sendMessage(chatId, '❌ Invalid report ID. Please use /reportstatus <number>.\nExample: /reportstatus 123');
       return;
     }
@@ -387,11 +387,11 @@ function setupCommandHandlers() {
         const match = text.trim().match(coordPattern);
         
         if (match) {
-          const lat = parseFloat(match[1]);
-          const lng = parseFloat(match[2]);
+          const lat = Number.parseFloat(match[1]);
+          const lng = Number.parseFloat(match[2]);
           
           // Validate coordinates
-          if (isNaN(lat) || isNaN(lng)) {
+          if (Number.isNaN(lat) || Number.isNaN(lng)) {
             await bot.sendMessage(chatId, '❌ Invalid coordinates. Please use format: latitude,longitude\nExample: 45.0703, 7.6869');
             return;
           }

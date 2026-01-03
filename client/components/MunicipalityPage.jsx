@@ -1285,7 +1285,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
               <i className="bi bi-chat-dots-fill me-3" style={{ 
                 fontSize: '1.6rem',
                 animation: 'pulse 2s ease-in-out infinite'
-              }}></i>
+              }}></i>{' '}
               Messages
             </Modal.Title>
             {selectedReport && (
@@ -1348,7 +1348,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                       <img 
                         key={index}
                         src={photoUrl}
-                        alt={`Photo ${index + 1}`}
+                        //alt={`Photo ${index + 1}`}
                         style={{ 
                           width: '60px',
                           height: '60px',
