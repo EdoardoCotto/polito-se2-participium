@@ -182,7 +182,18 @@ exports.getReportById = async (reportId) => {
     throw new NotFoundError('Report not found');
   }
 
-  return mapReportRow(report);
+  // Map the raw DB row to match mapReportRow expectations
+  const mappedRow = {
+    ...report,
+    reportId: report.id,  // Add reportId from id
+    userId: report.userId,
+    userUsername: null,
+    userName: null,
+    userSurname: null,
+    userEmail: null
+  };
+
+  return mapReportRow(mappedRow);
 };
 
 /**

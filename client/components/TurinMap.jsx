@@ -383,8 +383,6 @@ export default function TurinMap({
 
       // Se c'è la geometria, usala per disegnare l'area
       if (geometry && geometry.type && geometry.coordinates) {
-        console.log('Drawing street area with geometry:', geometry.type);
-        console.log('Geometry coordinates structure:', geometry.coordinates);
         
         try {
           // Crea un GeoJSON Feature dalla geometria
@@ -398,9 +396,7 @@ export default function TurinMap({
             properties: {
               name: streetArea.streetName
             }
-          };
-          
-          console.log('GeoJSON Feature:', JSON.stringify(geoJsonFeature, null, 2));
+          };             
           
           layer = L.geoJSON(geoJsonFeature, {
             style: {

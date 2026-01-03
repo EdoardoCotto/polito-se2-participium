@@ -236,7 +236,7 @@ function setupCommandHandlers() {
   });
 
   // Handle /reportstatus <id> command
-  bot.onText(/\/reportstatus (.+)/, async (msg, match) => {
+  bot.onText(/\/reportstatus(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     const telegramUsername = msg.from.username;
     const reportId = Number.parseInt(match[1], 10);

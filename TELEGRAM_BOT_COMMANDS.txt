@@ -1,5 +1,6 @@
 start - Welcome message and help
 help - Show available commands
 newreport - Create a new report
+myreports - View your reports and their status
 cancel - Cancel the current report creation
 
