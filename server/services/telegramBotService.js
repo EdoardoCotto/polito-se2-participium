@@ -27,6 +27,31 @@ const conversationStates = new Map();
 let bot = null;
 
 /**
+ * Get emoji for report status
+ * @param {string} status
+ * @returns {string}
+ */
+function getStatusEmoji(status) {
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case 'pending':
+      return '⏳';
+    case 'assigned':
+      return '✅';
+    case 'progress':
+      return '🚧';
+    case 'resolved':
+      return '✅';
+    case 'suspended':
+      return '⏸️';
+    case 'rejected':
+      return '❌';
+    default:
+      return '📋';
+  }
+}
+
+/**
  * Initialize the Telegram bot
  * @param {string} token - Telegram bot token
  * @param {string} webhookUrl - Webhook URL for receiving updates
@@ -55,6 +80,20 @@ function initializeBot(token, webhookUrl = null) {
 function setupCommandHandlers() {
   if (!bot) return;
 
+  // Register commands with Telegram API
+  bot.setMyCommands([
+    { command: 'start', description: 'Welcome message and help' },
+    { command: 'help', description: 'Show available commands' },
+    { command: 'newreport', description: 'Create a new report' },
+    { command: 'myreports', description: 'List all your submitted reports' },
+    { command: 'reportstatus', description: 'Show details of a specific report' },
+    { command: 'cancel', description: 'Cancel the current report creation' },
+  ]).then(() => {
+    console.log('✅ Telegram bot commands registered');
+  }).catch(error => {
+    console.error('❌ Failed to set Telegram bot commands:', error);
+  });
+
   // Handle /start command
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -65,6 +104,8 @@ function setupCommandHandlers() {
       `I can help you create reports about issues in your area.\n\n` +
       `Available commands:\n` +
       `/newreport - Create a new report\n` +
+      `/myreports - List all your reports\n` +
+      `/reportstatus <id> - Check a report's status\n` +
       `/help - Show this help message`
     );
   });
@@ -75,6 +116,8 @@ function setupCommandHandlers() {
     await bot.sendMessage(chatId,
       `📋 Available Commands:\n\n` +
       `/newreport - Start creating a new report\n` +
+      `/myreports - List all your submitted reports\n` +
+      `/reportstatus <id> - Show details of a specific report\n` +
       `/cancel - Cancel the current report creation\n\n` +
       `The bot will guide you through:\n` +
       `1. 📍 Location selection\n` +
@@ -141,6 +184,123 @@ function setupCommandHandlers() {
     } catch (error) {
       console.error('Error in /newreport:', error);
       await bot.sendMessage(chatId, '❌ An error occurred. Please try again later.');
+    }
+  });
+
+  // Handle /myreports command
+  bot.onText(/\/myreports/, async (msg) => {
+    const chatId = msg.chat.id;
+    const telegramUsername = msg.from.username;
+
+    if (!telegramUsername) {
+      await bot.sendMessage(chatId,
+        `❌ Please set a username in your Telegram profile to use this bot.\n\n` +
+        `Go to Settings > Username to set one.`
+      );
+      return;
+    }
+
+    try {
+      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      if (!user) {
+        await bot.sendMessage(chatId,
+          `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
+          `Please link your Telegram username in your Participium profile first.`
+        );
+        return;
+      }
+
+      const reports = await reportRepository.getUserReports(user.id);
+
+      if (reports.length === 0) {
+        await bot.sendMessage(chatId, 'You haven\'t submitted any reports yet. Use /newreport to create one!');
+        return;
+      }
+
+      let response = '📋 Your Reports:\n\n';
+      reports.forEach(report => {
+        const statusEmoji = getStatusEmoji(report.status);
+        response += `ID: #${report.id}\n`;
+        response += `Title: ${report.title}\n`;
+        response += `Status: ${statusEmoji} ${report.status.charAt(0).toUpperCase() + report.status.slice(1)}\n`;
+        response += `Created: ${new Date(report.created_at).toLocaleDateString()}\n`;
+        response += `----------------------------------------\n`;
+      });
+
+      await bot.sendMessage(chatId, response);
+
+    } catch (error) {
+      console.error('Error in /myreports:', error);
+      await bot.sendMessage(chatId, '❌ An error occurred while fetching your reports. Please try again later.');
+    }
+  });
+
+  // Handle /reportstatus <id> command
+  bot.onText(/\/reportstatus (.+)/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const telegramUsername = msg.from.username;
+    const reportId = parseInt(match[1], 10);
+
+    if (!telegramUsername) {
+      await bot.sendMessage(chatId,
+        `❌ Please set a username in your Telegram profile to use this bot.\n\n` +
+        `Go to Settings > Username to set one.`
+      );
+      return;
+    }
+
+    if (isNaN(reportId)) {
+      await bot.sendMessage(chatId, '❌ Invalid report ID. Please use /reportstatus <number>.\nExample: /reportstatus 123');
+      return;
+    }
+
+    try {
+      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      if (!user) {
+        await bot.sendMessage(chatId,
+          `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
+          `Please link your Telegram username in your Participium profile first.`
+        );
+        return;
+      }
+
+      const report = await reportRepository.getReportById(reportId);
+
+      if (!report) {
+        await bot.sendMessage(chatId, `❌ Report #${reportId} not found.`);
+        return;
+      }
+
+      // Authorization check: ensure user owns the report
+      if (report.userId !== user.id) {
+        await bot.sendMessage(chatId, `❌ You are not authorized to view report #${reportId}.`);
+        return;
+      }
+
+      const statusEmoji = getStatusEmoji(report.status);
+      let response = `📋 Report Details #${report.id}:\n\n`;
+      response += `📝 Title: ${report.title}\n`;
+      response += `📄 Description: ${report.description}\n`;
+      response += `🏷️ Category: ${report.category}\n`;
+      response += `📍 Location: ${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}\n`;
+      response += `📸 Photos: ${report.photos.length}\n`;
+      response += `👤 Anonymous: ${report.userId === null ? 'Yes' : 'No'}\n`;
+      response += `Status: ${statusEmoji} ${report.status.charAt(0).toUpperCase() + report.status.slice(1)}\n`;
+      if (report.rejection_reason) {
+        response += `Reason for Rejection: ${report.rejection_reason}\n`;
+      }
+      if (report.technical_office) {
+        response += `Assigned Office: ${report.technical_office}\n`;
+      }
+      response += `Created: ${new Date(report.created_at).toLocaleString()}\n`;
+      response += `Last Updated: ${new Date(report.updated_at).toLocaleString()}\n\n`;
+      response += `Use /myreports to see all your reports.`;
+
+      await bot.sendMessage(chatId, response);
+
+    } catch (error) {
+      console.error('Error in /reportstatus:', error);
+      await bot.sendMessage(chatId, '❌ An error occurred while fetching report details. Please try again later.');
     }
   });
 
