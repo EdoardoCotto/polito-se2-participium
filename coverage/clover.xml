@@ -8,6 +8,47 @@
         <metrics statements="44" coveredstatements="35" conditionals="8" coveredconditionals="4" methods="1" coveredmethods="0"/>
         <line num="3" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>
+<coverage generated="1767434401926" clover="3.2.0">
+  <project timestamp="1767434401926" name="All files">
+    <metrics statements="1837" coveredstatements="1714" conditionals="913" coveredconditionals="830" methods="306" coveredmethods="288" elements="3056" coveredelements="2832" complexity="0" loc="1837" ncloc="1837" packages="15" files="39" classes="39"/>
+    <package name="__mock__">
+      <metrics statements="25" coveredstatements="24" conditionals="12" coveredconditionals="12" methods="17" coveredmethods="16"/>
+      <file name="bcrypt.js" path="C:\Users\aleli\OneDrive\Desktop\SW Eng II\Participium\polito-se2-participium\__mock__\bcrypt.js">
+        <metrics statements="4" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="2"/>
+        <line num="6" count="57" type="stmt"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="8" count="5" type="stmt"/>
+        <line num="9" count="5" type="stmt"/>
+      </file>
+      <file name="sqlite3.js" path="C:\Users\aleli\OneDrive\Desktop\SW Eng II\Participium\polito-se2-participium\__mock__\sqlite3.js">
+        <metrics statements="21" coveredstatements="21" conditionals="12" coveredconditionals="12" methods="14" coveredmethods="14"/>
+        <line num="4" count="17" type="stmt"/>
+        <line num="5" count="17" type="stmt"/>
+        <line num="6" count="17" type="stmt"/>
+        <line num="8" count="17" type="stmt"/>
+        <line num="9" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="11" type="stmt"/>
+        <line num="13" count="18" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="20" count="9" type="stmt"/>
+        <line num="21" count="9" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+        <line num="24" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="29" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="17" type="stmt"/>
+        <line num="36" count="17" type="stmt"/>
+        <line num="37" count="17" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="43" count="17" type="stmt"/>
+      </file>
+    </package>
+    <package name="client.API">
+      <metrics statements="193" coveredstatements="171" conditionals="100" coveredconditionals="83" methods="31" coveredmethods="27"/>
+      <file name="API.js" path="C:\Users\aleli\OneDrive\Desktop\SW Eng II\Participium\polito-se2-participium\client\API\API.js">
+        <metrics statements="193" coveredstatements="171" conditionals="100" coveredconditionals="83" methods="31" coveredmethods="27"/>
         <line num="6" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
         <line num="8" count="1" type="stmt"/>

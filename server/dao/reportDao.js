@@ -482,3 +482,46 @@ exports.getReportsByExternalMaintainerId = (maintainerId) => {
     });
   });
 };
+
+/**
+ * Get reports by user ID
+ * @param {number} userId
+ * @returns {Promise<Object[]>}
+ */
+exports.getReportsByUserId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        R.id          AS reportId,
+        R.userId      AS reportUserId,
+        R.latitude,
+        R.longitude,
+        R.title,
+        R.description,
+        R.category,
+        R.status,
+        R.rejection_reason,
+        R.technical_office,
+        R.created_at,
+        R.updated_at,
+        R.image_path1,
+        R.image_path2,
+        R.image_path3,
+        U.id          AS userId,
+        U.username    AS userUsername,
+        U.name        AS userName,
+        U.surname     AS userSurname,
+        U.email       AS userEmail
+      FROM Reports R
+      LEFT JOIN Users U ON R.userId = U.id
+      WHERE R.userId = ?
+      ORDER BY R.created_at DESC
+    `;
+    db.all(sql, [userId], (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(rows || []);
+    });
+  });
+};

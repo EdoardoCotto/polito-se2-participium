@@ -21,10 +21,25 @@ jest.mock('@sendgrid/mail', () => {
   };
 });
 
+// Also ensure mocks apply if emailService resolves from its own node_modules
+function applyNestedEmailMocks() {
+  const path = require('path');
+  const svcDir = path.join(__dirname, '../../server/services');
+  try {
+    const nmPath = require.resolve('nodemailer', { paths: [svcDir] });
+    jest.doMock(nmPath, () => require('nodemailer'));
+  } catch {}
+  try {
+    const sgPath = require.resolve('@sendgrid/mail', { paths: [svcDir] });
+    jest.doMock(sgPath, () => require('@sendgrid/mail'));
+  } catch {}
+}
+
 // Helper to reload module with env
 function loadEmailServiceWithEnv(env) {
   jest.resetModules();
   process.env = { ...originalEnv, ...env };
+  applyNestedEmailMocks();
   return require('../../server/services/emailService');
 }
 
