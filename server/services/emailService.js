@@ -389,7 +389,7 @@ If you did not create an account, please ignore this email.
  */
 exports.sendNotificationEmail = async (email, subject, message) => {
   try {
-    const htmlMessage = `<p>${message.replaceAll(/\n/g, '<br>')}</p>`;
+    const htmlMessage = `<p>${message.replaceAll('\n', '<br>')}</p>`;
 
     // SendGrid
     if (emailProvider.type === 'sendgrid') {

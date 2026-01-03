@@ -97,7 +97,6 @@ function setupCommandHandlers() {
   // Handle /start command
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const username = msg.from.username;
 
     await bot.sendMessage(chatId, 
       `👋 Welcome to Participium!\n\n` +

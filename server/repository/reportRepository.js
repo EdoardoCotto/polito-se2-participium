@@ -61,6 +61,49 @@ const mapReportRow = (row) => {
   };
 };
 
+const validateReportFields = (data) => {
+  const { latitude, longitude, title, description, category, photos } = data;
+
+  if (latitude === undefined || longitude === undefined || 
+      typeof latitude !== 'number' || latitude < -90 || latitude > 90 ||
+      typeof longitude !== 'number' || longitude < -180 || longitude > 180) {
+    throw new BadRequestError('Valid Latitude and longitude are required');
+  }
+
+  if (typeof title !== 'string' || !title.trim() || 
+      typeof description !== 'string' || !description.trim()) {
+    throw new BadRequestError('Title and Description are required and must be strings');
+  }
+
+  if (typeof category !== 'string' || !REPORT_CATEGORIES.includes(category)) {
+    throw new BadRequestError('Category is invalid');
+  }
+
+  if (!Array.isArray(photos) || photos.length < 1 || photos.length > 3) {
+    throw new BadRequestError('Photos must be an array containing between 1 and 3 items');
+  }
+};
+
+/**
+ * Helper: Gestisce la logica dei permessi dell'utente e dell'anonimato.
+ */
+const verifyUserAndPermissions = async (userId, anonymous) => {
+  if (anonymous) return null;
+
+  if (userId == null) {
+    throw new BadRequestError('User ID is required for non-anonymous reports');
+  }
+
+  const user = await userDao.getUserById(userId);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  if (user.type !== 'citizen') {
+    throw new UnauthorizedError('Only citizens can create reports');
+  }
+  return userId;
+};
+
 /**
  * Create a new report with location
  * @param {{ userId: number, latitude: number, longitude: number, title: string, description: string, category: string, photos: string[] }} reportData
@@ -68,100 +111,46 @@ const mapReportRow = (row) => {
  */
 exports.createReport = async (reportData, anonymous) => {
   try {
-    const {
-      userId, 
-      latitude,
-      longitude,
-      title,
-      description,
-      category,
-      photos,
-    } = reportData || {};
+    const data = reportData || {};
 
-    // For non-anonymous reports, userId is required
-    if (!anonymous && userId == null) {
-      throw new BadRequestError('User ID is required for non-anonymous reports');
-    }
-    // Latitude and longitude are always required
-    if (latitude === undefined || longitude === undefined) {
-      throw new BadRequestError('Latitude and longitude are required');
-    }
+    // 1. Validazione dei dati di input
+    validateReportFields(data);
 
-    // Validate latitude range (-90 to 90)
-    if (typeof latitude !== 'number' || latitude < -90 || latitude > 90) {
-      throw new BadRequestError('Latitude must be a number between -90 and 90');
-    }
+    // 2. Controllo permessi e utente
+    const finalUserId = await verifyUserAndPermissions(data.userId, anonymous);
 
-    // Validate longitude range (-180 to 180)
-    if (typeof longitude !== 'number' || longitude < -180 || longitude > 180) {
-      throw new BadRequestError('Longitude must be a number between -180 and 180');
-    }
-
-    if (typeof title !== 'string' || title.trim().length === 0) {
-      throw new BadRequestError('Title is required');
-    }
-
-    if (typeof description !== 'string' || description.trim().length === 0) {
-      throw new BadRequestError('Description is required');
-    }
-
-    if (typeof category !== 'string' || !REPORT_CATEGORIES.includes(category)) {
-      throw new BadRequestError('Category is invalid');
-    }
-
-    if (!Array.isArray(photos)) {
-      throw new BadRequestError('Photos must be an array');
-    }
-
-    if (photos.length < 1 || photos.length > 3) {
-      throw new BadRequestError('Photos array must contain between 1 and 3 items');
-    }
-
-    const trimmedPhotos = photos.map((photo) => {
-      if (typeof photo !== 'string' || photo.trim().length === 0) {
+    // 3. Normalizzazione foto
+    const trimmedPhotos = data.photos.map((photo) => {
+      if (typeof photo !== 'string' || !photo.trim()) {
         throw new BadRequestError('Each photo must be a non-empty string');
       }
       return photo.trim();
     });
 
-    // Only check user type if not anonymous
-    if (!anonymous && userId != null) {
-      const user = await userDao.getUserById(userId);
-      if (!user) {
-        throw new NotFoundError('User not found');
-      }
-      if (user.type != 'citizen') {
-        throw new UnauthorizedError('Only citizens can create reports');
-      }
-    }
-
+    // 4. Persistenza tramite DAO
     const result = await reportDao.createReport({
-      userId: anonymous ? null : userId,
-      latitude,
-      longitude,
-      title: title.trim(),
-      description: description.trim(),
-      category,
+      userId: finalUserId,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      title: data.title.trim(),
+      description: data.description.trim(),
+      category: data.category,
       photos: trimmedPhotos,
     });
+
     if (!result) {
       throw new BadRequestError('Unable to create report');
     }
 
-    // When creating a report, DAO returns a row with 'id', but mapReportRow expects 'reportId'
-    // So we need to map it correctly
-    const mappedRow = {
+    // 5. Mapping finale del risultato
+    return mapReportRow({
       ...result,
       reportId: result.id,
-      userId: result.userId,
-      // Add default user fields if not present (for anonymous reports)
       userUsername: null,
       userName: null,
       userSurname: null,
       userEmail: null
-    };
-
-    return mapReportRow(mappedRow);
+    });
   } catch (err) {
     console.error('Error in createReport repository:', err);
     throw err;

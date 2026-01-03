@@ -107,5 +107,3 @@ async function main() {
         db.close();
     }
 }
-
-main();

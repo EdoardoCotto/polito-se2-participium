@@ -1,7 +1,7 @@
 "use strict";
 
 const sqlite = require('sqlite3');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
 const path = require('node:path');
 const { ALLOWED_ROLES } = require('../constants/roles');
@@ -144,7 +144,6 @@ exports.getUserByTelegramNickname = (telegramNickname) => {
 function generateConfirmationCode() {
   const min = 100000;
   const max = 999999;
-  const range = max - min + 1;
   
   const code = crypto.randomInt(min, max + 1); 
   
