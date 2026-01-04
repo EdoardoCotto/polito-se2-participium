@@ -215,6 +215,7 @@ const createUserByAdmin = async (userData) => {
  * @param {string} type - New role/type to assign (e.g., 'urban_planner', 'citizen', 'admin')
  * @returns {Promise<Object>} - Updated user object with id and type
  * @throws {Error} - If assignment fails (validation error, unauthorized, not found, etc.)
+ * @deprecated This endpoint may not exist in the backend. Consider using addRoleToUser instead.
  */
 const assignUserRole = async (userId, type) => {
   const response = await fetch(`${SERVER_URL}/users/${userId}/type`, {
@@ -228,6 +229,59 @@ const assignUserRole = async (userId, type) => {
 
   if (!response.ok) {
     await handleErrorResponse(response, 'Failed to assign user role');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Add Role to Municipality User
+ * Admin can add a role to a municipality user
+ * Municipality users can have multiple roles
+ * Requires admin authentication
+ * @param {number} userId - ID of the municipality user to add role to
+ * @param {string} role - Role to add (e.g., 'urban_planner', 'public_works_engineer', 'external_maintainer')
+ * @returns {Promise<Object>} - Updated user object with id, username, email, name, surname, type, and roles array
+ * @throws {Error} - If addition fails (validation error, unauthorized, not found, user already has role, etc.)
+ */
+const addRoleToUser = async (userId, role) => {
+  const response = await fetch(`${SERVER_URL}/users/${userId}/assign-role`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to add role to user');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Remove Role from Municipality User
+ * Admin can remove a role from a municipality user
+ * Requires admin authentication
+ * @param {number} userId - ID of the municipality user to remove role from
+ * @param {string} role - Role to remove (e.g., 'urban_planner', 'public_works_engineer', 'external_maintainer')
+ * @returns {Promise<Object>} - Success response with message
+ * @throws {Error} - If removal fails (validation error, unauthorized, not found, user doesn't have role, etc.)
+ */
+const removeRoleFromUser = async (userId, role) => {
+  const response = await fetch(`${SERVER_URL}/users/${userId}/remove-role`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to remove role from user');
   }
 
   return await response.json();
@@ -704,6 +758,26 @@ const getStreets = async (query = '') => {
 };
 
 /**
+ * Get Telegram Bot Information
+ * Retrieves information about the configured Telegram bot
+ * Public endpoint (no authentication required)
+ * @returns {Promise<Object>} - Bot information object with ok, bot (id, username, first_name, is_bot)
+ * @throws {Error} - If request fails (bot not initialized, etc.)
+ */
+const getTelegramBotInfo = async () => {
+  const response = await fetch(`${SERVER_URL}/telegram/info`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get Telegram bot information');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get Reports by Street Name
  * Retrieves reports and map focus data for a specific street
  * Given a street name, returns the geographic boundaries (bounding box)
@@ -790,6 +864,8 @@ const API = {
   resendConfirmationCode,
   createUserByAdmin,
   assignUserRole,
+  addRoleToUser,
+  removeRoleFromUser,
   getAllowedRoles,
   getMunicipalityUsers,
   updateUserProfile,
@@ -818,6 +894,9 @@ const API = {
   // Streets
   getStreets,
   getReportsByStreet,
+
+  // Telegram
+  getTelegramBotInfo,
 };
 
 export default API;
