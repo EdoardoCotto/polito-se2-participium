@@ -239,7 +239,9 @@ export default function MapPage() {
                       flex: 1
                     }}>
                       <i className="bi bi-shield-check me-2"></i>{' '}
-                      {getRoleLabel(user.type) || 'Assign Role'}
+                      {user.roles && user.roles.length > 0 
+                        ? user.roles.map(role => getRoleLabel(role)).join(', ')
+                        : 'Assign Role'}
                     </span>
                     <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
                   </Button>
@@ -254,7 +256,9 @@ export default function MapPage() {
 
   const handleOpenRoleModal = (user) => {
     setSelectedUser(user);
-    setSelectedRole(user.type);
+    // For municipality users, show the first role or empty string
+    // Note: user.type is always 'municipality_user', roles are in user.roles array
+    setSelectedRole(user.roles && user.roles.length > 0 ? user.roles[0] : '');
     setShowRoleModal(true);
   };
 
@@ -268,15 +272,15 @@ export default function MapPage() {
     if (!selectedUser || !selectedRole) return;
     
     try {
-      await API.assignUserRole(selectedUser.id, selectedRole);
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === selectedUser.id ? { ...user, type: selectedRole } : user
-        )
-      );
+      // Use addRoleToUser instead of assignUserRole
+      // Note: This adds a role to the user's roles array
+      // If the user already has this role, the backend will return an error
+      const updatedUser = await API.addRoleToUser(selectedUser.id, selectedRole);
+      // Refresh the users list to get the updated roles
+      await fetchUsers();
       handleCloseRoleModal();
     } catch (err) {
-      setUsersError(err?.message || 'Failed to update role');
+      setUsersError(err?.message || 'Failed to add role to user');
     }
   };
 
