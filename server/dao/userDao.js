@@ -20,7 +20,7 @@ const db = new sqlite.Database(dbPath, (err) => {
  */
 exports.getUser = (username, password) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM Users WHERE username = ?';
+    const sql = 'SELECT * FROM Users U WHERE username = ?';
     db.get(sql, [username], (err, row) => {
       if (err) {
         reject(err);
@@ -41,7 +41,8 @@ exports.getUser = (username, password) => {
 
         if (isMatch) {
           // Check if user needs confirmation (citizens only)
-          if (row.type === 'citizen' && row.is_confirmed === 0) {
+          const roles = this.getRolesByUserId(row.id);
+          if (roles.includes('citizen') && row.is_confirmed === 0) {
             resolve({ error: 'unconfirmed', email: row.email }); // Account not confirmed
             return;
           }
@@ -52,7 +53,10 @@ exports.getUser = (username, password) => {
             username: row.username,
             name: row.name,
             surname: row.surname,
-            type: row.type,
+            email: row.email,
+            telegram_nickname: row.telegram_nickname,
+            personal_photo_path: row.personal_photo_path,
+            mail_notifications: row.mail_notifications
           };
           resolve(user);
         } else {
@@ -68,17 +72,17 @@ exports.getUser = (username, password) => {
  * @param {number} id
  * @returns {Promise<Object>}
  */
-
-//TO UPDATE
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, email, name, surname, telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
-    db.get(sql, [id], (err, row) => {
+    const sql = `SELECT id, username, email, name, surname, type, telegram_nickname, personal_photo_path, mail_notifications 
+    FROM Users U, UsersRoles UR
+    WHERE U.id = UR.userId AND U.id = ?`;
+    db.all(sql, [id], (err, rows) => {
       if (err) {
         reject(err);
         return;
       }
-      resolve(row);
+      resolve(rows);
     });
   });
 };
@@ -100,6 +104,20 @@ exports.getUserByUsername = (username) => {
     });
   });
 };
+
+exports.getRolesByUserId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT type FROM UsersRoles WHERE id = ?';
+    db.all(sql, [userId], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      const roles = rows.map(r => r.type);
+      resolve(roles);
+    });
+  });
+}
 
 /**
  * Get user by email (usato da passport.deserializeUser)
@@ -130,13 +148,15 @@ exports.getUserByTelegramNickname = (telegramNickname) => {
   return new Promise((resolve, reject) => {
     // Normalize: remove @ if present, make case-insensitive
     const normalized = telegramNickname.replace(/^@/, '').toLowerCase();
-    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname FROM Users WHERE LOWER(REPLACE(telegram_nickname, "@", "")) = ?';
-    db.get(sql, [normalized], (err, row) => {
+    const sql = `SELECT id, username, email, name, surname, type, telegram_nickname 
+                FROM Users U, UserRoles UR 
+                WHERE U.id = UR.userId LOWER(REPLACE(telegram_nickname, "@", "")) = ?`;
+    db.all(sql, [normalized], (err, rows) => {
       if (err) {
         reject(err);
         return;
       }
-      resolve(row || null);
+      resolve(rows || null);
     });
   });
 };
@@ -160,7 +180,7 @@ function generateConfirmationCode() {
  * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, skipConfirmation?: boolean }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string, confirmationCode?: string }>}
  */
-exports.createUser = ({ username, email, name, surname, password, skipConfirmation = false }) => {
+exports.createUser = ({ username, email, name, surname, password, type = 'citizen', skipConfirmation = false }) => {
 
   // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
   return new Promise((resolve, reject) => { 
@@ -188,18 +208,28 @@ exports.createUser = ({ username, email, name, surname, password, skipConfirmati
           isConfirmed = 0; // Citizen needs to confirm
         }
 
-        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const insertSql = `INSERT INTO Users (username, email, name, surname, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         // db.run usa una callback, quindi non serve await
-        db.run(insertSql, [username, email, name, surname, 'citizen', hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
+        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr); // Chiamiamo reject dalla Promise esterna
             return;
           }
+          const userId = this.lastID;
+          // Insert role into UsersRoles
+          const roleInsertSql = `INSERT INTO UsersRoles (userId, type) VALUES (?, ?)`;
+          db.run(roleInsertSql, [userId, type], function (roleInsertErr) {
+            if (roleInsertErr) {
+              console.error('Error inserting user role:', roleInsertErr);
+              reject(roleInsertErr);
+              return;
+            }
+          });
 
-          const result = { id: this.lastID, username, email, name, surname, type };
+          const result = { id: userId, username, email, name, surname, type };
           if (confirmationCode) {
             result.confirmationCode = confirmationCode;
           }
@@ -257,8 +287,9 @@ exports.findMunicipalityUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT id, username, email, name, surname, type
-      FROM Users
-      WHERE type NOT IN ('citizen','admin')
+      FROM Users U, UsersRoles UR
+      WHERE U.id = UR.userId
+      AND type NOT IN ('citizen','admin')
       ORDER BY surname ASC, name ASC, username ASC
     `;
     db.all(sql, [], (err, rows) => {
@@ -278,8 +309,9 @@ exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT id, username, email, name, surname, type
-      FROM Users
-      WHERE type = 'external_maintainer'
+      FROM Users, UsersRoles UR
+      WHERE Users.id = UR.userId
+      AND type = 'external_maintainer'
       ORDER BY surname ASC, name ASC, username ASC
     `;
     db.all(sql, [], (err, rows) => {
