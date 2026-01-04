@@ -282,28 +282,6 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
  * @returns {Promise<{ id:number, type:string }>} updated info
  */
 
-//TO UPDATE
-exports.updateUserTypeById = (userId, newType) => {
-  return new Promise((resolve, reject) => {
-    if (!ALLOWED_ROLES.includes(newType)) {
-      reject(new Error('Invalid role'));
-      return;
-    }
-    const sql = 'UPDATE Users SET type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    db.run(sql, [newType, userId], function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      if (this.changes === 0) {
-        resolve(null);
-        return;
-      }
-      resolve({ id: userId, type: newType });
-    });
-  });
-};
-
 /**
  * Return all municipality users (everyone who is NOT citizen or admin).
  */

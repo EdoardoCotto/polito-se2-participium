@@ -171,42 +171,6 @@ router.post('/users/resend-confirmation', userController.resendConfirmationCode)
  */
 router.post('/users/admin', isLoggedIn, isAdmin, userController.createUserIfAdmin);
 
-/*
-/**
- * @swagger
- * /users/{id}/type:
- *   put:
- *     summary: Assign a role/type to a user (admin only)
- *     tags: [Users]
- *     security: [ { cookieAuth: [] } ]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: integer }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [type]
- *             properties:
- *               type:
- *                 type: string
- *                 enum:
- *                   [citizen, admin, municipal_public_relations_officer, municipal_administrator,
- *                    urban_planner, building_permit_officer, building_inspector, suap_officer,
- *                    public_works_engineer, mobility_traffic_engineer, environment_technician,
- *                    technical_office_staff_member]
- *     responses:
- *       200: { description: Role updated }
- *       400: { description: Invalid role }
- *       401: { description: Not authenticated }
- *       403: { description: Not admin }
- *       404: { description: User not found }
- *
-router.put('/users/:id/type', isLoggedIn, isAdmin, userController.assignUserRole);*/
 
 /**
  * @swagger

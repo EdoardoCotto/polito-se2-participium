@@ -124,39 +124,6 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
 }
 
 /**
- * Assign a role/type to a user (admin only)
- * @param {number} adminId - acting admin user id
- * @param {number} targetUserId - user to update
- * @param {string} newType - new role (validated)
- * @returns {Promise<{id:number, type:string}>}
- */
-exports.assignUserRole = async (adminId, targetUserId, newType) => {
-    const admin = await userDao.getUserById(adminId);
-    if (!admin) {
-        throw new NotFoundError('Admin not found')
-    }
-    if (admin.type !== 'admin') {
-        throw new UnauthorizedError('You are not an admin')
-    }
-    if (!newType) {
-        throw new BadRequestError('Role is required');
-    }
-    if (!ALLOWED_ROLES.includes(newType)) {
-        throw new BadRequestError('Invalid role');
-    }
-    const target = await userDao.getUserById(targetUserId);
-    if (!target) {
-        throw new NotFoundError('User not found');
-    }
-    const updated = await userDao.updateUserTypeById(targetUserId, newType);
-    if (!updated) {
-        throw new NotFoundError('User not found');
-    }
-    return updated;
-}
-
-
-/**
  * Get all municipality users (admin-only).
  * Double-checks the acting user is an admin, even if the route is protected.
  */
