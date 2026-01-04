@@ -100,7 +100,7 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
         throw new UnauthorizedError('You are not an admin')
     }
     
-    if (!admin.roles.includes('admin')) {
+    if (admin.type !== 'admin') {
         console.log('[DEBUG] Admin roles does not include "admin":', admin.roles);
         throw new UnauthorizedError('You are not an admin')
     }
@@ -135,7 +135,7 @@ exports.assignUserRole = async (adminId, targetUserId, newType) => {
     if (!admin) {
         throw new NotFoundError('Admin not found')
     }
-    if (admin.type != 'admin') {
+    if (admin.type !== 'admin') {
         throw new UnauthorizedError('You are not an admin')
     }
     if (!newType) {
@@ -162,7 +162,7 @@ exports.assignUserRole = async (adminId, targetUserId, newType) => {
  */
 exports.getMunicipalityUsers = async (adminId) => {
     const admin = await userDao.getUserById(adminId);
-    if (!admin?.roles.includes('admin')) { // cambia da admin?.type a admin?.roles.includes()
+    if (admin?.type !== 'admin') {
         throw new UnauthorizedError('You are not an admin');
     }
     const users = await userDao.findMunicipalityUsers();
