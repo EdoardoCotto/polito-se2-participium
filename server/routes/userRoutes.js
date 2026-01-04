@@ -318,7 +318,8 @@ router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, us
  *         required: true
  *         schema: 
  *           type: integer
- *         description: User ID
+ *         description: User ID of the municipality user to assign role to
+ *         example: 5
  *     requestBody:
  *       required: true
  *       content:
@@ -346,18 +347,84 @@ router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, us
  *               properties:
  *                 id:
  *                   type: integer
+ *                   example: 5
  *                 username:
  *                   type: string
+ *                   example: tech_user1
+ *                 email:
+ *                   type: string
+ *                   example: tech@comune.test.it
+ *                 name:
+ *                   type: string
+ *                   example: Mario
+ *                 surname:
+ *                   type: string
+ *                   example: Rossi
  *                 type:
  *                   type: string
+ *                   example: municipality_user
  *                 roles:
  *                   type: array
  *                   items:
  *                     type: string
- *       400: { description: Invalid role or validation error }
- *       401: { description: Not authenticated }
- *       403: { description: Not admin or user is not municipality_user }
- *       404: { description: User not found }
+ *                   example: ["urban_planner", "public_works_engineer"]
+ *       400: 
+ *         description: Invalid role or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Role is required in request body
+ *                     - Invalid role for municipality user
+ *                     - Can only assign roles to municipality users
+ *                   example: Can only assign roles to municipality users
+ *       401: 
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Not authenticated
+ *       403: 
+ *         description: Not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: You are not an admin
+ *       404: 
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Admin not found
+ *                     - User not found
+ *                   example: User not found
+ *       409:
+ *         description: User already has this role
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User already has this role
  */
 router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRoleToUser);
 
@@ -374,7 +441,8 @@ router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRol
  *         required: true
  *         schema: 
  *           type: integer
- *         description: User ID
+ *         description: User ID of the municipality user to remove role from
+ *         example: 5
  *     requestBody:
  *       required: true
  *       content:
@@ -403,10 +471,54 @@ router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRol
  *                 message:
  *                   type: string
  *                   example: Role deleted successfully
- *       400: { description: Invalid role or validation error }
- *       401: { description: Not authenticated }
- *       403: { description: Not admin or user is not municipality_user }
- *       404: { description: User or role not found }
+ *       400: 
+ *         description: Invalid role or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Role is required in request body
+ *                     - Can only remove roles from municipality users
+ *                   example: Can only remove roles from municipality users
+ *       401: 
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Not authenticated
+ *       403: 
+ *         description: Not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: You are not an admin
+ *       404: 
+ *         description: User or role not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   enum:
+ *                     - Admin not found
+ *                     - User not found
+ *                     - User does not have this role
+ *                     - Role not found or already deleted
+ *                   example: User does not have this role
  */
 router.delete('/users/:id/remove-role', isLoggedIn, isAdmin, userController.deleteRoleFromUser);
 
