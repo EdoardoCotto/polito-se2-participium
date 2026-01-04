@@ -42,7 +42,8 @@ export default function MapPage() {
   // Role change modal
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRoles, setSelectedRoles] = useState([]); // Changed to array for multiple roles
+  const [isSavingRoles, setIsSavingRoles] = useState(false);
 
   // Fetch users and roles on component mount
   useEffect(() => {
@@ -201,50 +202,85 @@ export default function MapPage() {
                   verticalAlign: 'middle',
                   borderBottom: '1px solid #e9ecef'
                 }}>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => handleOpenRoleModal(user)}
-                    className="d-flex align-items-center justify-content-between"
-                    style={{
-                      width: '100%',
-                      minWidth: '180px',
-                      maxWidth: '280px',
-                      fontSize: '0.875rem',
-                      borderRadius: '20px',
-                      fontWeight: '500',
-                      borderColor: '#5e7bb3',
-                      borderWidth: '1.5px',
-                      color: '#5e7bb3',
-                      backgroundColor: '#f8f9ff',
-                      padding: '0.5rem 1rem',
-                      transition: 'all 0.2s ease',
-                      textAlign: 'left'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#5e7bb3';
-                      e.currentTarget.style.color = '#ffffff';
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8f9ff';
-                      e.currentTarget.style.color = '#5e7bb3';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  >
-                    <span style={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      flex: 1
-                    }}>
-                      <i className="bi bi-shield-check me-2"></i>{' '}
-                      {user.roles && user.roles.length > 0 
-                        ? user.roles.map(role => getRoleLabel(role)).join(', ')
-                        : 'Assign Role'}
-                    </span>
-                    <i className="bi bi-pencil-square ms-2" style={{ fontSize: '0.9rem' }}></i>
-                  </Button>
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                    {user.roles && user.roles.length > 0 ? (
+                      <>
+                        {user.roles.map((role, idx) => (
+                          <span
+                            key={idx}
+                            className="badge"
+                            style={{
+                              backgroundColor: '#5e7bb3',
+                              color: 'white',
+                              fontSize: '0.75rem',
+                              padding: '0.35rem 0.65rem',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {getRoleLabel(role)}
+                          </span>
+                        ))}
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleOpenRoleModal(user)}
+                          className="d-flex align-items-center"
+                          style={{
+                            fontSize: '0.75rem',
+                            borderRadius: '6px',
+                            fontWeight: '500',
+                            borderColor: '#5e7bb3',
+                            borderWidth: '1.5px',
+                            color: '#5e7bb3',
+                            backgroundColor: 'transparent',
+                            padding: '0.25rem 0.5rem',
+                            transition: 'all 0.2s ease'
+                          }}
+                          title="Modify roles"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#5e7bb3';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#5e7bb3';
+                          }}
+                        >
+                          <i className="bi bi-pencil-square"></i>
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => handleOpenRoleModal(user)}
+                        className="d-flex align-items-center"
+                        style={{
+                          fontSize: '0.875rem',
+                          borderRadius: '8px',
+                          fontWeight: '500',
+                          borderColor: '#5e7bb3',
+                          borderWidth: '1.5px',
+                          color: '#5e7bb3',
+                          backgroundColor: '#f8f9ff',
+                          padding: '0.4rem 0.8rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#5e7bb3';
+                          e.currentTarget.style.color = '#ffffff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8f9ff';
+                          e.currentTarget.style.color = '#5e7bb3';
+                        }}
+                      >
+                        <i className="bi bi-shield-check me-2"></i>
+                        Assign Roles
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -256,31 +292,69 @@ export default function MapPage() {
 
   const handleOpenRoleModal = (user) => {
     setSelectedUser(user);
-    // For municipality users, show the first role or empty string
-    // Note: user.type is always 'municipality_user', roles are in user.roles array
-    setSelectedRole(user.roles && user.roles.length > 0 ? user.roles[0] : '');
+    // Initialize selectedRoles with user's current roles
+    setSelectedRoles(user.roles && Array.isArray(user.roles) ? [...user.roles] : []);
+    setUsersError('');
     setShowRoleModal(true);
   };
 
   const handleCloseRoleModal = () => {
     setShowRoleModal(false);
     setSelectedUser(null);
-    setSelectedRole('');
+    setSelectedRoles([]);
+    setIsSavingRoles(false);
+    setUsersError('');
+  };
+
+  const handleRoleToggle = (role) => {
+    setSelectedRoles(prev => {
+      if (prev.includes(role)) {
+        // Remove role
+        return prev.filter(r => r !== role);
+      } else {
+        // Add role
+        return [...prev, role];
+      }
+    });
   };
 
   const handleConfirmRoleChange = async () => {
-    if (!selectedUser || !selectedRole) return;
+    if (!selectedUser) return;
+    
+    setIsSavingRoles(true);
+    setUsersError('');
     
     try {
-      // Use addRoleToUser instead of assignUserRole
-      // Note: This adds a role to the user's roles array
-      // If the user already has this role, the backend will return an error
-      const updatedUser = await API.addRoleToUser(selectedUser.id, selectedRole);
+      const currentRoles = selectedUser.roles && Array.isArray(selectedUser.roles) ? selectedUser.roles : [];
+      const rolesToAdd = selectedRoles.filter(role => !currentRoles.includes(role));
+      const rolesToRemove = currentRoles.filter(role => !selectedRoles.includes(role));
+
+      // Add new roles
+      for (const role of rolesToAdd) {
+        try {
+          await API.addRoleToUser(selectedUser.id, role);
+        } catch (err) {
+          // If role already exists or other error, log but continue
+          console.warn(`Failed to add role ${role}:`, err);
+        }
+      }
+
+      // Remove roles
+      for (const role of rolesToRemove) {
+        try {
+          await API.removeRoleFromUser(selectedUser.id, role);
+        } catch (err) {
+          // If role doesn't exist or other error, log but continue
+          console.warn(`Failed to remove role ${role}:`, err);
+        }
+      }
+
       // Refresh the users list to get the updated roles
       await fetchUsers();
       handleCloseRoleModal();
     } catch (err) {
-      setUsersError(err?.message || 'Failed to add role to user');
+      setUsersError(err?.message || 'Failed to update user roles');
+      setIsSavingRoles(false);
     }
   };
 
@@ -590,15 +664,15 @@ export default function MapPage() {
         </Form>
       </Modal>
 
-      {/* Role Change Modal */}
-      <Modal show={showRoleModal} onHide={handleCloseRoleModal} centered size="md">
+      {/* Role Management Modal */}
+      <Modal show={showRoleModal} onHide={handleCloseRoleModal} centered size="lg">
         <Modal.Header closeButton style={{ 
           background: 'linear-gradient(135deg, #5e7bb3 0%, #4a6399 100%)',
           color: 'white',
           borderBottom: 'none'
         }}>
           <Modal.Title style={{ fontWeight: '600' }}>
-            <i className="bi bi-shield-lock me-2"></i>Change User Role
+            <i className="bi bi-shield-check me-2"></i>Manage User Roles
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
@@ -619,81 +693,107 @@ export default function MapPage() {
                 </small>
               </div>
 
-              <div className="mb-3">
-                <div className="form-label fw-semibold" style={{ color: '#495057' }}>
-                  <i className="bi bi-tag-fill me-2"></i>Select New Role
-                </div>
-                <div className="d-flex flex-column gap-2">
-                  {availableRoles.map((role) => (
-                    <label
-                      key={role}
-                      className="p-3"
-                      style={{
-                        backgroundColor: selectedRole === role ? '#5e7bb3' : '#ffffff',
-                        color: selectedRole === role ? '#ffffff' : '#212529',
-                        border: selectedRole === role ? '2px solid #5e7bb3' : '2px solid #e0e6ed',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        fontWeight: selectedRole === role ? '600' : '400',
-                        boxShadow: selectedRole === role ? '0 4px 12px rgba(94, 123, 179, 0.2)' : 'none',
-                        display: 'block'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selectedRole !== role) {
-                          e.currentTarget.style.backgroundColor = '#f8f9ff';
-                          e.currentTarget.style.borderColor = '#5e7bb3';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedRole !== role) {
-                          e.currentTarget.style.backgroundColor = '#ffffff';
-                          e.currentTarget.style.borderColor = '#e0e6ed';
-                        }
-                      }}
-                      onFocus={(e) => {
-                        if (selectedRole !== role) {
-                          e.currentTarget.style.backgroundColor = '#f8f9ff';
-                          e.currentTarget.style.borderColor = '#5e7bb3';
-                          e.currentTarget.style.outline = '2px solid #5e7bb3';
-                          e.currentTarget.style.outlineOffset = '2px';
-                        }
-                      }}
-                      onBlur={(e) => {
-                        if (selectedRole !== role) {
-                          e.currentTarget.style.backgroundColor = '#ffffff';
-                          e.currentTarget.style.borderColor = '#e0e6ed';
-                          e.currentTarget.style.outline = 'none';
-                        }
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="userRole"
-                        value={role}
-                        checked={selectedRole === role}
-                        onChange={() => setSelectedRole(role)}
+              {/* Current Roles Display */}
+              {selectedRoles.length > 0 && (
+                <div className="mb-3">
+                  <div className="form-label fw-semibold mb-2" style={{ color: '#495057' }}>
+                    <i className="bi bi-check-circle-fill me-2" style={{ color: '#28a745' }}></i>
+                    Selected Roles ({selectedRoles.length})
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    {selectedRoles.map((role) => (
+                      <span
+                        key={role}
+                        className="badge"
                         style={{
-                          position: 'absolute',
-                          opacity: 0,
-                          width: 0,
-                          height: 0
+                          backgroundColor: '#5e7bb3',
+                          color: 'white',
+                          fontSize: '0.875rem',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '6px',
+                          fontWeight: '500'
                         }}
-                      />
-                      <div className="d-flex align-items-center justify-content-between">
+                      >
+                        {getRoleLabel(role)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Available Roles Selection */}
+              <div className="mb-3">
+                <div className="form-label fw-semibold mb-3" style={{ color: '#495057' }}>
+                  <i className="bi bi-tag-fill me-2"></i>Available Roles
+                </div>
+                {usersError && (
+                  <Alert variant="danger" dismissible onClose={() => setUsersError('')} className="mb-3">
+                    <i className="bi bi-exclamation-triangle me-2"></i>{' '}
+                    {usersError}
+                  </Alert>
+                )}
+                <div className="d-flex flex-column gap-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  {availableRoles.map((role) => {
+                    const isSelected = selectedRoles.includes(role);
+                    return (
+                      <label
+                        key={role}
+                        className="p-3"
+                        style={{
+                          backgroundColor: isSelected ? '#e7f3ff' : '#ffffff',
+                          color: '#212529',
+                          border: isSelected ? '2px solid #5e7bb3' : '2px solid #e0e6ed',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontWeight: isSelected ? '600' : '400',
+                          boxShadow: isSelected ? '0 2px 8px rgba(94, 123, 179, 0.15)' : 'none',
+                          display: 'block'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = '#f8f9ff';
+                            e.currentTarget.style.borderColor = '#5e7bb3';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.backgroundColor = '#ffffff';
+                            e.currentTarget.style.borderColor = '#e0e6ed';
+                          }
+                        }}
+                      >
                         <div className="d-flex align-items-center">
-                          <i className={`bi bi-${selectedRole === role ? 'check-circle-fill' : 'circle'} me-3`} 
-                             style={{ fontSize: '1.2rem' }}></i>
-                          <div>
-                            <div style={{ fontSize: '0.95rem' }}>{getRoleLabel(role)}</div>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleRoleToggle(role)}
+                            className="me-3"
+                            style={{
+                              width: '1.25rem',
+                              height: '1.25rem',
+                              cursor: 'pointer',
+                              accentColor: '#5e7bb3'
+                            }}
+                          />
+                          <div className="flex-grow-1">
+                            <div style={{ fontSize: '0.95rem', fontWeight: '500' }}>
+                              {getRoleLabel(role)}
+                            </div>
+                            <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                              {role}
+                            </small>
                           </div>
+                          {isSelected && (
+                            <i className="bi bi-check-circle-fill" style={{ 
+                              fontSize: '1.25rem', 
+                              color: '#5e7bb3' 
+                            }}></i>
+                          )}
                         </div>
-                        {selectedRole === role && (
-                          <i className="bi bi-check2" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}></i>
-                        )}
-                      </div>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -703,6 +803,7 @@ export default function MapPage() {
           <Button 
             variant="outline-secondary" 
             onClick={handleCloseRoleModal}
+            disabled={isSavingRoles}
             style={{ 
               borderRadius: '8px',
               padding: '0.5rem 1.5rem',
@@ -714,7 +815,7 @@ export default function MapPage() {
           <Button 
             variant="primary"
             onClick={handleConfirmRoleChange}
-            disabled={!selectedRole || selectedRole === selectedUser?.type}
+            disabled={isSavingRoles}
             style={{ 
               backgroundColor: '#5e7bb3',
               borderColor: '#5e7bb3',
@@ -724,7 +825,16 @@ export default function MapPage() {
               boxShadow: '0 2px 8px rgba(94, 123, 179, 0.3)'
             }}
           >
-            <i className="bi bi-check-circle-fill me-2"></i>Confirm Change
+            {isSavingRoles ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle-fill me-2"></i>Save Changes
+              </>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
