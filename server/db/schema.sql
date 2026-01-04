@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Users (
   confirmation_code TEXT,
   confirmation_code_expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create Reports table
@@ -110,13 +110,13 @@ CREATE TABLE IF NOT EXISTS Streets (
   UNIQUE(city, street_name)
 );
 
-CREATE TABLE IF NOT EXISTS Officer-Roles (
+CREATE TABLE IF NOT EXISTS OfficerRoles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   officerId INTEGER NOT NULL,
-  role TEXT NOT NULL,
+  type TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (officerId) REFERENCES Users(id) ON DELETE CASCADE,
-  CHECK(role IN (
+  CHECK(type IN (
     'municipal_public_relations_officer',
     'municipal_administrator',
     'urban_planner',

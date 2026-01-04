@@ -68,9 +68,11 @@ exports.getUser = (username, password) => {
  * @param {number} id
  * @returns {Promise<Object>}
  */
+
+//TO UPDATE
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
+    const sql = 'SELECT id, username, email, name, surname, telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
     db.get(sql, [id], (err, row) => {
       if (err) {
         reject(err);
@@ -122,6 +124,8 @@ exports.getUserByEmail = (email) => {
  * @param {string} telegramNickname - Telegram username (with or without @)
  * @returns {Promise<Object|null>}
  */
+
+//TO UPDATE
 exports.getUserByTelegramNickname = (telegramNickname) => {
   return new Promise((resolve, reject) => {
     // Normalize: remove @ if present, make case-insensitive
@@ -156,7 +160,7 @@ function generateConfirmationCode() {
  * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, skipConfirmation?: boolean }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string, confirmationCode?: string }>}
  */
-exports.createUser = ({ username, email, name, surname, password, type = 'citizen', skipConfirmation = false }) => {
+exports.createUser = ({ username, email, name, surname, password, skipConfirmation = false }) => {
 
   // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
   return new Promise((resolve, reject) => { 
@@ -188,7 +192,7 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         // db.run usa una callback, quindi non serve await
-        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
+        db.run(insertSql, [username, email, name, surname, 'citizen', hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr); // Chiamiamo reject dalla Promise esterna
@@ -221,6 +225,8 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
  * @param {string} newType - must be one of ALLOWED_ROLES
  * @returns {Promise<{ id:number, type:string }>} updated info
  */
+
+//TO UPDATE
 exports.updateUserTypeById = (userId, newType) => {
   return new Promise((resolve, reject) => {
     if (!ALLOWED_ROLES.includes(newType)) {
@@ -245,6 +251,8 @@ exports.updateUserTypeById = (userId, newType) => {
 /**
  * Return all municipality users (everyone who is NOT citizen or admin).
  */
+
+//TO UPDATE
 exports.findMunicipalityUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -264,6 +272,8 @@ exports.findMunicipalityUsers = () => {
  * Get all external maintainers
  * @returns {Promise<Object[]>}
  */
+
+//TO UPDATE
 exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
