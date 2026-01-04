@@ -118,6 +118,8 @@ CREATE TABLE IF NOT EXISTS UsersRoles (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
   CHECK(type IN (
+    'admin',
+    'municipality_user',
     'municipal_public_relations_officer',
     'municipal_administrator',
     'urban_planner',

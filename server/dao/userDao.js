@@ -56,7 +56,8 @@ exports.getUser = (username, password) => {
             email: row.email,
             telegram_nickname: row.telegram_nickname,
             personal_photo_path: row.personal_photo_path,
-            mail_notifications: row.mail_notifications
+            mail_notifications: row.mail_notifications,
+            roles: roles
           };
           resolve(user);
         } else {

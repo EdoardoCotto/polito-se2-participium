@@ -13,7 +13,7 @@ exports.isLoggedIn = (req, res, next) => {
 
 exports.isAdmin = (req, res, next) => {
     if (req.isAuthenticated()) {
-        if (req.user.type === 'admin') {
+        if (req.user.roles.includes('admin')) {
             return next();
         } else {
             return next(new UnauthorizedError('User is not admin'));

@@ -31,6 +31,10 @@ exports.login = async (req, res, next) => {
                 name: user.name,
                 surname: user.surname,
                 email: user.email,
+                roles: user.roles,
+                telegram_nickname: user.telegram_nickname,
+                personal_photo_path: user.personal_photo_path,
+                mail_notifications: user.mail_notifications
             });
         });
     })(req, res, next);

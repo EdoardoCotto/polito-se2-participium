@@ -82,13 +82,31 @@ exports.createUser = async (user) => {
 
 
 exports.createUserIfAdmin = async (adminId, userToInsert) => {
+    console.log('[DEBUG] createUserIfAdmin called with adminId:', adminId);
+    
     const admin = await userDao.getUserById(adminId);
+    
+    console.log('[DEBUG] Admin object:', JSON.stringify(admin, null, 2));
+    console.log('[DEBUG] Admin roles type:', typeof admin?.roles);
+    console.log('[DEBUG] Admin roles value:', admin?.roles);
+    
     if (!admin) {
+        console.log('[DEBUG] Admin not found');
         throw new NotFoundError('Admin not found')
     }
-    if (admin.type != 'admin') {
+    
+    if (!admin.roles) {
+        console.log('[DEBUG] Admin has no roles property');
         throw new UnauthorizedError('You are not an admin')
     }
+    
+    if (!admin.roles.includes('admin')) {
+        console.log('[DEBUG] Admin roles does not include "admin":', admin.roles);
+        throw new UnauthorizedError('You are not an admin')
+    }
+    
+    console.log('[DEBUG] Admin check passed, proceeding with user creation');
+    
     if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password) {
         throw new BadRequestError('All fields are required');
     }
@@ -144,7 +162,7 @@ exports.assignUserRole = async (adminId, targetUserId, newType) => {
  */
 exports.getMunicipalityUsers = async (adminId) => {
     const admin = await userDao.getUserById(adminId);
-    if (admin?.type !== 'admin') {
+    if (!admin?.roles.includes('admin')) { // cambia da admin?.type a admin?.roles.includes()
         throw new UnauthorizedError('You are not an admin');
     }
     const users = await userDao.findMunicipalityUsers();
