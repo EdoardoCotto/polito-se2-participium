@@ -37,32 +37,6 @@ exports.getUser = async (req, res) => {
 };
 
 /**
- * Assign a role/type to a user (admin only).
- * Validates path param and presence of 'type' before delegating to repository.
- */
-exports.assignUserRole = async (req, res) => {
-  try {
-    const targetUserId = Number(req.params.id);
-    if (!Number.isInteger(targetUserId)) {
-      return res.status(400).json({ error: 'Invalid user id' });
-    }
-
-    const { type } = req.body || {};
-    if (!type) {
-      return res.status(400).json({ error: 'Role (type) is required' });
-    }
-
-    const updated = await userRepository.assignUserRole(req.user.id, targetUserId, type);
-    return res.status(200).json(updated);
-  } catch (err) {
-    if (err instanceof AppError) {
-      return res.status(err.statusCode).json({ error: err.message });
-    }
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-/**
  * Return allowed roles (and optional metadata for UI).
  */
 exports.getAllowedRoles = async (_req, res) => {
@@ -212,6 +186,30 @@ exports.resendConfirmationCode = async (req, res) => {
     
     const result = await userRepository.resendConfirmationCode(email);
     return res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.deleteRoleFromUser = async (req, res) => {
+  try {
+    await userRepository.deleteRoleFromUser(req.user.id, req.params.id, req.body.role);
+    return res.status(200).json({ message: 'Role deleted successfully' });
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.addRoleToUser = async (req, res) => {
+  try {
+    const updatedUser = await userRepository.addRoleToUser(req.user.id, req.params.id, req.body.role);
+    return res.status(200).json(updatedUser);
   } catch (err) {
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });

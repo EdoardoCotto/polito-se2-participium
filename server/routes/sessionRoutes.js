@@ -49,6 +49,11 @@ const sessionController = require('../controller/sessionController');
  *                   type: string
  *                 type:
  *                   type: string
+ *                   enum: [admin, citizen, municipality_user]
+ *                 roles:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       401:
  *         description: Invalid username or password
  */

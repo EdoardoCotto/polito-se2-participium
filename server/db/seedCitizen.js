@@ -26,19 +26,24 @@ const db = new sqlite.Database(dbPath, (err) => {
 // --- 1. DATI UTENTI DA INSERIRE ---
 const workers = [
   // CITTADINI E ADMIN
-  { username: 'citizen', email: 'citizen@participium.test', name: 'Davide', surname: 'Idini', type: 'citizen' },
-  { username: 'admin_main', email: 'admin@participium.test', name: 'Super', surname: 'Admin', type: 'admin' },
-  { username: 'pr_officer1', email: 'pr@comune.test.it', name: 'Sara', surname: 'Comunicazione', type: 'municipal_public_relations_officer' },
+  { username: 'citizen', email: 'citizen@participium.test', name: 'Davide', surname: 'Idini', type: 'citizen', roles: [] },
+  { username: 'admin_main', email: 'admin@participium.test', name: 'Super', surname: 'Admin', type: 'admin', roles: [] },
+  { username: 'pr_officer1', email: 'pr@comune.test.it', name: 'Sara', surname: 'Comunicazione', type: 'municipality_user', roles: ['municipal_public_relations_officer'] },
   // TECNICI
-  { username: 'urban_planner1', email: 'planner@comune.test.it', name: 'Giulia', surname: 'Rossi', type: 'urban_planner' },
-  { username: 'urban_planner2', email: 'planner2@comune.test.it', name: 'Luca', surname: 'Rossi', type: 'urban_planner' },
-  { username: 'civil_eng1', email: 'works@comune.test.it', name: 'Marco', surname: 'Gialli', type: 'public_works_engineer' },
-  { username: 'env_tech1', email: 'env@comune.test.it', name: 'Elena', surname: 'Verdi', type: 'environment_technician' },
-  { username: 'traffic_eng1', email: 'traffic@comune.test.it', name: 'Roberto', surname: 'Neri', type: 'mobility_traffic_engineer' },
-  { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'building_inspector' },
+  { username: 'urban_planner1', email: 'planner@comune.test.it', name: 'Giulia', surname: 'Rossi', type: 'municipality_user', roles: ['urban_planner'] },
+  { username: 'urban_planner2', email: 'planner2@comune.test.it', name: 'Luca', surname: 'Rossi', type: 'municipality_user', roles: ['urban_planner'] },
+  { username: 'civil_eng1', email: 'works@comune.test.it', name: 'Marco', surname: 'Gialli', type: 'municipality_user', roles: ['public_works_engineer'] },
+  { username: 'env_tech1', email: 'env@comune.test.it', name: 'Elena', surname: 'Verdi', type: 'municipality_user', roles: ['environment_technician'] },
+  { username: 'traffic_eng1', email: 'traffic@comune.test.it', name: 'Roberto', surname: 'Neri', type: 'municipality_user', roles: ['mobility_traffic_engineer'] },
+  { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'municipality_user', roles: ['building_inspector'] },
   // MANUTENTORI ESTERNI
-  { username: 'ext_maint1', email: 'maint1@external.com', name: 'Paolo', surname: 'Bianchi', type: 'external_maintainer' },
-  { username: 'ext_maint2', email: 'maint2@external.com', name: 'Francesca', surname: 'Russo', type: 'external_maintainer' }
+  { username: 'ext_maint1', email: 'maint1@external.com', name: 'Paolo', surname: 'Bianchi', type: 'municipality_user', roles: ['external_maintainer'] },
+  { username: 'ext_maint2', email: 'maint2@external.com', name: 'Francesca', surname: 'Russo', type: 'municipality_user', roles: ['external_maintainer'] },
+  // UTENTI CON RUOLI MULTIPLI
+  { username: 'multi_tech1', email: 'multi1@comune.test.it', name: 'Mario', surname: 'Multiruolo', type: 'municipality_user', roles: ['urban_planner', 'public_works_engineer'] },
+  { username: 'multi_tech2', email: 'multi2@comune.test.it', name: 'Laura', surname: 'Polivalente', type: 'municipality_user', roles: ['environment_technician', 'mobility_traffic_engineer'] },
+  { username: 'multi_tech3', email: 'multi3@comune.test.it', name: 'Giorgio', surname: 'Tuttofare', type: 'municipality_user', roles: ['building_inspector', 'public_works_engineer', 'urban_planner'] },
+  { username: 'super_tech', email: 'supertech@comune.test.it', name: 'Alessandro', surname: 'Onnisciente', type: 'municipality_user', roles: ['urban_planner', 'public_works_engineer', 'environment_technician', 'mobility_traffic_engineer'] }
 ];
 
 // --- 2. DATI REPORT DA INSERIRE ---
@@ -130,29 +135,37 @@ function runQuery(query, params = []) {
     // B. INSERIMENTO UTENTI
     console.log("👥 Inserimento utenti...");
     
-    // Test credentials for development/seeding purposes only
-    // In production, users set their own credentials through the registration form
-    // Use environment variable or fallback to default test value
     const testCredential = process.env.SEED_PASSWORD || 'test1234';
     const saltRounds = 10;
     
-    // Mappa per salvare la corrispondenza: username -> ID reale nel DB
     const userMap = {}; 
 
     for (const w of workers) {
       const salt = await bcrypt.genSalt(saltRounds);
       const hash = await bcrypt.hash(testCredential, salt);
 
-      // Seeded users are pre-confirmed (is_confirmed = 1) for testing purposes
+      // Inserisci utente (CON type)
       const result = await runQuery(
         `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [w.username, w.email, w.name, w.surname, w.type, hash, salt, 1]
       );
       
-      // Salviamo l'ID generato
-      userMap[w.username] = result.lastID;
-      console.log(`   ✅ Utente inserito: ${w.username} (ID: ${result.lastID})`);
+      const userId = result.lastID;
+      userMap[w.username] = userId;
+      
+      // Inserisci i ruoli nella tabella UsersRoles SOLO se municipality_user e ha ruoli
+      if (w.type === 'municipality_user' && w.roles.length > 0) {
+        for (const role of w.roles) {
+          await runQuery(
+            `INSERT INTO UsersRoles (userId, role) VALUES (?, ?)`,
+            [userId, role]
+          );
+        }
+        console.log(`   ✅ Utente inserito: ${w.username} (ID: ${userId}) type: ${w.type} con ruoli: ${w.roles.join(', ')}`);
+      } else {
+        console.log(`   ✅ Utente inserito: ${w.username} (ID: ${userId}) type: ${w.type}`);
+      }
     }
 
     // C. INSERIMENTO REPORT

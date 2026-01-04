@@ -20,7 +20,7 @@ const db = new sqlite.Database(dbPath, (err) => {
  */
 exports.getUser = (username, password) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM Users WHERE username = ?';
+    const sql = 'SELECT * FROM Users U WHERE username = ?';
     db.get(sql, [username], (err, row) => {
       if (err) {
         reject(err);
@@ -33,7 +33,7 @@ exports.getUser = (username, password) => {
       }
 
       // Verifica password
-      bcrypt.compare(password, row.password, (err, isMatch) => {
+      bcrypt.compare(password, row.password, async (err, isMatch) => {
         if (err) {
           reject(err);
           return;
@@ -41,7 +41,8 @@ exports.getUser = (username, password) => {
 
         if (isMatch) {
           // Check if user needs confirmation (citizens only)
-          if (row.type === 'citizen' && row.is_confirmed === 0) {
+          const roles = await this.getRolesByUserId(row.id);
+          if (roles.includes('citizen') && row.is_confirmed === 0) {
             resolve({ error: 'unconfirmed', email: row.email }); // Account not confirmed
             return;
           }
@@ -52,7 +53,12 @@ exports.getUser = (username, password) => {
             username: row.username,
             name: row.name,
             surname: row.surname,
+            email: row.email,
             type: row.type,
+            telegram_nickname: row.telegram_nickname,
+            personal_photo_path: row.personal_photo_path,
+            mail_notifications: row.mail_notifications,
+            roles: roles
           };
           resolve(user);
         } else {
@@ -70,13 +76,42 @@ exports.getUser = (username, password) => {
  */
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
-    db.get(sql, [id], (err, row) => {
+    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, UR.role, U.telegram_nickname, U.personal_photo_path, U.mail_notifications 
+    FROM Users U
+    LEFT JOIN UsersRoles UR ON U.id = UR.userId
+    WHERE U.id = ?`;
+    db.all(sql, [id], (err, rows) => {
       if (err) {
         reject(err);
         return;
       }
-      resolve(row);
+      
+      if (!rows || rows.length === 0) {
+        resolve(null);
+        return;
+      }
+
+      // Prendi la prima riga per i dati comuni dell'utente
+      const firstRow = rows[0];
+      
+      // Estrai tutti i ruoli dall'array di righe (solo per municipality_user)
+      const roles = rows.map(row => row.role).filter(role => role !== null);
+      
+      // Costruisci l'oggetto user
+      const user = {
+        id: firstRow.id,
+        username: firstRow.username,
+        email: firstRow.email,
+        name: firstRow.name,
+        surname: firstRow.surname,
+        type: firstRow.type,
+        telegram_nickname: firstRow.telegram_nickname,
+        personal_photo_path: firstRow.personal_photo_path,
+        mail_notifications: firstRow.mail_notifications,
+        roles: roles
+      };
+      
+      resolve(user);
     });
   });
 };
@@ -98,6 +133,20 @@ exports.getUserByUsername = (username) => {
     });
   });
 };
+
+exports.getRolesByUserId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT role FROM UsersRoles WHERE userId = ?';
+    db.all(sql, [userId], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      const roles = rows.map(r => r.role);
+      resolve(roles);
+    });
+  });
+}
 
 /**
  * Get user by email (usato da passport.deserializeUser)
@@ -122,17 +171,28 @@ exports.getUserByEmail = (email) => {
  * @param {string} telegramNickname - Telegram username (with or without @)
  * @returns {Promise<Object|null>}
  */
+
+//TO UPDATE
 exports.getUserByTelegramNickname = (telegramNickname) => {
   return new Promise((resolve, reject) => {
     // Normalize: remove @ if present, make case-insensitive
     const normalized = telegramNickname.replace(/^@/, '').toLowerCase();
-    const sql = 'SELECT id, username, email, name, surname, type, telegram_nickname FROM Users WHERE LOWER(REPLACE(telegram_nickname, "@", "")) = ?';
-    db.get(sql, [normalized], (err, row) => {
+    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.telegram_nickname, GROUP_CONCAT(UR.role) as roles
+                FROM Users U
+                LEFT JOIN UsersRoles UR ON U.id = UR.userId
+                WHERE LOWER(REPLACE(U.telegram_nickname, "@", "")) = ?
+                GROUP BY U.id`;
+    db.all(sql, [normalized], (err, rows) => {
       if (err) {
         reject(err);
         return;
       }
-      resolve(row || null);
+      // Trasforma roles da stringa a array
+      const users = rows.map(row => ({
+        ...row,
+        roles: row.roles ? row.roles.split(',') : []
+      }));
+      resolve(users.length > 0 ? users : null);
     });
   });
 };
@@ -187,19 +247,19 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
         const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        // db.run usa una callback, quindi non serve await
         db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
-            reject(insertErr); // Chiamiamo reject dalla Promise esterna
+            reject(insertErr);
             return;
           }
+          const userId = this.lastID;
 
-          const result = { id: this.lastID, username, email, name, surname, type };
+          const result = { id: userId, username, email, name, surname, type };
           if (confirmationCode) {
             result.confirmationCode = confirmationCode;
           }
-          resolve(result); // Chiamiamo resolve dalla Promise esterna
+          resolve(result);
         });
 
       } catch (e) {
@@ -221,41 +281,30 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
  * @param {string} newType - must be one of ALLOWED_ROLES
  * @returns {Promise<{ id:number, type:string }>} updated info
  */
-exports.updateUserTypeById = (userId, newType) => {
-  return new Promise((resolve, reject) => {
-    if (!ALLOWED_ROLES.includes(newType)) {
-      reject(new Error('Invalid role'));
-      return;
-    }
-    const sql = 'UPDATE Users SET type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-    db.run(sql, [newType, userId], function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      if (this.changes === 0) {
-        resolve(null);
-        return;
-      }
-      resolve({ id: userId, type: newType });
-    });
-  });
-};
 
 /**
  * Return all municipality users (everyone who is NOT citizen or admin).
  */
+
+//TO UPDATE
 exports.findMunicipalityUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT id, username, email, name, surname, type
-      FROM Users
-      WHERE type NOT IN ('citizen','admin')
-      ORDER BY surname ASC, name ASC, username ASC
+      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, GROUP_CONCAT(UR.role) as roles
+      FROM Users U
+      LEFT JOIN UsersRoles UR ON U.id = UR.userId
+      WHERE U.type = 'municipality_user'
+      GROUP BY U.id
+      ORDER BY U.surname ASC, U.name ASC, U.username ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(err);
-      resolve(rows || []);
+      // Trasforma roles da stringa a array
+      const users = rows.map(row => ({
+        ...row,
+        roles: row.roles ? row.roles.split(',') : []
+      }));
+      resolve(users);
     });
   });
 };
@@ -264,17 +313,26 @@ exports.findMunicipalityUsers = () => {
  * Get all external maintainers
  * @returns {Promise<Object[]>}
  */
+
+//TO UPDATE
 exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT id, username, email, name, surname, type
-      FROM Users
-      WHERE type = 'external_maintainer'
-      ORDER BY surname ASC, name ASC, username ASC
+      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, GROUP_CONCAT(UR.role) as roles
+      FROM Users U
+      INNER JOIN UsersRoles UR ON U.id = UR.userId
+      WHERE U.type = 'municipality_user' AND UR.role = 'external_maintainer'
+      GROUP BY U.id
+      ORDER BY U.surname ASC, U.name ASC, U.username ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(err);
-      resolve(rows || []);
+      // Trasforma roles da stringa a array
+      const users = rows.map(row => ({
+        ...row,
+        roles: row.roles ? row.roles.split(',') : []
+      }));
+      resolve(users);
     });
   });
 };
@@ -525,6 +583,32 @@ exports.resendConfirmationCode = (email) => {
           message: 'New confirmation code generated' 
         });
       });
+    });
+  });
+};
+
+exports.deleteRoleFromUser = (userId, role) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'DELETE FROM UsersRoles WHERE userId = ? AND role = ?';
+    db.run(sql, [userId, role], function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(this.changes);
+    });
+  });
+};
+
+exports.addRoleToUser = (userId, role) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO UsersRoles (userId, role) VALUES (?, ?)';
+    db.run(sql, [userId, role], function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(this.lastID);
     });
   });
 };

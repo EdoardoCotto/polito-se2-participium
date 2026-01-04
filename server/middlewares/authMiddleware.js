@@ -24,10 +24,10 @@ exports.isAdmin = (req, res, next) => {
 }
 exports.isMunicipal_public_relations_officer = (req, res, next) => {
     if (req.isAuthenticated()) {
-        if (req.user.type === 'municipal_public_relations_officer') {
+        if (req.user.roles.includes('municipal_public_relations_officer')) {
             return next();
         } else {
-            return next(new UnauthorizedError('User is not admin'));
+            return next(new UnauthorizedError('User is not a public relations officer'));
         }
     } else {
         return next(new UnauthorizedError('User not authenticated'));
@@ -37,7 +37,8 @@ exports.isMunicipal_public_relations_officer = (req, res, next) => {
 exports.isTechnicalOfficeStaff = (req, res, next) => {
     if (req.isAuthenticated()) {
         const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
-        if (TECHNICAL_OFFICER_ROLES.includes(req.user.type)) {
+        const hasRole = req.user.roles.some(role => TECHNICAL_OFFICER_ROLES.includes(role));
+        if (hasRole) {
             return next();
         } else {
             return next(new UnauthorizedError('User is not a technical office staff member'));

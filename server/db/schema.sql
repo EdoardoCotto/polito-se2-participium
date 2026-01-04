@@ -5,6 +5,8 @@
 DROP TABLE IF EXISTS InternalComments;
 DROP TABLE IF EXISTS Reports;
 DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Streets;
+DROP TABLE IF EXISTS UsersRoles;
 
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
@@ -16,7 +18,7 @@ CREATE TABLE IF NOT EXISTS Users (
   personal_photo_path TEXT,
   telegram_nickname TEXT,
   mail_notifications INTEGER NOT NULL DEFAULT 1,
-  type TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'citizen',
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
   is_confirmed INTEGER NOT NULL DEFAULT 0,
@@ -24,22 +26,7 @@ CREATE TABLE IF NOT EXISTS Users (
   confirmation_code_expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  CHECK(type IN (
-    'municipality_user',
-    'municipal_public_relations_officer',
-    'municipal_administrator',
-    'urban_planner',
-    'building_permit_officer',
-    'building_inspector',
-    'suap_officer',
-    'public_works_engineer',
-    'mobility_traffic_engineer',
-    'environment_technician',
-    'technical_office_staff_member',
-    'external_maintainer',
-    'citizen',
-    'admin'
-  ))
+  CHECK(type IN ('admin', 'citizen', 'municipality_user'))
 );
 
 -- Create Reports table
@@ -124,6 +111,27 @@ CREATE TABLE IF NOT EXISTS Streets (
   
   -- Evita duplicati della stessa via nella stessa città
   UNIQUE(city, street_name)
+);
+
+CREATE TABLE IF NOT EXISTS UsersRoles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId INTEGER NOT NULL,
+  role TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
+  CHECK(role IN (
+    'municipal_public_relations_officer',
+    'municipal_administrator',
+    'urban_planner',
+    'building_permit_officer',
+    'building_inspector',
+    'suap_officer',
+    'public_works_engineer',
+    'mobility_traffic_engineer',
+    'environment_technician',
+    'technical_office_staff_member',
+    'external_maintainer'
+  ))
 );
 
 -- Indice per rendere l'autocompletamento istantaneo (fondamentale per LIKE 'via...')

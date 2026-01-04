@@ -9,9 +9,19 @@ const emailService = require('../services/emailService')
 
 
 exports.getUserById = async (userId) => {
-    const user = await userDao.getUserById(userId);
-    if (!user) {
+    const userNotMapped = await userDao.getUserById(userId);
+    if (!userNotMapped || userNotMapped.length === 0) {
         throw new NotFoundError('User not found')
+    }
+    const firstRow = userNotMapped[0];
+    const user = {
+        id: firstRow.id,
+        username: firstRow.username,
+        email: firstRow.email,
+        name: firstRow.name,
+        surname: firstRow.surname,
+        roles: userNotMapped.map(row => row.type),
+        telegram_nickname: firstRow.telegram_nickname
     }
     return user
 }
@@ -72,13 +82,31 @@ exports.createUser = async (user) => {
 
 
 exports.createUserIfAdmin = async (adminId, userToInsert) => {
+    console.log('[DEBUG] createUserIfAdmin called with adminId:', adminId);
+    
     const admin = await userDao.getUserById(adminId);
+    
+    console.log('[DEBUG] Admin object:', JSON.stringify(admin, null, 2));
+    console.log('[DEBUG] Admin roles type:', typeof admin?.roles);
+    console.log('[DEBUG] Admin roles value:', admin?.roles);
+    
     if (!admin) {
+        console.log('[DEBUG] Admin not found');
         throw new NotFoundError('Admin not found')
     }
-    if (admin.type != 'admin') {
+    
+    if (!admin.roles) {
+        console.log('[DEBUG] Admin has no roles property');
         throw new UnauthorizedError('You are not an admin')
     }
+    
+    if (admin.type !== 'admin') {
+        console.log('[DEBUG] Admin roles does not include "admin":', admin.roles);
+        throw new UnauthorizedError('You are not an admin')
+    }
+    
+    console.log('[DEBUG] Admin check passed, proceeding with user creation');
+    
     if (!userToInsert.username || !userToInsert.email || !userToInsert.name || !userToInsert.surname || !userToInsert.password) {
         throw new BadRequestError('All fields are required');
     }
@@ -94,39 +122,6 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
     const result = await userDao.createUser(userToCreate);
     return result;
 }
-
-/**
- * Assign a role/type to a user (admin only)
- * @param {number} adminId - acting admin user id
- * @param {number} targetUserId - user to update
- * @param {string} newType - new role (validated)
- * @returns {Promise<{id:number, type:string}>}
- */
-exports.assignUserRole = async (adminId, targetUserId, newType) => {
-    const admin = await userDao.getUserById(adminId);
-    if (!admin) {
-        throw new NotFoundError('Admin not found')
-    }
-    if (admin.type != 'admin') {
-        throw new UnauthorizedError('You are not an admin')
-    }
-    if (!newType) {
-        throw new BadRequestError('Role is required');
-    }
-    if (!ALLOWED_ROLES.includes(newType)) {
-        throw new BadRequestError('Invalid role');
-    }
-    const target = await userDao.getUserById(targetUserId);
-    if (!target) {
-        throw new NotFoundError('User not found');
-    }
-    const updated = await userDao.updateUserTypeById(targetUserId, newType);
-    if (!updated) {
-        throw new NotFoundError('User not found');
-    }
-    return updated;
-}
-
 
 /**
  * Get all municipality users (admin-only).
@@ -237,4 +232,63 @@ exports.resendConfirmationCode = async (email) => {
     }
     
     return { success: true, message: 'Confirmation code sent to your email' };
+}
+
+exports.deleteRoleFromUser = async (adminId, targetUserId, roleToRemove) => {
+    const admin = await userDao.getUserById(adminId);
+    console.log('roleToRemove:', roleToRemove);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
+    }
+    if (admin.type !== 'admin') {
+        throw new UnauthorizedError('You are not an admin')
+    }
+    const target = await userDao.getUserById(targetUserId);
+    console.log('target user:', target);
+    if (!target) {
+        throw new NotFoundError('User not found');
+    }
+    if (target.type !== 'municipality_user') {
+        throw new BadRequestError('Roles can only be removed from municipality users');
+    }
+    if (!target.roles.includes(roleToRemove)) {
+        throw new ConflictError('User does not have this role');
+    }
+    if (!roleToRemove) {
+        throw new BadRequestError('Role is required');
+    }
+    if (!ALLOWED_ROLES.includes(roleToRemove)) {
+        throw new BadRequestError('Invalid role');
+    }
+    const result = await userDao.deleteRoleFromUser(targetUserId, roleToRemove);
+    return result;
+}
+
+exports.addRoleToUser = async (adminId, targetUserId, roleToAdd) => {
+    const admin = await userDao.getUserById(adminId);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
+    }
+    if (admin.type !== 'admin') {
+        throw new UnauthorizedError('You are not an admin')
+    }
+    const target = await userDao.getUserById(targetUserId);
+    if (!target) {
+        throw new NotFoundError('User not found');
+    }
+    if (target.type !== 'municipality_user') {
+        throw new BadRequestError('Roles can only be assigned to municipality users');
+    }
+    if (target.roles.includes(roleToAdd)) {
+        throw new ConflictError('User already has this role');
+    }
+    if (!roleToAdd) {
+        throw new BadRequestError('Role is required');
+    }
+    console.log('[DEBUG] roleToAdd:', roleToAdd);
+    if (!ALLOWED_ROLES.includes(roleToAdd)) {
+        throw new BadRequestError('Invalid role');
+    }
+    const result = await userDao.addRoleToUser(targetUserId, roleToAdd);
+    return result;
 }
