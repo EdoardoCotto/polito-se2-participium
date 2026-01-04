@@ -24,22 +24,6 @@ CREATE TABLE IF NOT EXISTS Users (
   confirmation_code_expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  CHECK(type IN (
-    'municipality_user',
-    'municipal_public_relations_officer',
-    'municipal_administrator',
-    'urban_planner',
-    'building_permit_officer',
-    'building_inspector',
-    'suap_officer',
-    'public_works_engineer',
-    'mobility_traffic_engineer',
-    'environment_technician',
-    'technical_office_staff_member',
-    'external_maintainer',
-    'citizen',
-    'admin'
-  ))
 );
 
 -- Create Reports table
@@ -124,6 +108,26 @@ CREATE TABLE IF NOT EXISTS Streets (
   
   -- Evita duplicati della stessa via nella stessa città
   UNIQUE(city, street_name)
+);
+
+CREATE TABLE IF NOT EXISTS Officer-Roles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  officerId INTEGER NOT NULL,
+  role TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (officerId) REFERENCES Users(id) ON DELETE CASCADE,
+  CHECK(role IN (
+    'municipal_public_relations_officer',
+    'municipal_administrator',
+    'urban_planner',
+    'building_permit_officer',
+    'building_inspector',
+    'suap_officer',
+    'public_works_engineer',
+    'mobility_traffic_engineer',
+    'environment_technician',
+    'technical_office_staff_member'
+  ))
 );
 
 -- Indice per rendere l'autocompletamento istantaneo (fondamentale per LIKE 'via...')
