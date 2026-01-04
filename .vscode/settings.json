@@ -1,5 +1,4 @@
 {
   "jest.jestCommandLine": "npm test --",
-  "jest.runMode": "watch",
-  "postman.settings.dotenv-detection-notification-visibility": false
+  "jest.runMode": "watch"
 }
