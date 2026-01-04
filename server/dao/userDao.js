@@ -33,7 +33,7 @@ exports.getUser = (username, password) => {
       }
 
       // Verifica password
-      bcrypt.compare(password, row.password, (err, isMatch) => {
+      bcrypt.compare(password, row.password, async (err, isMatch) => {
         if (err) {
           reject(err);
           return;
@@ -41,7 +41,7 @@ exports.getUser = (username, password) => {
 
         if (isMatch) {
           // Check if user needs confirmation (citizens only)
-          const roles = this.getRolesByUserId(row.id);
+          const roles = await this.getRolesByUserId(row.id);
           if (roles.includes('citizen') && row.is_confirmed === 0) {
             resolve({ error: 'unconfirmed', email: row.email }); // Account not confirmed
             return;
