@@ -266,3 +266,62 @@ exports.resendConfirmationCode = async (email) => {
     
     return { success: true, message: 'Confirmation code sent to your email' };
 }
+
+exports.deleteRoleFromUser = async (adminId, targetUserId, roleToRemove) => {
+    const admin = await userDao.getUserById(adminId);
+    console.log('roleToRemove:', roleToRemove);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
+    }
+    if (admin.type !== 'admin') {
+        throw new UnauthorizedError('You are not an admin')
+    }
+    const target = await userDao.getUserById(targetUserId);
+    console.log('target user:', target);
+    if (!target) {
+        throw new NotFoundError('User not found');
+    }
+    if (target.type !== 'municipality_user') {
+        throw new BadRequestError('Roles can only be removed from municipality users');
+    }
+    if (!target.roles.includes(roleToRemove)) {
+        throw new ConflictError('User does not have this role');
+    }
+    if (!roleToRemove) {
+        throw new BadRequestError('Role is required');
+    }
+    if (!ALLOWED_ROLES.includes(roleToRemove)) {
+        throw new BadRequestError('Invalid role');
+    }
+    const result = await userDao.deleteRoleFromUser(targetUserId, roleToRemove);
+    return result;
+}
+
+exports.addRoleToUser = async (adminId, targetUserId, roleToAdd) => {
+    const admin = await userDao.getUserById(adminId);
+    if (!admin) {
+        throw new NotFoundError('Admin not found')
+    }
+    if (admin.type !== 'admin') {
+        throw new UnauthorizedError('You are not an admin')
+    }
+    const target = await userDao.getUserById(targetUserId);
+    if (!target) {
+        throw new NotFoundError('User not found');
+    }
+    if (target.type !== 'municipality_user') {
+        throw new BadRequestError('Roles can only be assigned to municipality users');
+    }
+    if (target.roles.includes(roleToAdd)) {
+        throw new ConflictError('User already has this role');
+    }
+    if (!roleToAdd) {
+        throw new BadRequestError('Role is required');
+    }
+    console.log('[DEBUG] roleToAdd:', roleToAdd);
+    if (!ALLOWED_ROLES.includes(roleToAdd)) {
+        throw new BadRequestError('Invalid role');
+    }
+    const result = await userDao.addRoleToUser(targetUserId, roleToAdd);
+    return result;
+}

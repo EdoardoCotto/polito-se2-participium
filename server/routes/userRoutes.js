@@ -171,6 +171,7 @@ router.post('/users/resend-confirmation', userController.resendConfirmationCode)
  */
 router.post('/users/admin', isLoggedIn, isAdmin, userController.createUserIfAdmin);
 
+/*
 /**
  * @swagger
  * /users/{id}/type:
@@ -204,8 +205,8 @@ router.post('/users/admin', isLoggedIn, isAdmin, userController.createUserIfAdmi
  *       401: { description: Not authenticated }
  *       403: { description: Not admin }
  *       404: { description: User not found }
- */
-router.put('/users/:id/type', isLoggedIn, isAdmin, userController.assignUserRole);
+ *
+router.put('/users/:id/type', isLoggedIn, isAdmin, userController.assignUserRole);*/
 
 /**
  * @swagger
@@ -339,5 +340,110 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, userController.getExternalMaintainers);
+
+/**
+ * @swagger
+ * /users/{id}/assign-role:
+ *   post:
+ *     summary: Assign a role to a municipality user (admin only)
+ *     tags: [Users]
+ *     security: [ { cookieAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: 
+ *           type: integer
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [role]
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum:
+ *                   [municipal_public_relations_officer, municipal_administrator,
+ *                    urban_planner, building_permit_officer, building_inspector, suap_officer,
+ *                    public_works_engineer, mobility_traffic_engineer, environment_technician,
+ *                    technical_office_staff_member, external_maintainer]
+ *                 example: urban_planner
+ *                 description: Role to assign to the municipality user
+ *     responses:
+ *       200: 
+ *         description: Role successfully assigned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 username:
+ *                   type: string
+ *                 type:
+ *                   type: string
+ *                 roles:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400: { description: Invalid role or validation error }
+ *       401: { description: Not authenticated }
+ *       403: { description: Not admin or user is not municipality_user }
+ *       404: { description: User not found }
+ */
+router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRoleToUser);
+
+/**
+ * @swagger
+ * /users/{id}/remove-role:
+ *   delete:
+ *     summary: Remove a role from a municipality user (admin only)
+ *     tags: [Users]
+ *     security: [ { cookieAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: 
+ *           type: integer
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [role]
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum:
+ *                   [municipal_public_relations_officer, municipal_administrator,
+ *                    urban_planner, building_permit_officer, building_inspector, suap_officer,
+ *                    public_works_engineer, mobility_traffic_engineer, environment_technician,
+ *                    technical_office_staff_member, external_maintainer]
+ *                 example: urban_planner
+ *                 description: Role to remove from the municipality user
+ *     responses:
+ *       200: 
+ *         description: Role successfully removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Role deleted successfully
+ *       400: { description: Invalid role or validation error }
+ *       401: { description: Not authenticated }
+ *       403: { description: Not admin or user is not municipality_user }
+ *       404: { description: User or role not found }
+ */
+router.delete('/users/:id/remove-role', isLoggedIn, isAdmin, userController.deleteRoleFromUser);
 
 module.exports = router;

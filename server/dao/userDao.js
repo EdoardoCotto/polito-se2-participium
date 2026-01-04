@@ -608,3 +608,29 @@ exports.resendConfirmationCode = (email) => {
     });
   });
 };
+
+exports.deleteRoleFromUser = (userId, role) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'DELETE FROM UsersRoles WHERE userId = ? AND role = ?';
+    db.run(sql, [userId, role], function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(this.changes);
+    });
+  });
+};
+
+exports.addRoleToUser = (userId, role) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO UsersRoles (userId, role) VALUES (?, ?)';
+    db.run(sql, [userId, role], function (err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(this.lastID);
+    });
+  });
+};

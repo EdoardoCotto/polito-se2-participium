@@ -219,3 +219,27 @@ exports.resendConfirmationCode = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+exports.deleteRoleFromUser = async (req, res) => {
+  try {
+    await userRepository.deleteRoleFromUser(req.user.id, req.params.id, req.body.role);
+    return res.status(200).json({ message: 'Role deleted successfully' });
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.addRoleToUser = async (req, res) => {
+  try {
+    const updatedUser = await userRepository.addRoleToUser(req.user.id, req.params.id, req.body.role);
+    return res.status(200).json(updatedUser);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
