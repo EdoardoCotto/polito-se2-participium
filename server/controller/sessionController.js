@@ -31,7 +31,6 @@ exports.login = async (req, res, next) => {
                 name: user.name,
                 surname: user.surname,
                 email: user.email,
-                type: user.type
             });
         });
     })(req, res, next);
@@ -62,7 +61,7 @@ exports.getCurrentSession = (req, res) => {
             name: req.user.name,
             surname: req.user.surname,
             email: req.user.email,
-            type: req.user.type,
+            roles: req.user.roles,
             telegram_nickname: req.user.telegram_nickname,
             personal_photo_path: req.user.personal_photo_path,
             mail_notifications: req.user.mail_notifications

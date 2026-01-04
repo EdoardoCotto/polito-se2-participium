@@ -74,15 +74,41 @@ exports.getUser = (username, password) => {
  */
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT id, username, email, name, surname, type, telegram_nickname, personal_photo_path, mail_notifications 
-    FROM Users U, UsersRoles UR
-    WHERE U.id = UR.userId AND U.id = ?`;
+    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, UR.type, U.telegram_nickname, U.personal_photo_path, U.mail_notifications 
+    FROM Users U
+    LEFT JOIN UsersRoles UR ON U.id = UR.userId
+    WHERE U.id = ?`;
     db.all(sql, [id], (err, rows) => {
       if (err) {
         reject(err);
         return;
       }
-      resolve(rows);
+      
+      if (!rows || rows.length === 0) {
+        resolve(null);
+        return;
+      }
+
+      // Prendi la prima riga per i dati comuni dell'utente
+      const firstRow = rows[0];
+      
+      // Estrai tutti i ruoli dall'array di righe
+      const roles = rows.map(row => row.type).filter(type => type !== null);
+      
+      // Costruisci l'oggetto user
+      const user = {
+        id: firstRow.id,
+        username: firstRow.username,
+        email: firstRow.email,
+        name: firstRow.name,
+        surname: firstRow.surname,
+        telegram_nickname: firstRow.telegram_nickname,
+        personal_photo_path: firstRow.personal_photo_path,
+        mail_notifications: firstRow.mail_notifications,
+        roles: roles
+      };
+      
+      resolve(user);
     });
   });
 };
