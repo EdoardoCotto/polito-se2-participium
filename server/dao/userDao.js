@@ -107,7 +107,7 @@ exports.getUserByUsername = (username) => {
 
 exports.getRolesByUserId = (userId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT type FROM UsersRoles WHERE id = ?';
+    const sql = 'SELECT type FROM UsersRoles WHERE userId = ?'; // era "id", deve essere "userId"
     db.all(sql, [userId], (err, rows) => {
       if (err) {
         reject(err);
@@ -211,8 +211,8 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
         const insertSql = `INSERT INTO Users (username, email, name, surname, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        // db.run usa una callback, quindi non serve await
-        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
+        // RIMUOVI 'type' dall'array dei parametri!
+        db.run(insertSql, [username, email, name, surname, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr); // Chiamiamo reject dalla Promise esterna

@@ -5,6 +5,8 @@
 DROP TABLE IF EXISTS InternalComments;
 DROP TABLE IF EXISTS Reports;
 DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Streets;
+DROP TABLE IF EXISTS UsersRoles;
 
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
@@ -16,7 +18,6 @@ CREATE TABLE IF NOT EXISTS Users (
   personal_photo_path TEXT,
   telegram_nickname TEXT,
   mail_notifications INTEGER NOT NULL DEFAULT 1,
-  type TEXT NOT NULL,
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
   is_confirmed INTEGER NOT NULL DEFAULT 0,
@@ -115,7 +116,7 @@ CREATE TABLE IF NOT EXISTS UsersRoles (
   userId INTEGER NOT NULL,
   type TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (officerId) REFERENCES Users(id) ON DELETE CASCADE,
+  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
   CHECK(type IN (
     'municipal_public_relations_officer',
     'municipal_administrator',
@@ -126,7 +127,9 @@ CREATE TABLE IF NOT EXISTS UsersRoles (
     'public_works_engineer',
     'mobility_traffic_engineer',
     'environment_technician',
-    'technical_office_staff_member'
+    'technical_office_staff_member',
+    'external_maintainer',
+    'citizen'
   ))
 );
 

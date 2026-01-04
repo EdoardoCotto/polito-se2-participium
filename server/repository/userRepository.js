@@ -9,9 +9,19 @@ const emailService = require('../services/emailService')
 
 
 exports.getUserById = async (userId) => {
-    const user = await userDao.getUserById(userId);
-    if (!user) {
+    const userNotMapped = await userDao.getUserById(userId);
+    if (!userNotMapped || userNotMapped.length === 0) {
         throw new NotFoundError('User not found')
+    }
+    const firstRow = userNotMapped[0];
+    const user = {
+        id: firstRow.id,
+        username: firstRow.username,
+        email: firstRow.email,
+        name: firstRow.name,
+        surname: firstRow.surname,
+        roles: userNotMapped.map(row => row.type),
+        telegram_nickname: firstRow.telegram_nickname
     }
     return user
 }
