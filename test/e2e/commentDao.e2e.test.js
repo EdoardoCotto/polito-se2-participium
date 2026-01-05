@@ -62,8 +62,11 @@ beforeAll(async () => {
 
   // Create test users
   await userDao.createUser({ username: 'testuser1', email: 'test1@example.com', name: 'Test', surname: 'User1', password: 'password123', type: 'citizen' });
-  await userDao.createUser({ username: 'testuser2', email: 'test2@example.com', name: 'Test', surname: 'User2', password: 'password123', type: 'urban_planner' });
-  await userDao.createUser({ username: 'testuser3', email: 'test3@example.com', name: 'Test', surname: 'User3', password: 'password123', type: 'external_maintainer' });
+  const techUser = await userDao.createUser({ username: 'testuser2', email: 'test2@example.com', name: 'Test', surname: 'User2', password: 'password123', type: 'municipality_user' });
+  const maintUser = await userDao.createUser({ username: 'testuser3', email: 'test3@example.com', name: 'Test', surname: 'User3', password: 'password123', type: 'municipality_user' });
+  // Assign roles to municipality users
+  await userDao.addRoleToUser(techUser.id, 'urban_planner');
+  await userDao.addRoleToUser(maintUser.id, 'external_maintainer');
 
   // Create a test report for comments
   const createdReport = await reportDao.createReport({
@@ -81,9 +84,9 @@ beforeAll(async () => {
   await reportDao.updateReportReview(sharedReportId, {
     status: 'assigned',
     technicalOffice: 'urban_planner',
-    officerId: 2,
+    officerId: techUser.id,
   });
-  await reportDao.assignReportToExternalMaintainer(sharedReportId, 3);
+  await reportDao.assignReportToExternalMaintainer(sharedReportId, maintUser.id);
 });
 
 describe('commentDao', () => {

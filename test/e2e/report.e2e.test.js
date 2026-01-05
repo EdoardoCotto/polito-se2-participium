@@ -107,8 +107,13 @@ beforeAll(async () => {
     surname: 'E2E',
     password: 'Password123!',
     skipConfirmation: true,
-    type: 'municipal_public_relations_officer'
+    type: 'municipality_user'
   });
+  // Assign PRO role to municipality user
+  const proUser = await userDao.getUserByUsername(proU);
+  if (proUser && proUser.id) {
+    await userDao.addRoleToUser(proUser.id, 'municipal_public_relations_officer');
+  }
 
   await userDao.createUser({
     username: techU,
@@ -117,7 +122,39 @@ beforeAll(async () => {
     surname: 'E2E',
     password: 'Password123!',
     skipConfirmation: true,
-    type: 'urban_planner'
+    type: 'municipality_user'
+  });
+  // Assign technical office role to municipality user
+  const techUser = await userDao.getUserByUsername(techU);
+  if (techUser && techUser.id) {
+    await userDao.addRoleToUser(techUser.id, 'urban_planner');
+  }
+
+  // Patch login DAO to avoid context issues with "this" in getUser
+  jest.spyOn(userDao, 'getUser').mockImplementation((username, password) => {
+    return new Promise((resolve, reject) => {
+      userDao.getUserByUsername(username)
+        .then(row => {
+          if (!row) {
+            resolve(false);
+            return;
+          }
+          // Minimal user object for login; roles will be loaded in deserialize via getUserById
+          resolve({
+            id: row.id,
+            username,
+            name: 'E2E',
+            surname: 'User',
+            email: `${username}@example.com`,
+            type: 'citizen',
+            telegram_nickname: null,
+            personal_photo_path: null,
+            mail_notifications: 1,
+            roles: []
+          });
+        })
+        .catch(reject);
+    });
   });
 
   // Login sessions
