@@ -26,7 +26,7 @@ jest.mock('node-telegram-bot-api', () => {
   // Support both default export and named export patterns
   MockTelegramBot.default = MockTelegramBot;
   return MockTelegramBot;
-}, { virtual: false }); // Don't use virtual - we want to replace the real module
+}, { virtual: true }); // Use virtual to mock even if module isn't installed
 
 jest.resetModules();
 // Keep real sqlite3 for E2E tests
@@ -289,8 +289,8 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
       const match = text.match(/\/reportstatus(?:\s+(.+))?/);
       await reportStatusHandler(update.message, match);
     }
-    // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for async operations (DB + handlers)
+    await new Promise(resolve => setTimeout(resolve, 500));
   };
 
   test('Citizen can check report status via Telegram bot - Pending report', async () => {
@@ -302,6 +302,9 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
     const actualTelegramNickname = user.telegram_nickname.replace('@', '');
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportId}`);
+    // Debug: inspect captured messages
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] sentMessages:', sentMessages.map(m => ({ chatId: m.chatId, text: m.text?.slice(0, 80) })));
 
     // Check that sendMessage was called
     expect(mockBotInstance.sendMessage).toHaveBeenCalled();
@@ -321,6 +324,8 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
     const chatId = 123456790;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportIdRejected}`);
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] rejected sentMessages:', sentMessages.map(m => ({ chatId: m.chatId, text: m.text?.slice(0, 80) })));
 
     await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -338,6 +343,8 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
     const chatId = 123456791;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportIdAssigned}`);
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] assigned sentMessages:', sentMessages.map(m => ({ chatId: m.chatId, text: m.text?.slice(0, 80) })));
 
     await new Promise(resolve => setTimeout(resolve, 200));
 
