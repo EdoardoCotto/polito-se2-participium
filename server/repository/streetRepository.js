@@ -26,7 +26,7 @@ async function fetchStreetGeometry(streetName) {
       }
     );
 
-    if (!response.data || !response.data.elements || response.data.elements.length === 0) {
+    if (!response.data?.elements?.length) {
       console.warn(`Overpass: nessun risultato per ${streetName}, uso fallback Nominatim`);
       return fetchStreetFromNominatim(streetName);
     }
@@ -41,13 +41,13 @@ async function fetchStreetGeometry(streetName) {
       const MAX_DISTANCE = 0.001; // ~100 metri
 
       for (const cluster of clusters) {
-        const lastPoint = cluster[cluster.length - 1];
+        const lastPoint = cluster.at(-1);
         const firstNewPoint = coords[0];
         
         // Calcolo distanza euclidea semplice
-        const dist = Math.sqrt(
-          Math.pow(lastPoint[0] - firstNewPoint[0], 2) + 
-          Math.pow(lastPoint[1] - firstNewPoint[1], 2)
+        const dist = Math.hypot(
+          lastPoint[0] - firstNewPoint[0],
+          lastPoint[1] - firstNewPoint[1]
         );
         
         if (dist < MAX_DISTANCE) {
@@ -181,7 +181,7 @@ function createLineBuffer(lineCoords, bufferDegrees) {
     // Calcola il vettore perpendicolare normalizzato
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const len = Math.sqrt(dx * dx + dy * dy);
+    const len = Math.hypot(dx, dy);
     const perpX = -dy / len * bufferDegrees;
     const perpY = dx / len * bufferDegrees;
 
@@ -191,11 +191,11 @@ function createLineBuffer(lineCoords, bufferDegrees) {
   }
 
   // Aggiungi l'ultimo punto
-  const [xLast, yLast] = lineCoords[lineCoords.length - 1];
-  const [xPrev, yPrev] = lineCoords[lineCoords.length - 2];
+  const [xLast, yLast] = lineCoords.at(-1);
+  const [xPrev, yPrev] = lineCoords.at(-2);
   const dx = xLast - xPrev;
   const dy = yLast - yPrev;
-  const len = Math.sqrt(dx * dx + dy * dy);
+  const len = Math.hypot(dx, dy);
   const perpX = -dy / len * bufferDegrees;
   const perpY = dx / len * bufferDegrees;
 

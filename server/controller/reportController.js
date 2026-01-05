@@ -468,10 +468,3 @@ exports.getReportsByStreet = async (req, res) => {
        .json({ error: err.message });
   }
 };
-
-// function buildPhotoUrls(photos, req) {
-//   if (!photos) return [];
-//   return photos.split(',').map(filename => 
-//     `${req.protocol}://${req.get('host')}/uploads/${filename}`
-//   );
-// }

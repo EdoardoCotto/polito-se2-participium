@@ -1373,7 +1373,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                       >
                         <img 
                           src={photoUrl}
-                          alt={`Report photo ${index + 1}`}
+                          alt={`Report ${index + 1}`}
                           style={{ 
                             width: '60px',
                             height: '60px',

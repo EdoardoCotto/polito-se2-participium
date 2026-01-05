@@ -52,7 +52,7 @@ async function fetchStreetsFromOSM(city) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
 
-        const elements = response.data.elements;
+        const elements = response.data?.elements || [];
         const streetNames = new Set();
         elements.forEach(el => {
             if (el.tags?.name) {
@@ -90,7 +90,7 @@ async function saveStreetsToDb(city, streets) {
     });
 }
 
-async function main() {
+(async () => {
     try {
         // Se la tabella la crei manualmente da schema.sql, 
         // puoi commentare questa riga MA assicurati che non sia chiamata sotto
@@ -106,6 +106,4 @@ async function main() {
     } finally {
         db.close();
     }
-}
-
-main();
+})();

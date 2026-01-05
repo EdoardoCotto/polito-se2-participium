@@ -276,7 +276,7 @@ export default function MapPage() {
                           e.currentTarget.style.color = '#5e7bb3';
                         }}
                       >
-                        <i className="bi bi-shield-check me-2"></i>
+                        <i className="bi bi-shield-check me-2"></i>{' '}
                         Assign Roles
                       </Button>
                     )}
@@ -827,7 +827,7 @@ export default function MapPage() {
           >
             {isSavingRoles ? (
               <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{' '}
                 Saving...
               </>
             ) : (

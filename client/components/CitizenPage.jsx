@@ -730,7 +730,7 @@ export default function CitizenPage({ user }) {
                         
                         {streetSearchQuery.trim().length >= 3 && !searchingStreet && streetSuggestions.length === 0 && (
                           <small className="text-muted d-block mt-1">
-                            <i className="bi bi-info-circle me-1"></i>
+                            <i className="bi bi-info-circle me-1"></i>{' '}
                             No streets found. Press Enter to search anyway.
                           </small>
                         )}

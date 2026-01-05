@@ -2,6 +2,7 @@
 
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const userDao = require('../dao/userDao');
@@ -97,7 +98,6 @@ function setupCommandHandlers() {
   // Handle /start command
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
-    const username = msg.from.username;
 
     await bot.sendMessage(chatId, 
       `👋 Welcome to Participium!\n\n` +
@@ -365,14 +365,14 @@ function setupCommandHandlers() {
     // Skip if no active conversation
     if (!state) {
       // Skip if it's a command (but not /done which is handled in conversation flow)
-      if (text && text.startsWith('/')) {
+      if (text?.startsWith('/')) {
         return;
       }
       return;
     }
 
     // Allow /done and /confirm commands during conversation, but skip other commands
-    if (text && text.startsWith('/')) {
+    if (text?.startsWith('/')) {
       const allowedCommands = ['/done', '/confirm', '/cancel'];
       const normalizedText = text.toLowerCase().trim();
       if (!allowedCommands.includes(normalizedText)) {
