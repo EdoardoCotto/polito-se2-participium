@@ -26,7 +26,7 @@ async function fetchStreetGeometry(streetName) {
       }
     );
 
-    if (!response.data || !response.data.elements || response.data.elements.length === 0) {
+    if (!response.data?.elements?.length) {
       console.warn(`Overpass: nessun risultato per ${streetName}, uso fallback Nominatim`);
       return fetchStreetFromNominatim(streetName);
     }
