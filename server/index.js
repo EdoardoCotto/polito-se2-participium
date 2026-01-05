@@ -18,6 +18,7 @@ const constantRoutes = require('./routes/constantRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const telegramRoutes = require('./routes/telegramRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const telegramBotService = require('./services/telegramBotService');
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api', constantRoutes);
 app.use('/api', commentRoutes);
 app.use('/api', telegramRoutes);
 app.use('/api', messageRoutes);
+app.use('/api', notificationRoutes);
 
 app.use(errorHandler);
 
