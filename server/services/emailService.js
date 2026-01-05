@@ -35,10 +35,11 @@ const sgMail = require('@sendgrid/mail');
  * For Custom SMTP:
  *   EMAIL_PROVIDER=smtp
  *   EMAIL_HOST=smtp.example.com
- *   EMAIL_PORT=587
- *   EMAIL_SECURE=false
+ *   EMAIL_PORT=587 (STARTTLS) or 465 (SSL/TLS)
+ *   EMAIL_SECURE=true (for port 465) or false (for port 587 with STARTTLS)
  *   EMAIL_USER=your.email@example.com
  *   EMAIL_PASS=your_password
+ *   Note: Secure connections are enforced. Port 465 uses SSL/TLS, port 587 uses STARTTLS.
  * 
  * To get SendGrid API Key:
  * 1. Sign up at https://sendgrid.com (Free 100 emails/day)
@@ -91,16 +92,29 @@ function initializeEmailProvider() {
     if (process.env.EMAIL_SERVICE) {
       config = {
         service: process.env.EMAIL_SERVICE,
+        requireTLS: true, // Require TLS for secure connections
+        tls: {
+          rejectUnauthorized: true // Reject unauthorized certificates for security
+        },
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS
         }
       };
     } else if (process.env.EMAIL_HOST) {
+      const port = Number.parseInt(process.env.EMAIL_PORT || '587', 10);
+      // Port 465 uses SSL/TLS (secure=true), port 587 uses STARTTLS (secure=false but still encrypted)
+      // Default to secure connection (port 465) or STARTTLS (port 587)
+      const isSecurePort = port === 465;
+      const useSecure = process.env.EMAIL_SECURE === 'true' || isSecurePort;
       config = {
         host: process.env.EMAIL_HOST,
-        port: Number.parseInt(process.env.EMAIL_PORT || '587', 10),
-        secure: process.env.EMAIL_SECURE === 'true',
+        port: port,
+        secure: useSecure,
+        requireTLS: !useSecure, // Require TLS for STARTTLS connections (port 587)
+        tls: {
+          rejectUnauthorized: true // Reject unauthorized certificates for security
+        },
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS
