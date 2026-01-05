@@ -2,6 +2,7 @@
 
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const userDao = require('../dao/userDao');
