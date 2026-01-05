@@ -1,7 +1,7 @@
 "use strict";
 
 const sqlite = require('sqlite3');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
 const path = require('node:path');
 const { ALLOWED_ROLES } = require('../constants/roles');
