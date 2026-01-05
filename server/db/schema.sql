@@ -89,6 +89,17 @@ CREATE TABLE IF NOT EXISTS InternalComments (
   FOREIGN KEY (authorId) REFERENCES Users(id)
 );
 
+--Table for messages between users and officers
+CREATE TABLE IF NOT EXISTS Messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reportId INTEGER NOT NULL,
+  senderId INTEGER NOT NULL,
+  message TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE,
+  FOREIGN KEY (senderId) REFERENCES Users(id)
+);
+
 -- Tabella per l'autocompletamento e la cache geografica delle vie
 CREATE TABLE IF NOT EXISTS Streets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
