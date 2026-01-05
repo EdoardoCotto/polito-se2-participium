@@ -80,18 +80,18 @@ describe('authMiddleware', () => {
   describe('isMunicipal_public_relations_officer', () => {
     it('calls next if authenticated and has municipal_public_relations_officer role', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'municipal_public_relations_officer' };
+      req.user = { type: 'municipality_user', roles: ['municipal_public_relations_officer'] };
       isMunicipal_public_relations_officer(req, res, next);
       expect(next).toHaveBeenCalledWith();
     });
 
     it('calls next with UnauthorizedError if authenticated but wrong role', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'citizen' };
+      req.user = { type: 'citizen', roles: [] };
       isMunicipal_public_relations_officer(req, res, next);
       expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const err = next.mock.calls[0][0];
-      expect(err.message).toBe('User is not admin'); // message in middleware
+      expect(err.message).toBe('User is not a public relations officer');
     });
 
     it('calls next with UnauthorizedError if not authenticated', () => {
@@ -106,14 +106,14 @@ describe('authMiddleware', () => {
   describe('isTechnicalOfficeStaff', () => {
     it('calls next if authenticated and technical office staff role', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'urban_planner' }; // one of TECHNICAL_OFFICER_ROLES
+      req.user = { type: 'municipality_user', roles: ['urban_planner'] }; // one of TECHNICAL_OFFICER_ROLES
       isTechnicalOfficeStaff(req, res, next);
       expect(next).toHaveBeenCalledWith();
     });
 
     it('calls next with UnauthorizedError if authenticated but not technical staff', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'citizen' };
+      req.user = { type: 'citizen', roles: [] };
       isTechnicalOfficeStaff(req, res, next);
       expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
       const err = next.mock.calls[0][0];

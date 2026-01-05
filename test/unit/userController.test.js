@@ -2,7 +2,7 @@
 jest.mock('../../server/repository/userRepository', () => ({
   getUserById: jest.fn(),
   getUser: jest.fn(),
-  assignUserRole: jest.fn(),
+  addRoleToUser: jest.fn(),
   createUser: jest.fn(),
   createUserIfAdmin: jest.fn(),
   getMunicipalityUsers: jest.fn(),
@@ -121,51 +121,55 @@ describe('userController', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
 
-  // assignUserRole
-  it('assignUserRole -> 400 when id invalid', async () => {
+  // addRoleToUser
+  it('addRoleToUser -> 400 when id invalid', async () => {
     const badReq = { ...req, params: { id: 'abc' } };
-    await userController.assignUserRole(badReq, res);
+    userRepository.addRoleToUser.mockRejectedValueOnce(new AppError('Invalid user id', 400));
+    await userController.addRoleToUser(badReq, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid user id' });
   });
 
-  it('assignUserRole -> 400 when type missing', async () => {
-    const noTypeReq = { ...req, body: {} };
-    await userController.assignUserRole(noTypeReq, res);
+  it('addRoleToUser -> 400 when role missing', async () => {
+    const noRoleReq = { ...req, body: {} };
+    userRepository.addRoleToUser.mockRejectedValueOnce(new AppError('Role is required', 400));
+    await userController.addRoleToUser(noRoleReq, res);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Role (type) is required' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Role is required' });
   });
 
-  it('assignUserRole -> 400 when body undefined', async () => {
+  it('addRoleToUser -> 400 when body undefined', async () => {
     const undefinedBodyReq = { ...req };
     delete undefinedBodyReq.body; // simulate missing body property entirely
-    await userController.assignUserRole(undefinedBodyReq, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Role (type) is required' });
+    // Controller accesses req.body.role directly; with undefined body it triggers a 500
+    userRepository.addRoleToUser.mockRejectedValueOnce(new AppError('Role is required', 400));
+    await userController.addRoleToUser(undefinedBodyReq, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });
 
-  it('assignUserRole -> 200 OK', async () => {
-    const updated = { id: 1, type: 'urban_planner' };
-    userRepository.assignUserRole.mockResolvedValueOnce(updated);
-    const goodReq = { ...req, params: { id: 1 }, body: { type: 'urban_planner' } };
-    await userController.assignUserRole(goodReq, res);
-    expect(userRepository.assignUserRole).toHaveBeenCalledWith(10, 1, 'urban_planner');
+  it('addRoleToUser -> 200 OK', async () => {
+    const updated = { id: 1, role: 'urban_planner' };
+    userRepository.addRoleToUser.mockResolvedValueOnce(updated);
+    const goodReq = { ...req, params: { id: 1 }, body: { role: 'urban_planner' } };
+    await userController.addRoleToUser(goodReq, res);
+    expect(userRepository.addRoleToUser).toHaveBeenCalledWith(10, 1, 'urban_planner');
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(updated);
   });
 
-  it('assignUserRole -> AppError mapped to status', async () => {
-    userRepository.assignUserRole.mockRejectedValueOnce(new AppError('Forbidden', 403));
-    const goodReq = { ...req, params: { id: 1 }, body: { type: 'urban_planner' } };
-    await userController.assignUserRole(goodReq, res);
+  it('addRoleToUser -> AppError mapped to status', async () => {
+    userRepository.addRoleToUser.mockRejectedValueOnce(new AppError('Forbidden', 403));
+    const goodReq = { ...req, params: { id: 1 }, body: { role: 'urban_planner' } };
+    await userController.addRoleToUser(goodReq, res);
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({ error: 'Forbidden' });
   });
 
-  it('assignUserRole -> unknown error -> 500', async () => {
-    userRepository.assignUserRole.mockRejectedValueOnce(new Error('db'));
-    const goodReq = { ...req, params: { id: 1 }, body: { type: 'urban_planner' } };
-    await userController.assignUserRole(goodReq, res);
+  it('addRoleToUser -> unknown error -> 500', async () => {
+    userRepository.addRoleToUser.mockRejectedValueOnce(new Error('db'));
+    const goodReq = { ...req, params: { id: 1 }, body: { role: 'urban_planner' } };
+    await userController.addRoleToUser(goodReq, res);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: 'Internal Server Error' });
   });

@@ -5,12 +5,13 @@ jest.mock('../../server/dao/userDao', () => ({
   getUserByUsername: jest.fn(),
   getUserByEmail: jest.fn(),
   createUser: jest.fn(),
-  updateUserTypeById: jest.fn(),
   findMunicipalityUsers: jest.fn(),
   updateUserProfile: jest.fn(),
   getExternalMaintainers: jest.fn(),
   confirmUser: jest.fn(),
   resendConfirmationCode: jest.fn(),
+  deleteRoleFromUser: jest.fn(),
+  addRoleToUser: jest.fn(),
 }));
 
 jest.mock('../../server/services/emailService', () => ({
@@ -33,12 +34,12 @@ describe('userRepository.getUserById', () => {
   });
 
   test('returns the user if found', async () => {
-    const mockUser = { id: 1, username: 'testuser' };
-    userDao.getUserById.mockResolvedValue(mockUser);
+    const rows = [{ id: 1, username: 'testuser', email: 'e@test', name: 'N', surname: 'S', type: 'citizen', telegram_nickname: null }];
+    userDao.getUserById.mockResolvedValue(rows);
 
     const result = await userRepository.getUserById(1);
 
-    expect(result).toEqual(mockUser);
+    expect(result).toMatchObject({ id: 1, username: 'testuser' });
     expect(userDao.getUserById).toHaveBeenCalledWith(1);
   });
 
@@ -154,30 +155,35 @@ describe('userRepository.createUserIfAdmin', () => {
   });
 
   test('throws UnauthorizedError when caller is not admin', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'citizen' });
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'citizen', roles: [] });
+    await expect(userRepository.createUserIfAdmin(1, baseUser)).rejects.toThrow(UnauthorizedError);
+  });
+
+  test('throws UnauthorizedError when admin has no roles property', async () => {
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
     await expect(userRepository.createUserIfAdmin(1, baseUser)).rejects.toThrow(UnauthorizedError);
   });
 
   test('throws BadRequestError when required fields missing', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin', roles: ['admin'] });
     await expect(userRepository.createUserIfAdmin(1, { username: 'only' })).rejects.toThrow(BadRequestError);
   });
 
   test('throws ConflictError when username exists', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin', roles: ['admin'] });
     userDao.getUserByUsername.mockResolvedValueOnce({ id: 3 });
     await expect(userRepository.createUserIfAdmin(1, baseUser)).rejects.toThrow(ConflictError);
   });
 
   test('throws ConflictError when email exists', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin', roles: ['admin'] });
     userDao.getUserByUsername.mockResolvedValueOnce(null);
     userDao.getUserByEmail.mockResolvedValueOnce({ id: 4 });
     await expect(userRepository.createUserIfAdmin(1, baseUser)).rejects.toThrow(ConflictError);
   });
 
   test('creates user with municipality_user type on success', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin', roles: ['admin'] });
     userDao.getUserByUsername.mockResolvedValueOnce(null);
     userDao.getUserByEmail.mockResolvedValueOnce(null);
     userDao.createUser.mockResolvedValueOnce({ id: 10, ...baseUser, type: 'municipality_user' });
@@ -186,54 +192,133 @@ describe('userRepository.createUserIfAdmin', () => {
     expect(res).toMatchObject({ id: 10, username: baseUser.username, type: 'municipality_user' });
   });
 });
-
-describe('userRepository.assignUserRole', () => {
+describe('userRepository.deleteRoleFromUser', () => {
   afterEach(() => jest.clearAllMocks());
 
+  const adminOk = { id: 1, type: 'admin' };
+  const muniUserBase = { id: 2, type: 'municipality_user', roles: [] };
+
   test('throws NotFoundError when admin not found', async () => {
-    userDao.getUserById.mockResolvedValueOnce(null);
-    await expect(userRepository.assignUserRole(1, 2, 'urban_planner')).rejects.toThrow(NotFoundError);
+    userDao.getUserById
+      .mockResolvedValueOnce(null);
+    await expect(userRepository.deleteRoleFromUser(1, 2, 'urban_planner')).rejects.toThrow(NotFoundError);
   });
 
   test('throws UnauthorizedError when caller is not admin', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'citizen' });
-    await expect(userRepository.assignUserRole(1, 2, 'urban_planner')).rejects.toThrow(UnauthorizedError);
-  });
-
-  test('throws BadRequestError when role missing', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
-    await expect(userRepository.assignUserRole(1, 2, undefined)).rejects.toThrow(BadRequestError);
-  });
-
-  test('throws BadRequestError when role invalid', async () => {
-    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'admin' });
-    await expect(userRepository.assignUserRole(1, 2, 'invalid_role')).rejects.toThrow(BadRequestError);
+    userDao.getUserById
+      .mockResolvedValueOnce({ id: 1, type: 'citizen' });
+    await expect(userRepository.deleteRoleFromUser(1, 2, 'urban_planner')).rejects.toThrow(UnauthorizedError);
   });
 
   test('throws NotFoundError when target user not found', async () => {
     userDao.getUserById
-      .mockResolvedValueOnce({ id: 1, type: 'admin' }) // admin ok
-      .mockResolvedValueOnce(null); // target missing
-    await expect(userRepository.assignUserRole(1, 99, 'urban_planner')).rejects.toThrow(NotFoundError);
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce(null);
+    await expect(userRepository.deleteRoleFromUser(1, 99, 'urban_planner')).rejects.toThrow(NotFoundError);
   });
 
-  test('throws NotFoundError when update returns null', async () => {
+  test('throws BadRequestError when target is not municipality_user', async () => {
     userDao.getUserById
-      .mockResolvedValueOnce({ id: 1, type: 'admin' }) // admin ok
-      .mockResolvedValueOnce({ id: 2, type: 'citizen' }); // target exists
-    userDao.updateUserTypeById.mockResolvedValueOnce(null);
-    await expect(userRepository.assignUserRole(1, 2, 'urban_planner')).rejects.toThrow(NotFoundError);
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'citizen', roles: [] });
+    await expect(userRepository.deleteRoleFromUser(1, 2, 'urban_planner')).rejects.toThrow(BadRequestError);
   });
 
-  test('returns updated info on success', async () => {
+  test('throws ConflictError when user does not have this role', async () => {
     userDao.getUserById
-      .mockResolvedValueOnce({ id: 1, type: 'admin' })
-      .mockResolvedValueOnce({ id: 2, type: 'citizen' });
-    userDao.updateUserTypeById.mockResolvedValueOnce({ id: 2, type: 'urban_planner' });
-    const res = await userRepository.assignUserRole(1, 2, 'urban_planner');
-    expect(userDao.updateUserTypeById).toHaveBeenCalledWith(2, 'urban_planner');
-    expect(res).toEqual({ id: 2, type: 'urban_planner' });
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: ['technical_office_staff_member'] });
+    await expect(userRepository.deleteRoleFromUser(1, 2, 'urban_planner')).rejects.toThrow(ConflictError);
   });
+
+  test('throws BadRequestError when role is required (falsy)', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: [''] });
+    await expect(userRepository.deleteRoleFromUser(1, 2, '')).rejects.toThrow(BadRequestError);
+  });
+
+  test('throws BadRequestError for invalid role not in allowed list', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: ['invalid_role'] });
+    await expect(userRepository.deleteRoleFromUser(1, 2, 'invalid_role')).rejects.toThrow(BadRequestError);
+  });
+
+  test('returns DAO result on success', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: ['urban_planner'] });
+    userDao.deleteRoleFromUser.mockResolvedValueOnce({ id: 2, roles: [] });
+    const res = await userRepository.deleteRoleFromUser(1, 2, 'urban_planner');
+    expect(userDao.deleteRoleFromUser).toHaveBeenCalledWith(2, 'urban_planner');
+    expect(res).toEqual({ id: 2, roles: [] });
+  });
+});
+
+describe('userRepository.addRoleToUser', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  const adminOk = { id: 1, type: 'admin' };
+
+  test('throws NotFoundError when admin not found', async () => {
+    userDao.getUserById.mockResolvedValueOnce(null);
+    await expect(userRepository.addRoleToUser(1, 2, 'urban_planner')).rejects.toThrow(NotFoundError);
+  });
+
+  test('throws UnauthorizedError when caller is not admin', async () => {
+    userDao.getUserById.mockResolvedValueOnce({ id: 1, type: 'citizen' });
+    await expect(userRepository.addRoleToUser(1, 2, 'urban_planner')).rejects.toThrow(UnauthorizedError);
+  });
+
+  test('throws NotFoundError when target user not found', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce(null);
+    await expect(userRepository.addRoleToUser(1, 99, 'urban_planner')).rejects.toThrow(NotFoundError);
+  });
+
+  test('throws BadRequestError when target is not municipality_user', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'citizen', roles: [] });
+    await expect(userRepository.addRoleToUser(1, 2, 'urban_planner')).rejects.toThrow(BadRequestError);
+  });
+
+  test('throws ConflictError when user already has this role', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: ['urban_planner'] });
+    await expect(userRepository.addRoleToUser(1, 2, 'urban_planner')).rejects.toThrow(ConflictError);
+  });
+
+  test('throws BadRequestError when role is required (falsy)', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: [] });
+    await expect(userRepository.addRoleToUser(1, 2, '')).rejects.toThrow(BadRequestError);
+  });
+
+  test('throws BadRequestError for invalid role not in allowed list', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: [] });
+    await expect(userRepository.addRoleToUser(1, 2, 'invalid_role')).rejects.toThrow(BadRequestError);
+  });
+
+  test('returns DAO result on success', async () => {
+    userDao.getUserById
+      .mockResolvedValueOnce(adminOk)
+      .mockResolvedValueOnce({ id: 2, type: 'municipality_user', roles: [] });
+    userDao.addRoleToUser.mockResolvedValueOnce({ id: 2, roles: ['urban_planner'] });
+    const res = await userRepository.addRoleToUser(1, 2, 'urban_planner');
+    expect(userDao.addRoleToUser).toHaveBeenCalledWith(2, 'urban_planner');
+    expect(res).toEqual({ id: 2, roles: ['urban_planner'] });
+  });
+});
+
+describe.skip('userRepository.assignUserRole', () => {
+  // Deprecated API in repository; use addRoleToUser instead.
 });
 
 describe('userRepository.getMunicipalityUsers', () => {

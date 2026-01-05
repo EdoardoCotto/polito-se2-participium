@@ -276,7 +276,7 @@ describe("reportRepository.getReportById", () => {
 
   test("returns mapped report", async () => {
     const daoRow = {
-      reportId: 5,
+      id: 5,
       userId: 1,
       latitude: 10,
       longitude: 20,

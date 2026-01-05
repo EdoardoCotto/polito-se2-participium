@@ -62,15 +62,22 @@ jest.mock('../../server/controller/userController', () => ({
     }
     return res.status(201).json({ id: 2, username, email, type });
   },
-  assignUserRole: (req, res) => {
-    const { type } = req.body || {};
-    if (!type) {
-      return res.status(400).json({ error: 'Role type is required' });
+  addRoleToUser: (req, res) => {
+    const { role } = req.body || {};
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required' });
     }
     return res.status(200).json({ 
       id: Number.parseInt(req.params.id, 10),
-      type 
+      role 
     });
+  },
+  deleteRoleFromUser: (req, res) => {
+    const { role } = req.body || {};
+    if (!role) {
+      return res.status(400).json({ error: 'Role is required' });
+    }
+    return res.status(200).json({ message: 'Role deleted successfully' });
   },
   getAllowedRoles: (_req, res) => {
     return res.status(200).json({
@@ -231,20 +238,20 @@ describe('POST /api/users/admin (Admin User Creation)', () => {
   });
 });
 
-describe('PUT /api/users/:id/type (Assign Role)', () => {
+describe('POST /api/users/:id/assign-role (Assign Role)', () => {
   it('should assign a role to a user', async () => {
     const res = await request(app)
-      .put('/api/users/5/type')
-      .send({ type: 'technical_office_staff_member' });
+      .post('/api/users/5/assign-role')
+      .send({ role: 'technical_office_staff_member' });
 
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(5);
-    expect(res.body.type).toBe('technical_office_staff_member');
+    expect(res.body.role).toBe('technical_office_staff_member');
   });
 
   it('should return 400 if type is missing', async () => {
     const res = await request(app)
-      .put('/api/users/5/type')
+      .post('/api/users/5/assign-role')
       .send({});
 
     expect(res.status).toBe(400);

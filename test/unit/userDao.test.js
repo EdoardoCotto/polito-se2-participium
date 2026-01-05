@@ -74,13 +74,14 @@ describe('userDao Functions', () => {
         {
           runImpl: (_s, _p, cb) => cb.call({ lastID: 11 }, null),
           getImpl: (_s, _p, cb) => cb(null, { id: 11, username, name: 'John', surname: 'Doe', type: 'citizen', password: 'stored_hash' }),
+          allImpl: (_s, _p, cb) => cb(null, [{ role: 'citizen' }]),
         },
         async (d, mods) => {
           const bcryptMod = mods.bcrypt;
           bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, true));
           const created = await d.createUser({ username, email, name: 'John', surname: 'Doe', password: 'password123', type: 'citizen' });
           const result = await d.getUser(username, 'password123');
-          expect(result).toEqual({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
+          expect(result).toMatchObject({ id: created.id, username, name: 'John', surname: 'Doe', type: 'citizen' });
           expect(mods.bcrypt.compare).toHaveBeenCalled();
         }
       );
@@ -118,7 +119,10 @@ describe('userDao Functions', () => {
       const username = unique('u');
       const email = `${unique('e')}@example.com`;
       await withSqliteMock(
-        { getImpl: (_s, _p, cb) => cb(null, { id: 1, username, email, name: 'A', surname: 'B', type: 'citizen', is_confirmed: 0, password: 'stored_hash' }) },
+        { 
+          getImpl: (_s, _p, cb) => cb(null, { id: 1, username, email, name: 'A', surname: 'B', type: 'citizen', is_confirmed: 0, password: 'stored_hash' }),
+          allImpl: (_s, _p, cb) => cb(null, [{ role: 'citizen' }]),
+        },
         async (d, mods) => {
           const bcryptMod = mods.bcrypt;
           bcryptMod.compare.mockImplementation((pw, hash, cb) => cb(null, true));
@@ -135,7 +139,7 @@ describe('userDao Functions', () => {
       const email = `${unique('e')}@example.com`;
       const id = 123;
       await withSqliteMock(
-        { getImpl: (_s, _p, cb) => cb(null, { id, username, email, name: 'John', surname: 'Doe', type: 'citizen' }) },
+        { allImpl: (_s, _p, cb) => cb(null, [{ id, username, email, name: 'John', surname: 'Doe', type: 'citizen', role: null }]) },
         async (d) => {
           const result = await d.getUserById(id);
           expect(result).toMatchObject({ id, username, email, name: 'John', surname: 'Doe', type: 'citizen' });
@@ -145,10 +149,10 @@ describe('userDao Functions', () => {
 
     test('should return undefined when user not found', async () => {
       await withSqliteMock(
-        { getImpl: (_s, _p, cb) => cb(null, undefined) },
+        { allImpl: (_s, _p, cb) => cb(null, []) },
         async (d) => {
           const result = await d.getUserById(9999999);
-          expect(result).toBeUndefined();
+          expect(result).toBeNull();
         }
       );
     });
@@ -211,10 +215,11 @@ describe('userDao Functions', () => {
   describe('getUserByTelegramNickname', () => {
     test('normalizes @ and case-insensitivity and returns row', async () => {
       await withSqliteMock(
-        { getImpl: (_s, _p, cb) => cb(null, { id: 2, username: 'u', email: 'e@example.com', name: 'N', surname: 'S', type: 'citizen', telegram_nickname: '@Nick' }) },
+        { allImpl: (_s, _p, cb) => cb(null, [{ id: 2, username: 'u', email: 'e@example.com', name: 'N', surname: 'S', type: 'citizen', telegram_nickname: '@Nick', roles: null }]) },
         async (d) => {
-          const user = await d.getUserByTelegramNickname('@NICK');
-          expect(user).toMatchObject({ id: 2, username: 'u' });
+          const users = await d.getUserByTelegramNickname('@NICK');
+          expect(Array.isArray(users)).toBe(true);
+          expect(users[0]).toMatchObject({ id: 2, username: 'u' });
         }
       );
     });
@@ -355,32 +360,7 @@ describe('userDao Functions', () => {
   });
 
   describe('updateUserTypeById', () => {
-    test('should update user type successfully', async () => {
-      await withSqliteMock(
-        { runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null) },
-        async (d) => {
-          const id = 501;
-          const result = await d.updateUserTypeById(id, 'municipal_public_relations_officer');
-          expect(result).toEqual({ id, type: 'municipal_public_relations_officer' });
-        }
-      );
-    });
-
-    test('should return null when no row updated', async () => {
-      await withSqliteMock(
-        { runImpl: (_s, _p, cb) => cb.call({ changes: 0 }, null) },
-        async (d) => {
-          const result = await d.updateUserTypeById(9999999, 'municipal_public_relations_officer');
-          expect(result).toBeNull();
-        }
-      );
-    });
-
-    test('should reject invalid role', async () => {
-      await withSqliteMock({}, async (d) => {
-        await expect(d.updateUserTypeById(1, 'invalid_role')).rejects.toThrow('Invalid role');
-      });
-    });
+    test.skip('deprecated - updateUserTypeById not implemented in current DAO', async () => {});
 
     // Skip: non forziamo errori DB qui
   });
@@ -397,9 +377,9 @@ describe('userDao Functions', () => {
       );
     });
 
-    test('should return empty array when rows is null', async () => {
+    test('should return empty array when no rows', async () => {
       await withSqliteMock(
-        { allImpl: (_s, _p, cb) => cb(null, null) },
+        { allImpl: (_s, _p, cb) => cb(null, []) },
         async (d) => {
           const result = await d.findMunicipalityUsers();
           expect(result).toEqual([]);
@@ -413,7 +393,7 @@ describe('userDao Functions', () => {
   describe('getExternalMaintainers', () => {
     test('returns maintainers list', async () => {
       await withSqliteMock(
-        { allImpl: (_s, _p, cb) => cb(null, [{ id: 1, type: 'external_maintainer' }]) },
+        { allImpl: (_s, _p, cb) => cb(null, [{ id: 1, type: 'external_maintainer', roles: null }]) },
         async (d) => {
           const res = await d.getExternalMaintainers();
           expect(Array.isArray(res)).toBe(true);
@@ -676,7 +656,7 @@ describe('userDao Functions', () => {
 
     test('getUserById rejects on DB error', async () => {
       await withSqliteMock(
-        { getImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
+        { allImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
         async (d) => {
           await expect(d.getUserById(1)).rejects.toThrow('DB Error');
         }
@@ -701,14 +681,7 @@ describe('userDao Functions', () => {
       );
     });
 
-    test('updateUserTypeById rejects on DB error', async () => {
-      await withSqliteMock(
-        { runImpl: (_s, _p, cb) => cb(new Error('DB Error')) },
-        async (d) => {
-          await expect(d.updateUserTypeById(1, 'municipal_public_relations_officer')).rejects.toThrow('DB Error');
-        }
-      );
-    });
+    test.skip('updateUserTypeById rejects on DB error', async () => {});
 
     test('findMunicipalityUsers rejects on DB error', async () => {
       await withSqliteMock(
@@ -765,11 +738,11 @@ describe('userDao Functions', () => {
     test('returns list of external maintainers', async () => {
       await withSqliteMock(
         {
-          allImpl: (_s, _p, cb) => cb(null, [{ id: 1, username: 'm1', type: 'external_maintainer' }]),
+          allImpl: (_s, _p, cb) => cb(null, [{ id: 1, username: 'm1', type: 'external_maintainer', roles: null }]),
         },
         async (d) => {
           const result = await d.getExternalMaintainers();
-          expect(result).toEqual([{ id: 1, username: 'm1', type: 'external_maintainer' }]);
+          expect(result[0]).toMatchObject({ id: 1, username: 'm1', type: 'external_maintainer' });
         }
       );
     });
@@ -788,7 +761,7 @@ describe('userDao Functions', () => {
     test('returns empty array when no maintainers', async () => {
       await withSqliteMock(
         {
-          allImpl: (_s, _p, cb) => cb(null, null),
+          allImpl: (_s, _p, cb) => cb(null, []),
         },
         async (d) => {
           const result = await d.getExternalMaintainers();

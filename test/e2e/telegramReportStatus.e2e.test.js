@@ -29,93 +29,12 @@ jest.mock('node-telegram-bot-api', () => {
 }, { virtual: false }); // Don't use virtual - we want to replace the real module
 
 jest.resetModules();
-<<<<<<< HEAD:test/e2e/telegramReportStatus.e2e.test.js
-// Use real sqlite3 for E2E; no mocking here
-=======
-jest.unmock('sqlite3');
-
-jest.doMock('sqlite3', () => {
-  const real = jest.requireActual('sqlite3');
-  const moduleWithVerbose = typeof real.verbose === 'function' ? real : { ...real, verbose: () => real };
-  try {
-    const TestDb = new moduleWithVerbose.Database(':memory:');
-    const hasExec = typeof TestDb.exec === 'function';
-    TestDb.close();
-    if (!hasExec) {
-      const OriginalDatabase = moduleWithVerbose.Database;
-      moduleWithVerbose.Database = function(...args) {
-        if (typeof args[0] === 'string' && args[0] !== ':memory:' && !String(args[0]).startsWith('file:')) {
-          args[0] = 'file:participium?mode=memory&cache=shared';
-        }
-        const db = new OriginalDatabase(...args);
-        if (typeof db.exec !== 'function') {
-          db.exec = (sql, cb) => {
-            const statements = String(sql)
-              .split(';')
-              .map(s => s.trim())
-              .filter(s => s.length);
-            const runSequentially = async () => {
-              for (const stmt of statements) {
-                await new Promise((res, rej) => db.run(stmt, (err) => (err ? rej(err) : res())));
-              }
-            };
-            runSequentially().then(() => cb && cb(null)).catch(err => cb && cb(err));
-          };
-        }
-        return db;
-      };
-      moduleWithVerbose.Database.prototype = OriginalDatabase.prototype;
-    }
-  } catch {}
-  return moduleWithVerbose;
-}, { virtual: true });
->>>>>>> c61f0d4004d147d6d5f045a895a8b86858c84207:test/e2e/telegramReportStatus.e2e.js
+// Keep real sqlite3 for E2E tests
 
 jest.doMock('node:fs', () => {
   const real = jest.requireActual('node:fs');
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
-
-<<<<<<< HEAD:test/e2e/telegramReportStatus.e2e.test.js
-// Mock Telegram Bot BEFORE importing any server modules that reference it
-let mockBot;
-let sentMessages;
-let reportStatusHandler;
-sentMessages = [];
-mockBot = {
-  setMyCommands: jest.fn().mockResolvedValue(true),
-  onText: jest.fn((pattern, handler) => {
-    if (pattern.toString().includes('reportstatus')) {
-      reportStatusHandler = handler;
-    }
-  }),
-  sendMessage: jest.fn((chatId, text, options) => {
-    sentMessages.push({ chatId, text, options });
-    return Promise.resolve({ message_id: sentMessages.length });
-  }),
-  on: jest.fn(),
-  processUpdate: jest.fn((update) => {
-    if (update.message && update.message.text) {
-      const text = update.message.text;
-      if (text.startsWith('/reportstatus')) {
-        const match = text.match(/\/reportstatus(?:\s+(.+))?/);
-        if (match && reportStatusHandler) {
-          reportStatusHandler(update.message, match);
-        }
-      }
-    }
-  }),
-  getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
-  token: 'test-token'
-};
-jest.doMock('node-telegram-bot-api', () => {
-  return jest.fn(() => mockBot);
-}, { virtual: true });
-
-// Use real telegramBotService (module will use mocked TelegramBot)
-
-=======
->>>>>>> c61f0d4004d147d6d5f045a895a8b86858c84207:test/e2e/telegramReportStatus.e2e.js
 const request = require('supertest');
 const path = require('node:path');
 
@@ -128,21 +47,14 @@ let app;
 let userDao;
 let reportRepository;
 let telegramBotService;
-<<<<<<< HEAD:test/e2e/telegramReportStatus.e2e.test.js
-=======
 let sentMessages;
 let reportStatusHandler;
->>>>>>> c61f0d4004d147d6d5f045a895a8b86858c84207:test/e2e/telegramReportStatus.e2e.js
 
 beforeAll(async () => {
   await initializeDatabase();
   app = require('../../server/index');
   userDao = require('../../server/dao/userDao');
   reportRepository = require('../../server/repository/reportRepository');
-  
-<<<<<<< HEAD:test/e2e/telegramReportStatus.e2e.test.js
-  // Prepare mock bot implementation for Telegram
-=======
   // Get the mock bot instance
   sentMessages = [];
   
@@ -171,8 +83,6 @@ beforeAll(async () => {
       }
     }
   });
-  
->>>>>>> c61f0d4004d147d6d5f045a895a8b86858c84207:test/e2e/telegramReportStatus.e2e.js
   // Now require and initialize the service
   // The mock should prevent real TelegramBot from being instantiated
   telegramBotService = require('../../server/services/telegramBotService');
@@ -222,11 +132,6 @@ beforeEach(() => {
   sentMessages = [];
   jest.clearAllMocks();
 });
-
-<<<<<<< HEAD:test/e2e/telegramReportStatus.e2e.test.js
-// Temporarily skip Telegram E2E while service is incomplete; bot polling is mocked to avoid network
-describe.skip('Telegram Bot - Report Status E2E Tests', () => {
-=======
 afterAll(async () => {
   // Stop polling to prevent async operations after tests complete
   try {
@@ -249,7 +154,6 @@ afterAll(async () => {
 });
 
 describe('Telegram Bot - Report Status E2E Tests', () => {
->>>>>>> c61f0d4004d147d6d5f045a895a8b86858c84207:test/e2e/telegramReportStatus.e2e.js
   let citizenUser;
   let citizenUserId;
   let citizenTelegramUsername;
