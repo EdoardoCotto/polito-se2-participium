@@ -158,7 +158,7 @@ exports.confirmRegistration = async (req, res) => {
       return res.status(400).json({ error: 'Email and confirmation code are required' });
     }
     
-    const result = await userRepository.confirmUser(email, code);
+    await userRepository.confirmUser(email, code);
     
     return res.status(200).json({ 
       success: true, 
