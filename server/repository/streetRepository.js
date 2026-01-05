@@ -41,7 +41,7 @@ async function fetchStreetGeometry(streetName) {
       const MAX_DISTANCE = 0.001; // ~100 metri
 
       for (const cluster of clusters) {
-        const lastPoint = cluster[cluster.length - 1];
+        const lastPoint = cluster.at(-1);
         const firstNewPoint = coords[0];
         
         // Calcolo distanza euclidea semplice
@@ -191,8 +191,8 @@ function createLineBuffer(lineCoords, bufferDegrees) {
   }
 
   // Aggiungi l'ultimo punto
-  const [xLast, yLast] = lineCoords[lineCoords.length - 1];
-  const [xPrev, yPrev] = lineCoords[lineCoords.length - 2];
+  const [xLast, yLast] = lineCoords.at(-1);
+  const [xPrev, yPrev] = lineCoords.at(-2);
   const dx = xLast - xPrev;
   const dy = yLast - yPrev;
   const len = Math.hypot(dx, dy);
