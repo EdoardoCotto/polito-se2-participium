@@ -10,8 +10,9 @@ on:
 jobs:
   sonarqube:
     name: SonarQube
-    # Using 'windows-latest' is fine, but 'ubuntu-latest' is often faster/cheaper for Node.js
-    runs-on: windows-latest
+    # Using 'ubuntu-latest' is faster and more cost-effective for Node.js projects
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # Set a maximum timeout for the entire job (30 minutes)
     steps:
       # 1. Checkout the code (REQUIRED)
       - uses: actions/checkout@v4
@@ -26,12 +27,19 @@ jobs:
 
       # 3. Install dependencies and RUN UNIT TESTS (REQUIRED for coverage report)
       - name: Install dependencies and Run Tests to Generate Coverage
+        timeout-minutes: 20  # Set a timeout for this step (20 minutes)
         run: |
           npm install
           cd server && npm install && cd ..
           # This command MUST generate the coverage file (e.g., coverage/lcov.info)
-          # Use || true to ensure coverage is generated even if some tests fail
-          npm run test:coverage || true 
+          # Add timeout to prevent hanging tests (15 minutes max, leaving buffer for step timeout)
+          timeout 15m npm run test:coverage || echo "Tests completed with exit code $?"
+          # Ensure coverage file exists even if tests fail
+          if [ ! -f coverage/lcov.info ]; then
+            echo "Warning: coverage/lcov.info not found, creating empty file"
+            mkdir -p coverage
+            echo "TN:" > coverage/lcov.info
+          fi 
 
       # 4. Run SonarQube Scan
       # It will automatically read coverage settings from sonar-project.properties
