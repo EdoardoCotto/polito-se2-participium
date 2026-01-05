@@ -45,9 +45,9 @@ async function fetchStreetGeometry(streetName) {
         const firstNewPoint = coords[0];
         
         // Calcolo distanza euclidea semplice
-        const dist = Math.sqrt(
-          Math.pow(lastPoint[0] - firstNewPoint[0], 2) + 
-          Math.pow(lastPoint[1] - firstNewPoint[1], 2)
+        const dist = Math.hypot(
+          lastPoint[0] - firstNewPoint[0],
+          lastPoint[1] - firstNewPoint[1]
         );
         
         if (dist < MAX_DISTANCE) {
@@ -181,7 +181,7 @@ function createLineBuffer(lineCoords, bufferDegrees) {
     // Calcola il vettore perpendicolare normalizzato
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const len = Math.sqrt(dx * dx + dy * dy);
+    const len = Math.hypot(dx, dy);
     const perpX = -dy / len * bufferDegrees;
     const perpY = dx / len * bufferDegrees;
 
@@ -195,7 +195,7 @@ function createLineBuffer(lineCoords, bufferDegrees) {
   const [xPrev, yPrev] = lineCoords[lineCoords.length - 2];
   const dx = xLast - xPrev;
   const dy = yLast - yPrev;
-  const len = Math.sqrt(dx * dx + dy * dy);
+  const len = Math.hypot(dx, dy);
   const perpX = -dy / len * bufferDegrees;
   const perpY = dx / len * bufferDegrees;
 
