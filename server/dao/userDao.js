@@ -204,9 +204,8 @@ exports.getUserByTelegramNickname = (telegramNickname) => {
 function generateConfirmationCode() {
   const min = 100000;
   const max = 999999;
-  const range = max - min + 1;
-  
-  const code = crypto.randomInt(min, max + 1); 
+
+  const code = crypto.randomInt(min, max + 1);
   
   return code.toString();
 }
