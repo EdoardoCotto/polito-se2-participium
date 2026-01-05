@@ -851,6 +851,155 @@ const getComments = async (reportId) => {
   return await response.json();
 };
 
+/**
+ * Create Message
+ * Sends a message in a report's chat thread
+ * Requires authentication (citizen or staff)
+ * @param {number} reportId - The ID of the report to send message to
+ * @param {string} message - The message text
+ * @returns {Promise<Object>} - Created message object with id, reportId, userId, message, senderType, createdAt
+ * @throws {Error} - If creation fails (validation error, unauthorized, not found, etc.)
+ */
+const createMessage = async (reportId, message) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ message }),
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to create message');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Messages
+ * Retrieves all messages in a report's chat thread
+ * Requires authentication
+ * @param {number} reportId - The ID of the report to get messages for
+ * @returns {Promise<Array>} - Array of message objects with id, message, senderType, createdAt
+ * @throws {Error} - If request fails (unauthorized, not found, etc.)
+ */
+const getMessages = async (reportId) => {
+  const response = await fetch(`${SERVER_URL}/reports/${reportId}/messages`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get messages');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Notifications
+ * Retrieves all notifications for the logged-in user
+ * Requires authentication
+ * @returns {Promise<Array>} - Array of notification objects with id, userId, reportId, title, message, is_read, created_at
+ * @throws {Error} - If request fails (unauthorized, etc.)
+ */
+const getNotifications = async () => {
+  const response = await fetch(`${SERVER_URL}/notifications`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get notifications');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get Unread Notifications
+ * Retrieves all unread notifications for the logged-in user
+ * Requires authentication
+ * @returns {Promise<Array>} - Array of unread notification objects with id, userId, reportId, title, message, is_read, created_at
+ * @throws {Error} - If request fails (unauthorized, etc.)
+ */
+const getUnreadNotifications = async () => {
+  const response = await fetch(`${SERVER_URL}/notifications/unread`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get unread notifications');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Mark Notification as Read
+ * Marks a specific notification as read
+ * Requires authentication
+ * @param {number} notificationId - The ID of the notification to mark as read
+ * @returns {Promise<Object>} - Updated notification object with is_read set to 1
+ * @throws {Error} - If update fails (validation error, unauthorized, not found, etc.)
+ */
+const markNotificationAsRead = async (notificationId) => {
+  const response = await fetch(`${SERVER_URL}/notifications/${notificationId}/read`, {
+    method: 'PUT',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to mark notification as read');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Mark All Notifications as Read
+ * Marks all notifications for the logged-in user as read
+ * Requires authentication
+ * @returns {Promise<Object>} - Success response with message and count of notifications marked as read
+ * @throws {Error} - If update fails (unauthorized, etc.)
+ */
+const markAllNotificationsAsRead = async () => {
+  const response = await fetch(`${SERVER_URL}/notifications/read-all`, {
+    method: 'PUT',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to mark all notifications as read');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Delete Notification
+ * Deletes a specific notification
+ * Requires authentication
+ * @param {number} notificationId - The ID of the notification to delete
+ * @returns {Promise<Object>} - Success response with message
+ * @throws {Error} - If deletion fails (validation error, unauthorized, not found, etc.)
+ */
+const deleteNotification = async (notificationId) => {
+  const response = await fetch(`${SERVER_URL}/notifications/${notificationId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to delete notification');
+  }
+
+  return await response.json();
+};
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -887,6 +1036,17 @@ const API = {
   // Comment management
   createComment,
   getComments,
+
+  // Message management
+  createMessage,
+  getMessages,
+
+  // Notification management
+  getNotifications,
+  getUnreadNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
 
   // Constants
   getCategories,
