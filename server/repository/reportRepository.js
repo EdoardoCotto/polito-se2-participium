@@ -1,5 +1,6 @@
 const reportDao = require('../dao/reportDao');
 const userDao = require('../dao/userDao');
+const notificationService = require('../services/notificationService');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
@@ -273,6 +274,9 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
       technicalOffice
     );
 
+    // Store old status for notification
+    const oldStatus = existing.status;
+
     // Eseguiamo l'update passando anche l'officerId trovato
     const updated = await reportDao.updateReportReview(reportId, {
       status: normalizedStatus,
@@ -284,6 +288,16 @@ exports.reviewReport = async (reportId, reviewData = {}) => {
     if (!updated) {
       throw new NotFoundError('Report not found');
     }
+
+    // Create notification for status change (async, don't wait)
+    notificationService.createStatusChangeNotification(
+      reportId,
+      normalizedStatus,
+      oldStatus,
+      rejectionReason
+    ).catch(err => {
+      console.error('Error creating notification in reviewReport:', err);
+    });
 
     return mapReportRow(updated);
   } catch (err) {
@@ -447,6 +461,13 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
     throw new BadRequestError(`Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
   }
 
+  // Get the current report to know the old status
+  const currentReport = await reportDao.getReportById(reportId);
+  if (!currentReport) {
+    throw new NotFoundError('Report not found');
+  }
+  const oldStatus = currentReport.status;
+
   // CHIAMATA CORRETTA AL NUOVO METODO DAO
   const updatedRow = await reportDao.updateReportStatusByExternalMaintainer(reportId, maintainerId, normalizedStatus);
 
@@ -459,6 +480,16 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
     // Se esiste, allora non era assegnato a questo maintainer
     throw new UnauthorizedError('You are not assigned to this report as external maintainer');
   }
+
+  // Create notification for status change (async, don't wait)
+  notificationService.createStatusChangeNotification(
+    reportId,
+    normalizedStatus,
+    oldStatus,
+    null
+  ).catch(err => {
+    console.error('Error creating notification in updateMaintainerStatus:', err);
+  });
 
   // Ora updatedRow contiene tutte le join, quindi mapReportRow funziona
   return mapReportRow(updatedRow);
