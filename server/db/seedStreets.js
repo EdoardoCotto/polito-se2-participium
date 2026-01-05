@@ -52,7 +52,7 @@ async function fetchStreetsFromOSM(city) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
 
-        const elements = response.data.elements;
+        const elements = response.data?.elements || [];
         const streetNames = new Set();
         elements.forEach(el => {
             if (el.tags?.name) {
