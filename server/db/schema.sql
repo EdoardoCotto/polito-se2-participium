@@ -100,6 +100,19 @@ CREATE TABLE IF NOT EXISTS Messages (
   FOREIGN KEY (senderId) REFERENCES Users(id)
 );
 
+-- Table for notifications
+CREATE TABLE IF NOT EXISTS Notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId INTEGER NOT NULL,
+  reportId INTEGER,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+  FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE
+);
+
 -- Tabella per l'autocompletamento e la cache geografica delle vie
 CREATE TABLE IF NOT EXISTS Streets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
