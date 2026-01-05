@@ -42,6 +42,27 @@ jest.doMock('node:fs', () => {
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
 
+// Mock TelegramBot BEFORE requiring anything that might use it
+// Create mock bot object that will be shared
+const mockBotInstance = {
+  setMyCommands: jest.fn().mockResolvedValue(true),
+  onText: jest.fn(),
+  sendMessage: jest.fn().mockResolvedValue({ message_id: 1 }),
+  on: jest.fn(),
+  processUpdate: jest.fn(),
+  getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
+  stopPolling: jest.fn().mockResolvedValue(true),
+  stop: jest.fn().mockResolvedValue(true),
+  token: 'test-token'
+};
+
+jest.doMock('node-telegram-bot-api', () => {
+  // Return a constructor function that returns the mock bot
+  const MockTelegramBot = jest.fn(() => mockBotInstance);
+  MockTelegramBot.default = MockTelegramBot;
+  return MockTelegramBot;
+});
+
 // Mock Telegram bot service but allow initialization
 jest.doMock('../../server/services/telegramBotService', () => {
   const actual = jest.requireActual('../../server/services/telegramBotService');
@@ -60,7 +81,6 @@ let app;
 let userDao;
 let reportRepository;
 let telegramBotService;
-let mockBot;
 let sentMessages;
 let reportStatusHandler;
 
@@ -70,41 +90,35 @@ beforeAll(async () => {
   userDao = require('../../server/dao/userDao');
   reportRepository = require('../../server/repository/reportRepository');
   
-  // Mock TelegramBot before requiring the service
+  // Get the mock bot instance
   const TelegramBot = require('node-telegram-bot-api');
   sentMessages = [];
   
-  mockBot = {
-    setMyCommands: jest.fn().mockResolvedValue(true),
-    onText: jest.fn((pattern, handler) => {
-      // Capture the reportstatus handler
-      if (pattern.toString().includes('reportstatus')) {
-        reportStatusHandler = handler;
-      }
-    }),
-    sendMessage: jest.fn((chatId, text, options) => {
-      sentMessages.push({ chatId, text, options });
-      return Promise.resolve({ message_id: sentMessages.length });
-    }),
-    on: jest.fn(),
-    processUpdate: jest.fn((update) => {
-      // Simulate processing the update
-      if (update.message && update.message.text) {
-        const text = update.message.text;
-        if (text.startsWith('/reportstatus')) {
-          const match = text.match(/\/reportstatus(?:\s+(.+))?/);
-          if (match && reportStatusHandler) {
-            reportStatusHandler(update.message, match);
-          }
+  // Update mock bot to capture handlers and messages
+  mockBotInstance.onText = jest.fn((pattern, handler) => {
+    // Capture the reportstatus handler
+    if (pattern.toString().includes('reportstatus')) {
+      reportStatusHandler = handler;
+    }
+  });
+  
+  mockBotInstance.sendMessage = jest.fn((chatId, text, options) => {
+    sentMessages.push({ chatId, text, options });
+    return Promise.resolve({ message_id: sentMessages.length });
+  });
+  
+  mockBotInstance.processUpdate = jest.fn((update) => {
+    // Simulate processing the update
+    if (update.message && update.message.text) {
+      const text = update.message.text;
+      if (text.startsWith('/reportstatus')) {
+        const match = text.match(/\/reportstatus(?:\s+(.+))?/);
+        if (match && reportStatusHandler) {
+          reportStatusHandler(update.message, match);
         }
       }
-    }),
-    getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
-    token: 'test-token'
-  };
-
-  // Mock TelegramBot constructor
-  jest.spyOn(TelegramBot, 'default' || TelegramBot).mockImplementation(() => mockBot);
+    }
+  });
   
   // Now require and initialize the service
   telegramBotService = require('../../server/services/telegramBotService');
@@ -117,6 +131,27 @@ beforeAll(async () => {
 beforeEach(() => {
   sentMessages = [];
   jest.clearAllMocks();
+});
+
+afterAll(async () => {
+  // Stop polling to prevent async operations after tests complete
+  try {
+    const bot = telegramBotService.getBot();
+    if (bot && typeof bot.stopPolling === 'function') {
+      await bot.stopPolling();
+    }
+    if (bot && typeof bot.stop === 'function') {
+      await bot.stop();
+    }
+    // Also call stopPolling on mock bot instance
+    if (mockBotInstance && typeof mockBotInstance.stopPolling === 'function') {
+      await mockBotInstance.stopPolling();
+    }
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+  // Wait a bit to ensure all async operations complete
+  await new Promise(resolve => setTimeout(resolve, 100));
 });
 
 describe('Telegram Bot - Report Status E2E Tests', () => {
@@ -248,7 +283,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportId}`);
 
     // Check that sendMessage was called
-    expect(mockBot.sendMessage).toHaveBeenCalled();
+    expect(mockBotInstance.sendMessage).toHaveBeenCalled();
     
     // Find the message sent to our chat
     const statusMessage = sentMessages.find(msg => msg.chatId === chatId);

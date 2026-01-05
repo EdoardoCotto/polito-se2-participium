@@ -29,6 +29,8 @@ describe('Telegram Bot Service - Report Status Command', () => {
       on: jest.fn(),
       processUpdate: jest.fn(),
       getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
+      stopPolling: jest.fn().mockResolvedValue(true),
+      stop: jest.fn().mockResolvedValue(true),
       token: 'test-token'
     };
 
@@ -41,6 +43,24 @@ describe('Telegram Bot Service - Report Status Command', () => {
   afterEach(() => {
     jest.clearAllMocks();
     reportStatusHandler = null;
+  });
+
+  afterAll(async () => {
+    // Stop polling to prevent async operations after tests complete
+    try {
+      const bot = telegramBotService.getBot();
+      if (bot && typeof bot.stopPolling === 'function') {
+        await bot.stopPolling();
+      }
+      if (bot && typeof bot.stop === 'function') {
+        await bot.stop();
+      }
+      if (mockBot && typeof mockBot.stopPolling === 'function') {
+        await mockBot.stopPolling();
+      }
+    } catch (error) {
+      // Ignore cleanup errors
+    }
   });
 
   const createMockMessage = (chatId, username, text) => ({
