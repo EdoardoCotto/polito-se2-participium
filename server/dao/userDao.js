@@ -41,7 +41,7 @@ exports.getUser = (username, password) => {
 
         if (isMatch) {
           // Check if user needs confirmation (citizens only)
-          const roles = await this.getRolesByUserId(row.id);
+          const roles = await exports.getRolesByUserId(row.id);
           if (roles.includes('citizen') && row.is_confirmed === 0) {
             resolve({ error: 'unconfirmed', email: row.email }); // Account not confirmed
             return;
