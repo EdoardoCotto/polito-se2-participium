@@ -365,14 +365,14 @@ function setupCommandHandlers() {
     // Skip if no active conversation
     if (!state) {
       // Skip if it's a command (but not /done which is handled in conversation flow)
-      if (text && text.startsWith('/')) {
+      if (text?.startsWith('/')) {
         return;
       }
       return;
     }
 
     // Allow /done and /confirm commands during conversation, but skip other commands
-    if (text && text.startsWith('/')) {
+    if (text?.startsWith('/')) {
       const allowedCommands = ['/done', '/confirm', '/cancel'];
       const normalizedText = text.toLowerCase().trim();
       if (!allowedCommands.includes(normalizedText)) {
