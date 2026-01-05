@@ -1,6 +1,36 @@
 // E2E tests for Telegram bot report status functionality
+
+// Mock TelegramBot FIRST - this must be hoisted before any other requires
+// Use jest.mock (hoisted) to ensure it's applied before any module loads
+// Create mock bot object that will be shared - use a module-level variable
+const mockBotInstance = {
+  setMyCommands: jest.fn().mockResolvedValue(true),
+  onText: jest.fn(),
+  sendMessage: jest.fn().mockResolvedValue({ message_id: 1 }),
+  on: jest.fn(),
+  processUpdate: jest.fn(),
+  getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
+  stopPolling: jest.fn().mockResolvedValue(true),
+  stop: jest.fn().mockResolvedValue(true),
+  token: 'test-token'
+};
+
+jest.mock('node-telegram-bot-api', () => {
+  // Return a constructor function that returns the mock bot
+  // This prevents the real TelegramBot from being instantiated
+  const MockTelegramBot = jest.fn((token, options) => {
+    // Always return the mock instance - this prevents real polling from starting
+    // The real TelegramBot would start polling here, but we return a mock instead
+    return mockBotInstance;
+  });
+  // Support both default export and named export patterns
+  MockTelegramBot.default = MockTelegramBot;
+  return MockTelegramBot;
+}, { virtual: false }); // Don't use virtual - we want to replace the real module
+
 jest.resetModules();
 jest.unmock('sqlite3');
+
 jest.doMock('sqlite3', () => {
   const real = jest.requireActual('sqlite3');
   const moduleWithVerbose = typeof real.verbose === 'function' ? real : { ...real, verbose: () => real };
@@ -42,33 +72,6 @@ jest.doMock('node:fs', () => {
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
 
-// Mock TelegramBot BEFORE requiring anything that might use it
-// Create mock bot object that will be shared
-const mockBotInstance = {
-  setMyCommands: jest.fn().mockResolvedValue(true),
-  onText: jest.fn(),
-  sendMessage: jest.fn().mockResolvedValue({ message_id: 1 }),
-  on: jest.fn(),
-  processUpdate: jest.fn(),
-  getMe: jest.fn().mockResolvedValue({ id: 123, username: 'test_bot' }),
-  stopPolling: jest.fn().mockResolvedValue(true),
-  stop: jest.fn().mockResolvedValue(true),
-  token: 'test-token'
-};
-
-jest.doMock('node-telegram-bot-api', () => {
-  // Return a constructor function that returns the mock bot
-  const MockTelegramBot = jest.fn(() => mockBotInstance);
-  MockTelegramBot.default = MockTelegramBot;
-  return MockTelegramBot;
-});
-
-// Mock Telegram bot service but allow initialization
-jest.doMock('../../server/services/telegramBotService', () => {
-  const actual = jest.requireActual('../../server/services/telegramBotService');
-  return actual;
-});
-
 const request = require('supertest');
 const path = require('node:path');
 
@@ -91,7 +94,6 @@ beforeAll(async () => {
   reportRepository = require('../../server/repository/reportRepository');
   
   // Get the mock bot instance
-  const TelegramBot = require('node-telegram-bot-api');
   sentMessages = [];
   
   // Update mock bot to capture handlers and messages
@@ -121,8 +123,45 @@ beforeAll(async () => {
   });
   
   // Now require and initialize the service
+  // The mock should prevent real TelegramBot from being instantiated
   telegramBotService = require('../../server/services/telegramBotService');
-  telegramBotService.initializeBot('test-token');
+  
+  // Initialize bot - the mock should prevent real polling
+  const initializedBot = telegramBotService.initializeBot('test-token');
+  
+  // Verify the mock was used (the bot should be our mock instance)
+  const bot = telegramBotService.getBot();
+  if (bot && bot !== mockBotInstance) {
+    // If we got a different bot (real one), try to stop it immediately
+    console.warn('Warning: Real TelegramBot detected, attempting to stop polling');
+    try {
+      if (typeof bot.stopPolling === 'function') {
+        await bot.stopPolling().catch(() => {});
+      }
+      if (typeof bot.stop === 'function') {
+        await bot.stop().catch(() => {});
+      }
+    } catch (e) {
+      // Ignore errors when stopping
+    }
+    // Replace with our mock
+    telegramBotService.initializeBot('test-token');
+  }
+  
+  // Ensure we're using the mock
+  const finalBot = telegramBotService.getBot();
+  if (finalBot === mockBotInstance) {
+    // Good - we're using the mock
+  } else if (finalBot) {
+    // Still have a real bot - try one more time to stop it
+    try {
+      if (typeof finalBot.stopPolling === 'function') {
+        await finalBot.stopPolling().catch(() => {});
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
   
   // Wait a bit for handlers to be registered
   await new Promise(resolve => setTimeout(resolve, 50));
