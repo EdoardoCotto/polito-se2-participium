@@ -28,6 +28,10 @@ module.exports = {
     '/server/swagger.js',
     '/server/routes/',
   ],
+  // Force Jest to exit after tests complete (prevents hanging on async operations)
+  forceExit: true,
+  // Detect open handles to help debug what's keeping Jest alive
+  detectOpenHandles: false, // Set to true if you want to see what's keeping Jest alive
   projects: [
     {
       displayName: 'unit',
