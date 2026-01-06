@@ -41,10 +41,10 @@ function LoginModal(props) {
       } else if (user?.type === 'citizen') {
         navigate('/citizen');
       } 
-      else if (user?.type === 'municipal_public_relations_officer') {
+      else if (user?.roles?.[0] === 'municipal_public_relations_officer') {
         navigate('/public-relations-officer');
       }
-      else if(user?.type === 'external_maintainer') {
+      else if(user?.roles?.[0] === 'external_maintainer') {
         navigate('/external-maintainer');
       } else {
         // All other municipality roles go to municipality page

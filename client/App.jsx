@@ -34,6 +34,7 @@ function App() {
       setUser(user);
       }
       
+      
       // Auto-redirect based on user type if on home page
       const currentPath = globalThis.location.pathname;
       if (currentPath === '/') {
@@ -41,9 +42,11 @@ function App() {
           navigate('/admin');
         } else if (user?.type === 'citizen') {
           navigate('/citizen');
-        } else if (user?.type === 'external_maintainer') {
+        } else if (user?.roles === 'external_maintainer') {
           navigate('/external-maintainer');
-        }else if (user?.type) {
+        } else if (user?.roles?.[0] === 'municipal_public_relations_officer') {
+          navigate('/public-relations-officer');
+        }else if (user?.roles) {
           // All other municipality roles
           navigate('/municipality');
         }

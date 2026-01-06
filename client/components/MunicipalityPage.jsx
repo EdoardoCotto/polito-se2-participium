@@ -36,6 +36,15 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const [newComment, setNewComment] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
 
+  // Status update modal state - ADD THIS
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedReportForStatus, setSelectedReportForStatus] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [statusNote, setStatusNote] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState('');
+  const [statusSuccess, setStatusSuccess] = useState('');
+
   // Get user role display name
   const getRoleDisplayName = (type) => {
     const roleMap = {
@@ -685,6 +694,75 @@ export default function TechnicalOfficeStaffMember({ user }) {
     );
   }, [selectedPhotos, photoModalTitle]);
 
+  // Open status update modal - ADD THIS
+  const handleOpenStatusModal = (report, e) => {
+    e.stopPropagation();
+    setSelectedReportForStatus(report);
+    setNewStatus(report.status);
+    setStatusNote('');
+    setStatusError('');
+    setStatusSuccess('');
+    setShowStatusModal(true);
+  };
+
+  // Close status modal - ADD THIS
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setSelectedReportForStatus(null);
+    setNewStatus('');
+    setStatusNote('');
+    setStatusError('');
+    setStatusSuccess('');
+  };
+
+  // Submit status update - ADD THIS
+  const handleSubmitStatusUpdate = async () => {
+    if (!newStatus || newStatus === selectedReportForStatus.status) {
+      setStatusError('Please select a different status');
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      setStatusError('');
+      
+      await API.updateMunicipalStatus(
+        selectedReportForStatus.id, 
+        newStatus,
+        statusNote.trim()
+      );
+      
+      setStatusSuccess(`Report status updated to "${newStatus}"! Citizen has been notified.`);
+      
+      // Refresh reports after delay
+      setTimeout(() => {
+        setShowStatusModal(false);
+        setTimeout(() => {
+          fetchAssignedReports();
+          setSelectedReportForStatus(null);
+          setNewStatus('');
+          setStatusNote('');
+          setStatusError('');
+          setStatusSuccess('');
+        }, 300);
+      }, 2000);
+      
+    } catch (err) {
+      setStatusError(err.message || 'Failed to update report status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  // Available status options for municipal workers - ADD THIS
+  const statusOptions = [
+    { value: 'accepted', label: 'Accepted', icon: 'bi-check-circle' },
+    { value: 'progress', label: 'In Progress', icon: 'bi-hourglass-split' },
+    { value: 'assigned', label: 'Assigned', icon: 'bi-person-check' },
+    { value: 'resolved', label: 'Resolved', icon: 'bi-check-circle-fill' },
+    { value: 'suspended', label: 'Suspended', icon: 'bi-pause-circle' },
+  ];
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
       {/* Welcome Section */}
@@ -1026,6 +1104,39 @@ export default function TechnicalOfficeStaffMember({ user }) {
                               }}
                             >
                               <i className="bi bi-chat-dots me-2"></i>Messages
+                            </Button>
+                          </div>
+
+                          {/* ADD THIS: Update Status Button */}
+                          <div className="mb-3">
+                            <Button
+                              variant="outline-success"
+                              size="sm"
+                              onClick={(e) => handleOpenStatusModal(report, e)}
+                              style={{
+                                fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+                                borderRadius: '0.5rem',
+                                transition: 'all 0.3s ease',
+                                fontWeight: '600',
+                                padding: '0.5rem 1rem',
+                                border: '2px solid #28a745',
+                                color: '#28a745',
+                                boxShadow: '0 2px 4px rgba(40, 167, 69, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                                e.currentTarget.style.color = 'white';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '';
+                                e.currentTarget.style.color = '#28a745';
+                                e.currentTarget.style.transform = '';
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(40, 167, 69, 0.2)';
+                              }}
+                            >
+                              <i className="bi bi-arrow-repeat me-2"></i>Update Status
                             </Button>
                           </div>
 
@@ -1498,6 +1609,126 @@ export default function TechnicalOfficeStaffMember({ user }) {
             </Form.Group>
           </div>
         </Modal.Body>
+      </Modal>
+
+      {/* ADD THIS: Status Update Modal */}
+      <Modal show={showStatusModal} onHide={handleCloseStatusModal} centered size="lg">
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)', 
+          color: 'white',
+          borderBottom: 'none',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ 
+            fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>
+            Update Report Status
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
+          {statusError && (
+            <Alert variant="danger" dismissible onClose={() => setStatusError('')}>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              {statusError}
+            </Alert>
+          )}
+          {statusSuccess && (
+            <Alert variant="success">
+              <i className="bi bi-check-circle me-2"></i>
+              {statusSuccess}
+            </Alert>
+          )}
+          
+          {selectedReportForStatus && (
+            <>
+              <Card className="mb-3" style={{ 
+                border: 'none',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Card.Body className="p-3">
+                  <h6 className="fw-bold mb-2">{selectedReportForStatus.title}</h6>
+                  <Badge bg={getStatusBadgeVariant(selectedReportForStatus.status)} className="mb-2">
+                    Current Status: {selectedReportForStatus.status}
+                  </Badge>
+                </Card.Body>
+              </Card>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">
+                  <i className="bi bi-arrow-repeat me-2"></i>New Status *
+                </Form.Label>
+                <Form.Select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  disabled={updatingStatus}
+                >
+                  <option value="">Select new status...</option>
+                  {statusOptions.map((option) => (
+                    <option 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={option.value === selectedReportForStatus.status}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">
+                  <i className="bi bi-chat-text me-2"></i>Note for Citizen (Optional)
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={statusNote}
+                  onChange={(e) => setStatusNote(e.target.value)}
+                  placeholder="Add a note to inform the citizen about this status change..."
+                  disabled={updatingStatus}
+                />
+                <Form.Text className="text-muted">
+                  This note will be included in the notification sent to the citizen
+                </Form.Text>
+              </Form.Group>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ backgroundColor: '#f8f9fa', borderTop: 'none' }}>
+          <Button 
+            variant="secondary" 
+            onClick={handleCloseStatusModal}
+            disabled={updatingStatus}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="success"
+            onClick={handleSubmitStatusUpdate}
+            disabled={updatingStatus || !newStatus || newStatus === selectedReportForStatus?.status}
+            style={{ 
+              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              border: 'none'
+            }}
+          >
+            {updatingStatus ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle me-2"></i>
+                Update Status & Notify Citizen
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

@@ -1,5 +1,5 @@
 // components/CitizenPage.jsx
-import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge, InputGroup, Carousel } from 'react-bootstrap';
+import { Container, Card, Row, Col, Button, Form, Alert, Modal, Dropdown, ListGroup, Badge, InputGroup, Carousel, Toast, ToastContainer } from 'react-bootstrap';
 import { useState, useEffect, useMemo} from 'react';
 import PropTypes from 'prop-types';
 import TurinMap from './TurinMap';
@@ -44,6 +44,12 @@ export default function CitizenPage({ user }) {
   const [streetSearchQuery, setStreetSearchQuery] = useState(''); // Nuovo stato separato per la ricerca via
   const [streetSuggestions, setStreetSuggestions] = useState([]); // Nuovo stato per i suggerimenti delle vie
   const [showSuggestions, setShowSuggestions] = useState(false); // Stato per mostrare/nascondere i suggerimenti
+
+  // Notifications state - ADD THIS
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -501,8 +507,283 @@ export default function CitizenPage({ user }) {
     setSelectedLocation(null);
   };
 
+  // Fetch notifications - ADD THIS
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+      const allNotifications = await API.getNotifications();
+      const unread = await API.getUnreadNotifications();
+      setNotifications(allNotifications);
+      setUnreadCount(unread.length);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Poll notifications every 10 minutes - ADD THIS
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 600000); // Poll every 10 minutes
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
+
+  // Mark notification as read - ADD THIS
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await API.markNotificationAsRead(notificationId);
+      await fetchNotifications();
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
+  // Mark all notifications as read - ADD THIS
+  const handleMarkAllAsRead = async () => {
+    try {
+      await API.markAllNotificationsAsRead();
+      await fetchNotifications();
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err);
+    }
+  };
+
+  // Delete notification - ADD THIS
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await API.deleteNotification(notificationId);
+      await fetchNotifications();
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
+  };
+
+  // Format notification date - ADD THIS
+  const formatNotificationDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  };
+
   return (
     <div className="app-root d-flex flex-column min-vh-100">
+      {/* ADD THIS: Notification Bell Button - Position it in the top-right corner */}
+      <div style={{
+        position: 'fixed',
+        top: '80px',
+        right: '20px',
+        zIndex: 1000
+      }}>
+        <Button
+          variant={unreadCount > 0 ? 'danger' : 'primary'}
+          onClick={() => setShowNotifications(!showNotifications)}
+          style={{
+            borderRadius: '50%',
+            width: '60px',
+            height: '60px',
+            position: 'relative',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            border: 'none',
+            background: unreadCount > 0 
+              ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
+              : 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)'
+          }}
+        >
+          <i className="bi bi-bell-fill" style={{ fontSize: '1.5rem' }}></i>
+          {unreadCount > 0 && (
+            <Badge
+              bg="light"
+              text="danger"
+              pill
+              style={{
+                position: 'absolute',
+                top: '0',
+                right: '0',
+                fontSize: '0.7rem',
+                fontWeight: 'bold',
+                minWidth: '20px',
+                border: '2px solid white'
+              }}
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </div>
+
+      {/* ADD THIS: Notifications Panel */}
+      <div style={{
+        position: 'fixed',
+        top: '150px',
+        right: showNotifications ? '20px' : '-400px',
+        width: '380px',
+        maxHeight: 'calc(100vh - 170px)',
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+        transition: 'right 0.3s ease-in-out',
+        zIndex: 999,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}>
+        {/* Notifications Header */}
+        <div style={{
+          padding: '1.25rem',
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)',
+          color: 'white',
+          borderTopLeftRadius: '16px',
+          borderTopRightRadius: '16px'
+        }}>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h5 className="mb-0 fw-bold">
+              <i className="bi bi-bell-fill me-2"></i>Notifications
+            </h5>
+            <Button
+              variant="link"
+              size="sm"
+              className="text-white p-0"
+              onClick={() => setShowNotifications(false)}
+              style={{ textDecoration: 'none' }}
+            >
+              <i className="bi bi-x-lg" style={{ fontSize: '1.2rem' }}></i>
+            </Button>
+          </div>
+          {unreadCount > 0 && (
+            <div className="d-flex justify-content-between align-items-center">
+              <small>{unreadCount} unread notification{unreadCount === 1 ? '' : 's'}</small>
+              <Button
+                variant="link"
+                size="sm"
+                className="text-white p-0"
+                onClick={handleMarkAllAsRead}
+                style={{ textDecoration: 'underline', fontSize: '0.85rem' }}
+              >
+                Mark all as read
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Notifications List */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '0.5rem'
+        }}>
+          {loadingNotifications ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" style={{ width: '2rem', height: '2rem' }}>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Loading notifications...</p>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="bi bi-bell-slash" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
+              <p className="mt-3 text-muted">No notifications yet</p>
+            </div>
+          ) : (
+            <ListGroup variant="flush">
+              {notifications.map((notification) => (
+                <ListGroup.Item
+                  key={notification.id}
+                  style={{
+                    backgroundColor: notification.is_read ? 'white' : '#f0f7ff',
+                    border: 'none',
+                    borderBottom: '1px solid #e9ecef',
+                    borderRadius: '8px',
+                    marginBottom: '0.5rem',
+                    padding: '1rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = notification.is_read ? '#f8f9fa' : '#e3f2fd';
+                    e.currentTarget.style.transform = 'translateX(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = notification.is_read ? 'white' : '#f0f7ff';
+                    e.currentTarget.style.transform = 'translateX(0)';
+                  }}
+                  onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                >
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center flex-grow-1">
+                      {!notification.is_read && (
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: '#dc3545',
+                          marginRight: '8px',
+                          flexShrink: 0
+                        }} />
+                      )}
+                      <strong style={{
+                        fontSize: '0.95rem',
+                        color: '#2c3e50',
+                        fontWeight: notification.is_read ? '600' : '700'
+                      }}>
+                        {notification.title}
+                      </strong>
+                    </div>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-danger p-0 ms-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNotification(notification.id);
+                      }}
+                      style={{ flexShrink: 0 }}
+                    >
+                      <i className="bi bi-x-circle"></i>
+                    </Button>
+                  </div>
+                  <p style={{
+                    fontSize: '0.85rem',
+                    color: '#6c757d',
+                    marginBottom: '0.5rem',
+                    lineHeight: '1.4'
+                  }}>
+                    {notification.message}
+                  </p>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <small className="text-muted">
+                      <i className="bi bi-clock me-1"></i>
+                      {formatNotificationDate(notification.created_at)}
+                    </small>
+                    {notification.reportId && (
+                      <Badge bg="primary" style={{ fontSize: '0.7rem' }}>
+                        Report #{notification.reportId}
+                      </Badge>
+                    )}
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+        </div>
+      </div>
+
       <Container fluid className="flex-grow-1 py-2 py-md-4 px-2 px-md-3">
         <Row className="g-2 g-md-4">
           {/* Map */}
