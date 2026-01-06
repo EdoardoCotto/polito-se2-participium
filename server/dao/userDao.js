@@ -167,32 +167,39 @@ exports.getUserByEmail = (email) => {
 };
 
 /**
- * Get user by Telegram nickname
+ * Get user(s) by Telegram nickname
+ * Note: For backward compatibility with existing tests, this returns an array of users
+ * when a match is found, otherwise null.
  * @param {string} telegramNickname - Telegram username (with or without @)
- * @returns {Promise<Object|null>}
+ * @returns {Promise<Object[]|null>}
  */
 
-//TO UPDATE
 exports.getUserByTelegramNickname = (telegramNickname) => {
   return new Promise((resolve, reject) => {
-    // Normalize: remove @ if present, make case-insensitive
+    if (!telegramNickname) return resolve(null);
     const normalized = telegramNickname.replace(/^@/, '').toLowerCase();
-    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.telegram_nickname, GROUP_CONCAT(UR.role) as roles
-                FROM Users U
-                LEFT JOIN UsersRoles UR ON U.id = UR.userId
-                WHERE LOWER(REPLACE(U.telegram_nickname, "@", "")) = ?
-                GROUP BY U.id`;
+    const sql = `
+      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.telegram_nickname,
+             GROUP_CONCAT(UR.role) as roles
+      FROM Users U
+      LEFT JOIN UsersRoles UR ON U.id = UR.userId
+      WHERE LOWER(REPLACE(U.telegram_nickname, '@', '')) = ?
+      GROUP BY U.id
+    `;
     db.all(sql, [normalized], (err, rows) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      // Trasforma roles da stringa a array
+      if (err) return reject(err);
+      if (!rows || rows.length === 0) return resolve(null);
       const users = rows.map(row => ({
-        ...row,
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        name: row.name,
+        surname: row.surname,
+        type: row.type,
+        telegram_nickname: row.telegram_nickname,
         roles: row.roles ? row.roles.split(',') : []
       }));
-      resolve(users.length > 0 ? users : null);
+      resolve(users);
     });
   });
 };

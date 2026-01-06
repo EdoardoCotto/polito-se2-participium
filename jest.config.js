@@ -5,7 +5,7 @@ const common = {
   restoreMocks: true,
   transformIgnorePatterns: ['node_modules/(?!(supertest)/)'],
   resetModules: true,
-  testTimeout: 30000, // 30 seconds timeout per test to prevent hanging
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
   collectCoverageFrom: [
     'server/**/*.js',
     '!server/db/**/*.js',
@@ -57,7 +57,7 @@ module.exports = {
       resetMocks: true,
       restoreMocks: true,
       resetModules: true,
-      testTimeout: 30000, // 30 seconds timeout per test to prevent hanging
+      setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
       collectCoverageFrom: [
         'client/**/*.{js,jsx}',
         '!client/**/*.test.{js,jsx}',

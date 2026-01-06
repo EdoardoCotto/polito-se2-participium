@@ -1,12 +1,14 @@
 -- SQLite Schema for Participium
 -- Database for citizen participation management system
 
--- Drop existing tables (in reverse order of dependencies due to foreign keys)
+-- Drop child tables first to satisfy foreign key constraints
 DROP TABLE IF EXISTS InternalComments;
-DROP TABLE IF EXISTS Reports;
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Streets;
+DROP TABLE IF EXISTS Messages;
+DROP TABLE IF EXISTS Notifications;
 DROP TABLE IF EXISTS UsersRoles;
+DROP TABLE IF EXISTS Reports;
+DROP TABLE IF EXISTS Streets;
+DROP TABLE IF EXISTS Users;
 
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
@@ -109,7 +111,7 @@ CREATE TABLE IF NOT EXISTS Notifications (
   message TEXT NOT NULL,
   is_read INTEGER NOT NULL DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+  FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
   FOREIGN KEY (reportId) REFERENCES Reports(id) ON DELETE CASCADE
 );
 

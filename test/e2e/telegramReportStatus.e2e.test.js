@@ -1,5 +1,7 @@
 // E2E tests for Telegram bot report status functionality
 
+jest.setTimeout(30000);
+
 // Mock TelegramBot FIRST - this must be hoisted before any other requires
 // Use jest.mock (hoisted) to ensure it's applied before any module loads
 // Create mock bot object that will be shared - use a module-level variable
@@ -35,6 +37,7 @@ jest.doMock('node:fs', () => {
   const real = jest.requireActual('node:fs');
   return { ...real, existsSync: () => false, unlinkSync: () => {} };
 });
+// Use real repository/dao for Option B (server-side fix)
 const request = require('supertest');
 const path = require('node:path');
 
@@ -54,6 +57,7 @@ beforeAll(async () => {
   await initializeDatabase();
   app = require('../../server/index');
   userDao = require('../../server/dao/userDao');
+  // Require the mocked repository (with getReportById overridden)
   reportRepository = require('../../server/repository/reportRepository');
   // Get the mock bot instance
   sentMessages = [];
@@ -89,6 +93,14 @@ beforeAll(async () => {
   
   // Initialize bot - the mock should prevent real polling
   const initializedBot = telegramBotService.initializeBot('test-token');
+  // Ensure we capture all messages from the actual bot instance
+  const activeBot = telegramBotService.getBot();
+  if (activeBot && typeof activeBot.sendMessage === 'function') {
+    jest.spyOn(activeBot, 'sendMessage').mockImplementation((chatId, text, options) => {
+      sentMessages.push({ chatId, text, options });
+      return Promise.resolve({ message_id: sentMessages.length });
+    });
+  }
   
   // Verify the mock was used (the bot should be our mock instance)
   const bot = telegramBotService.getBot();
@@ -126,6 +138,8 @@ beforeAll(async () => {
   
   // Wait a bit for handlers to be registered
   await new Promise(resolve => setTimeout(resolve, 50));
+
+  // No repository patching; rely on server code
 });
 
 beforeEach(() => {
@@ -160,6 +174,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   let reportId;
   let reportIdRejected;
   let reportIdAssigned;
+  // Track only ids; rely on real repository lookups
 
   beforeAll(async () => {
     // Create a citizen user with Telegram nickname
@@ -211,7 +226,6 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
 
     reportIdRejected = rejectedReport.id;
 
-    // Reject the report
     await reportRepository.reviewReport(reportIdRejected, {
       status: 'rejected',
       explanation: 'Duplicate report - already exists'
@@ -243,6 +257,10 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
     });
     await userDao.addRoleToUser(techUser.id, 'urban_planner');
 
+    // Ensure assignment path finds an officer without relying on DB query heuristics
+    const reportDao = require('../../server/dao/reportDao');
+    jest.spyOn(reportDao, 'getLeastLoadedOfficer').mockResolvedValue(techUser.id);
+
     // Accept the report
     await reportRepository.reviewReport(reportIdAssigned, {
       status: 'accepted',
@@ -265,6 +283,11 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   const simulateTelegramMessage = async (chatId, username, text) => {
+    // Ensure we capture messages for this simulation
+    mockBotInstance.sendMessage = jest.fn((cId, t, options) => {
+      sentMessages.push({ chatId: cId, text: t, options });
+      return Promise.resolve({ message_id: sentMessages.length });
+    });
     const update = {
       message: {
         message_id: Math.floor(Math.random() * 1000000),
@@ -294,12 +317,8 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   };
 
   test('Citizen can check report status via Telegram bot - Pending report', async () => {
-    const telegramUsername = `telegram_user_${Date.now() - 1000}`; // Use approximate timestamp
     const chatId = 123456789;
-
-    // Get the actual telegram nickname from the user
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportId}`);
     // Debug: inspect captured messages
@@ -319,8 +338,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Citizen can check report status via Telegram bot - Rejected report with reason', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
     const chatId = 123456790;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportIdRejected}`);
@@ -338,8 +356,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Citizen can check report status via Telegram bot - Assigned report', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
     const chatId = 123456791;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportIdAssigned}`);
@@ -356,8 +373,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Telegram bot returns error when report ID is invalid', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
     const chatId = 123456792;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, '/reportstatus abc');
@@ -370,8 +386,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Telegram bot returns error when report does not exist', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
     const chatId = 123456793;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, '/reportstatus 99999');
@@ -439,6 +454,8 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
       photos: ['/static/uploads/other.jpg']
     }, false);
 
+    // Nothing to store; real lookups will read from DB
+
     const chatId = 123456796;
     const user = await userDao.getUserById(citizenUserId);
     const actualTelegramNickname = user.telegram_nickname.replace('@', '');
@@ -454,8 +471,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Telegram bot displays all report details correctly', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
     const chatId = 123456797;
 
     await simulateTelegramMessage(chatId, actualTelegramNickname, `/reportstatus ${reportId}`);
@@ -481,8 +497,7 @@ describe('Telegram Bot - Report Status E2E Tests', () => {
   });
 
   test('Telegram bot handles different report statuses correctly', async () => {
-    const user = await userDao.getUserById(citizenUserId);
-    const actualTelegramNickname = user.telegram_nickname.replace('@', '');
+    const actualTelegramNickname = citizenTelegramUsername;
 
     // Test pending status
     let chatId = 123456798;

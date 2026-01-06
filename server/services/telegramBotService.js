@@ -8,6 +8,7 @@ const path = require('node:path');
 const userDao = require('../dao/userDao');
 const reportRepository = require('../repository/reportRepository');
 const { REPORT_CATEGORIES } = require('../constants/reportCategories');
+const NotFoundError = require('../errors/NotFoundError');
 
 // Conversation states
 const CONVERSATION_STATES = {
@@ -143,7 +144,8 @@ function setupCommandHandlers() {
 
     // Check if user exists in database
     try {
-      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      const userRes = await userDao.getUserByTelegramNickname(telegramUsername);
+      const user = Array.isArray(userRes) ? userRes[0] : userRes;
       
       if (!user) {
         await bot.sendMessage(chatId,
@@ -201,7 +203,8 @@ function setupCommandHandlers() {
     }
 
     try {
-      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      const userRes = await userDao.getUserByTelegramNickname(telegramUsername);
+      const user = Array.isArray(userRes) ? userRes[0] : userRes;
       if (!user) {
         await bot.sendMessage(chatId,
           `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
@@ -255,7 +258,8 @@ function setupCommandHandlers() {
     }
 
     try {
-      const user = await userDao.getUserByTelegramNickname(telegramUsername);
+      const userRes = await userDao.getUserByTelegramNickname(telegramUsername);
+      const user = Array.isArray(userRes) ? userRes[0] : userRes;
       if (!user) {
         await bot.sendMessage(chatId,
           `❌ Your Telegram username (@${telegramUsername}) is not linked to any account.\n\n` +
@@ -264,11 +268,15 @@ function setupCommandHandlers() {
         return;
       }
 
-      const report = await reportRepository.getReportById(reportId);
-
-      if (!report) {
-        await bot.sendMessage(chatId, `❌ Report #${reportId} not found.`);
-        return;
+      let report;
+      try {
+        report = await reportRepository.getReportById(reportId);
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          await bot.sendMessage(chatId, `❌ Report #${reportId} not found.`);
+          return;
+        }
+        throw err;
       }
 
       // Authorization check: ensure user owns the report

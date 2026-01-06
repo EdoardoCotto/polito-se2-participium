@@ -288,8 +288,9 @@ exports.getLeastLoadedOfficer = (technicalOfficeRole) => {
     const sql = `
       SELECT u.id, COUNT(r.id) as workload
       FROM Users u
+      INNER JOIN UsersRoles ur ON ur.userId = u.id AND ur.role = ?
       LEFT JOIN Reports r ON u.id = r.officerId AND r.status = 'assigned'
-      WHERE u.type = ?
+      WHERE u.type = 'municipality_user'
       GROUP BY u.id
       ORDER BY workload ASC, u.id ASC
       LIMIT 1
@@ -299,7 +300,6 @@ exports.getLeastLoadedOfficer = (technicalOfficeRole) => {
       if (err) {
         return reject(err);
       }
-      // Se non ci sono lavoratori per quel ruolo, row sarà undefined
       resolve(row ? row.id : null);
     });
   });

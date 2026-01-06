@@ -559,6 +559,129 @@ describe('API Client', () => {
     });
   });
 
+  describe('Notifications', () => {
+    test('getNotifications success', async () => {
+      const mock = [{ id: 1, title: 't', is_read: 0 }];
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.getNotifications();
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/notifications',
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('getNotifications error branch', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Failed to get notifications' }) });
+      await expect(API.getNotifications()).rejects.toThrow('Failed to get notifications');
+    });
+
+    test('getUnreadNotifications success', async () => {
+      const mock = [{ id: 2, title: 't2', is_read: 0 }];
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.getUnreadNotifications();
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/notifications/unread',
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('markNotificationAsRead success', async () => {
+      const mock = { id: 10, is_read: 1 };
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.markNotificationAsRead(10);
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/notifications/10/read',
+        expect.objectContaining({ method: 'PUT', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('markAllNotificationsAsRead success', async () => {
+      const mock = { message: 'All notifications marked as read', count: 3 };
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.markAllNotificationsAsRead();
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/notifications/read-all',
+        expect.objectContaining({ method: 'PUT', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('deleteNotification success', async () => {
+      const mock = { message: 'Notification deleted successfully' };
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.deleteNotification(7);
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/notifications/7',
+        expect.objectContaining({ method: 'DELETE', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('notifications endpoints error branches', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'err' }) });
+      await expect(API.getUnreadNotifications()).rejects.toThrow('err');
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'err2' }) });
+      await expect(API.markNotificationAsRead(1)).rejects.toThrow('err2');
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'err3' }) });
+      await expect(API.markAllNotificationsAsRead()).rejects.toThrow('err3');
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'err4' }) });
+      await expect(API.deleteNotification(1)).rejects.toThrow('err4');
+    });
+  });
+
+  describe('Streets & Telegram', () => {
+    test('getStreets with query', async () => {
+      const mock = [{ id: 1, street_name: 'Via Roma' }];
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.getStreets('Roma');
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/streets?q=Roma'),
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('getStreets error branch', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Failed to get streets' }) });
+      await expect(API.getStreets()).rejects.toThrow('Failed to get streets');
+    });
+
+    test('getReportsByStreet success', async () => {
+      const mock = { mapFocus: { center: { lat: 45, lon: 7 } }, reports: [] };
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.getReportsByStreet('Via Roma');
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/streets/Via%20Roma/reports',
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('getReportsByStreet error branch', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Street not found' }) });
+      await expect(API.getReportsByStreet('Unknown')).rejects.toThrow('Street not found');
+    });
+
+    test('getTelegramBotInfo success', async () => {
+      const mock = { ok: true, bot: { id: 1, username: 'bot' } };
+      fetch.mockResolvedValueOnce({ ok: true, json: async () => mock });
+      const res = await API.getTelegramBotInfo();
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/telegram/info',
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      );
+      expect(res).toEqual(mock);
+    });
+
+    test('getTelegramBotInfo error branch', async () => {
+      fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Bot not initialized' }) });
+      await expect(API.getTelegramBotInfo()).rejects.toThrow('Bot not initialized');
+    });
+  });
+
   describe('Error Handling', () => {
     it('should handle error response with error field', async () => {
       fetch.mockResolvedValueOnce({

@@ -461,12 +461,17 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
     throw new BadRequestError(`Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
   }
 
-  // Get the current report to know the old status
-  const currentReport = await reportDao.getReportById(reportId);
-  if (!currentReport) {
-    throw new NotFoundError('Report not found');
+  // Try to get the current report to know the old status (optional)
+  // Do not fail early here; let the DAO update drive existence checks.
+  let oldStatus = null;
+  try {
+    const currentReport = await reportDao.getReportById(reportId);
+    if (currentReport) {
+      oldStatus = currentReport.status;
+    }
+  } catch (_e) {
+    // Ignore; will handle not found if update returns null below
   }
-  const oldStatus = currentReport.status;
 
   // CHIAMATA CORRETTA AL NUOVO METODO DAO
   const updatedRow = await reportDao.updateReportStatusByExternalMaintainer(reportId, maintainerId, normalizedStatus);
