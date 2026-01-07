@@ -1799,8 +1799,7 @@ const handleSendComment = async () => {
               fontSize: 'clamp(0.85rem, 2vw, 0.9rem)',
               borderRadius: '0.75rem'
             }}>
-              <i className="bi bi-info-circle me-2"></i>
-              No external maintainer assigned yet. You can only chat with the citizen.
+              <i className="bi bi-info-circle me-2"></i>No external maintainer assigned yet. You can only chat with the citizen.
             </Alert>
           )}
         </Modal.Body>
@@ -1820,8 +1819,7 @@ const handleSendComment = async () => {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>
-            Update Report Status
+            <i className="bi bi-arrow-repeat me-2" style={{ fontSize: '1.5rem' }}></i>Update Report Status
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
@@ -1918,8 +1916,7 @@ const handleSendComment = async () => {
               </>
             ) : (
               <>
-                <i className="bi bi-check-circle me-2"></i>
-                Update Status & Notify Citizen
+                <i className="bi bi-check-circle me-2"></i>Update Status & Notify Citizen
               </>
             )}
           </Button>
