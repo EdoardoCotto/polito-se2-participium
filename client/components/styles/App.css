@@ -248,6 +248,61 @@
   transform: translateX(3px);
 }
 
+/* Map Button Styles - Matching Login Button */
+.map-button {
+  background: linear-gradient(135deg, #3d5a8f 0%, #2d4a73 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(94, 123, 179, 0.3);
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.map-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.map-button:hover {
+  background: linear-gradient(135deg, #4a6fa5 0%, #3d5c8f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(94, 123, 179, 0.4);
+}
+
+.map-button:active {
+  transform: translateY(0);
+}
+
+.map-button i {
+  font-size: 1.1em;
+  margin-right: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.map-button:hover i {
+  transform: translateX(3px);
+}
+
 /* Logout Button Styles */
 .logout-button {
   border-radius: 12px;
@@ -1089,6 +1144,7 @@
   
   .profile-button,
   .login-button,
+  .map-button,
   .logout-button {
     width: 100%;
     justify-content: center;
