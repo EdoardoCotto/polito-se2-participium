@@ -18,6 +18,8 @@ services:
       - "3001:3001"
     volumes:
       - db-data:/app/server/db
+    env_file:
+      - ../.env
     environment:
       - NODE_ENV=production
       - PORT=3001
