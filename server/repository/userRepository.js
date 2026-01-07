@@ -10,29 +10,11 @@ const emailService = require('../services/emailService')
 
 exports.getUserById = async (userId) => {
     console.log('[REPO getUserById] START - userId:', userId);
-    const userNotMapped = await userDao.getUserById(userId);
+    const user = await userDao.getUserById(userId);
     
-    console.log('[REPO getUserById] userNotMapped:', userNotMapped);
-    console.log('[REPO getUserById] userNotMapped type:', typeof userNotMapped);
-    console.log('[REPO getUserById] userNotMapped length:', userNotMapped?.length);
-    
-    if (!userNotMapped) {
+    if (!user) {
         console.log('[REPO getUserById] User not found, throwing error');
         throw new NotFoundError('User not found')
-    }
-
-    console.log('[REPO getUserById] firstRow:', firstRow);
-    const user = {
-        id: userNotMapped.id,
-        username: userNotMapped.username,
-        email: userNotMapped.email,
-        name: userNotMapped.name,
-        surname: userNotMapped.surname,
-        type: userNotMapped.type,
-        roles: userNotMapped.map(row => row.role),
-        telegram_nickname: userNotMapped.telegram_nickname,
-        personal_photo_path: userNotMapped.personal_photo_path, // Aggiungi questo
-        mail_notifications: userNotMapped.mail_notifications      // Aggiungi questo
     }
     return user
 }
