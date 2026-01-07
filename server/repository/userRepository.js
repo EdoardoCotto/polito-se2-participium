@@ -9,19 +9,12 @@ const emailService = require('../services/emailService')
 
 
 exports.getUserById = async (userId) => {
-    const userNotMapped = await userDao.getUserById(userId);
-    if (!userNotMapped || userNotMapped.length === 0) {
+    console.log('[REPO getUserById] START - userId:', userId);
+    const user = await userDao.getUserById(userId);
+    
+    if (!user) {
+        console.log('[REPO getUserById] User not found, throwing error');
         throw new NotFoundError('User not found')
-    }
-    const firstRow = userNotMapped[0];
-    const user = {
-        id: firstRow.id,
-        username: firstRow.username,
-        email: firstRow.email,
-        name: firstRow.name,
-        surname: firstRow.surname,
-        roles: userNotMapped.map(row => row.type),
-        telegram_nickname: firstRow.telegram_nickname
     }
     return user
 }
@@ -137,24 +130,37 @@ exports.getMunicipalityUsers = async (adminId) => {
 };
 
 exports.updateUserProfile = async (userId, updateData) => {
+    console.log('[REPO updateUserProfile] START - userId:', userId);
+    console.log('[REPO updateUserProfile] updateData:', updateData);
+    
     if (!Number.isInteger(userId)){
+        console.log('[REPO updateUserProfile] Invalid user id');
         throw new BadRequestError('Invalid user id')
     }
     
+    console.log('[REPO updateUserProfile] Calling getUserById...');
     const user = await exports.getUserById(userId);
+    console.log('[REPO updateUserProfile] getUserById returned:', user);
+    
     if (!user){
+        console.log('[REPO updateUserProfile] User not found');
         throw new NotFoundError('User not found');
     }
 
     if (updateData.personal_photo_path) {
+        console.log('[REPO updateUserProfile] Validating photo extension...');
         const validExtensions = ['.jpg', '.png', '.jpeg'];
         const fileExtension = updateData.personal_photo_path.toLowerCase().slice(updateData.personal_photo_path.lastIndexOf('.'));
         if (!validExtensions.includes(fileExtension)) {
+            console.log('[REPO updateUserProfile] Invalid file extension:', fileExtension);
             throw new BadRequestError('Invalid file extension');
         }
+        console.log('[REPO updateUserProfile] Photo extension valid:', fileExtension);
     }
     
+    console.log('[REPO updateUserProfile] Calling DAO updateUserProfile...');
     const result = await userDao.updateUserProfile(userId, updateData);
+    console.log('[REPO updateUserProfile] END - DAO returned:', result);
     return result;
 }
 
