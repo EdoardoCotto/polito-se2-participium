@@ -689,6 +689,35 @@ const updateMaintainerStatus = async (reportId, status) => {
 };
 
 /**
+ * Update Report Status (Municipal Staff convenience)
+ * NOTE: Backend supports:
+ * - Accept/Reject via review endpoint (requires technicalOffice or explanation)
+ * - Assign to external via assign-external endpoint
+ * - Progress/Suspended/Resolved via maintainer endpoint (external maintainer only)
+ *
+ * This helper routes allowed statuses to the correct backend or throws for unsupported flows.
+ * @param {number} reportId
+ * @param {string} status - accepted | rejected | assigned | progress | suspended | resolved
+ * @param {string} [note] - optional note/explanation (used by review flows in UI, not supported here)
+ * @returns {Promise<Object>}
+ */
+const updateMunicipalStatus = async (reportId, status, note) => {
+  const normalized = String(status || '').toLowerCase();
+  
+  // Delegate statuses that are only allowed for external maintainers
+  if (['progress', 'suspended', 'resolved'].includes(normalized)) {
+    return await updateMaintainerStatus(reportId, normalized);
+  }
+  
+  // For review-related statuses, guide the caller to use the proper flow
+  if (normalized === 'accepted' || normalized === 'rejected' || normalized === 'assigned') {
+    throw new Error('Use the review/assignment flows to change status (accept/reject/assign).');
+  }
+  
+  throw new Error('Invalid status value');
+};
+
+/**
  * Get External Assigned Reports
  * Retrieves all reports assigned to the logged-in external maintainer
  * Requires external maintainer authentication
@@ -1032,6 +1061,7 @@ const API = {
   reviewReport,
   assignReportToExternalMaintainer,
   updateMaintainerStatus,
+  updateMunicipalStatus,
 
   // Comment management
   createComment,

@@ -275,7 +275,7 @@ function NavHeader(props) {
             {/* Public Map Button - Show only on homepage when not logged in */}
             {!props.loggedIn && isHomePage && (
               <Button
-                variant="outline-primary"
+                variant="primary"
                 onClick={() => navigate('/map')}
                 className="map-button d-flex align-items-center me-2 me-lg-3 my-2 my-lg-0"
               >

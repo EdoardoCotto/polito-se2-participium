@@ -26,6 +26,10 @@ exports.createComment = async (reportId, authorId, comment) => {
   // 2. LOGICA DI BLOCCO
   const isAssignedOfficer = report.officerId === authorId;
   const isAssignedMaintainer = report.external_maintainerId === authorId;
+  console.log('Author ID:', authorId);
+  console.log('Report ID:', reportId);
+  console.log('Report:', report);
+  console.log('isAssignedOfficer:', isAssignedOfficer, 'isAssignedMaintainer:', isAssignedMaintainer);
 
   if (!isAssignedOfficer && !isAssignedMaintainer) {
     throw new Error('UnauthorizedComment: User is not assigned to this report');
