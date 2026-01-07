@@ -283,6 +283,153 @@ const handleSendMessage = async () => {
     }
   };
 
+  // Open municipality chat - ADD THIS
+    const handleOpenMunicipalityChat = async (report) => {
+      setSelectedReportForChat(report);
+      setChatMessages([]);
+      setNewMessage('');
+      setMessageError('');
+      setShowMunicipalityChat(true);
+      await fetchMessages(report.id);
+    };
+
+    // Close municipality chat - ADD THIS
+    const handleCloseMunicipalityChat = () => {
+      setShowMunicipalityChat(false);
+      setSelectedReportForChat(null);
+      setChatMessages([]);
+      setNewMessage('');
+      setMessageError('');
+    };
+
+    // Render chat message - ADD THIS
+    const renderChatMessage = (message, idx) => {
+      const isCurrentUser = message.authorId === user.id;
+      const displayTime = new Date(message.created_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      const messageText = message.message || message.comment || message.text || '';
+      const authorName = message.name || message.senderName || message.authorName || '';
+      const authorSurname = message.surname || message.senderSurname || message.authorSurname || '';
+
+      return (
+        <div
+          key={idx}
+          style={{
+            display: 'flex',
+            justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+            marginBottom: '1rem',
+            animation: 'slideIn 0.3s ease-out'
+          }}
+        >
+          <div style={{
+            maxWidth: '75%',
+            background: isCurrentUser 
+              ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
+              : 'linear-gradient(135deg, #5e7bb3 0%, #4a5f8f 100%)',
+            color: '#fff',
+            padding: '1rem 1.3rem',
+            borderRadius: isCurrentUser
+              ? '1.5rem 1.5rem 0.3rem 1.5rem'
+              : '1.5rem 1.5rem 1.5rem 0.3rem',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+            position: 'relative',
+            wordBreak: 'break-word'
+          }}>
+            {!isCurrentUser && (
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                marginBottom: '0.5rem',
+                opacity: 0.9
+              }}>
+                {authorName} {authorSurname}
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontWeight: '500',
+                  opacity: 0.8,
+                  fontSize: '0.7rem'
+                }}>
+                  (Municipality)
+                </span>
+              </div>
+            )}
+            <div style={{
+              fontSize: '0.95rem',
+              lineHeight: '1.5',
+              marginBottom: '0.5rem'
+            }}>
+              {messageText || '(No message text)'}
+            </div>
+            <div style={{
+              fontSize: '0.7rem',
+              opacity: 0.8,
+              textAlign: 'right',
+              fontWeight: '500'
+            }}>
+              {displayTime}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Render chat messages content - ADD THIS
+    const renderChatMessagesContent = () => {
+      if (loadingMessages) {
+        return (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" style={{ width: '2.5rem', height: '2.5rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3 text-muted fw-medium">Loading messages...</p>
+          </div>
+        );
+      }
+
+      if (messageError && chatMessages.length === 0) {
+        return (
+          <Alert variant="danger" style={{ 
+            borderRadius: '1rem',
+            border: 'none',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
+          }}>
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            {messageError}
+          </Alert>
+        );
+      }
+
+      if (chatMessages.length === 0) {
+        return (
+          <div className="text-center py-5">
+            <div style={{
+              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+              borderRadius: '50%',
+              width: '120px',
+              height: '120px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+              boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
+            }}>
+              <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
+            </div>
+            <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
+              No messages yet. Start the conversation!
+            </p>
+          </div>
+        );
+      }
+
+      return chatMessages.map((message, idx) => renderChatMessage(message, idx));
+    };
+
   // Handle report marker click in view mode - Show detail modal
   const handleReportMarkerClick = (report) => {
     setSelectedReportDetail(report);
@@ -385,150 +532,6 @@ const handleSendMessage = async () => {
         </div>
       );
     }
-    // Open municipality chat - ADD THIS
-    const handleOpenMunicipalityChat = async (report) => {
-      setSelectedReportForChat(report);
-      setChatMessages([]);
-      setNewMessage('');
-      setMessageError('');
-      setShowMunicipalityChat(true);
-      await fetchMessages(report.id);
-    };
-
-    // Close municipality chat - ADD THIS
-    const handleCloseMunicipalityChat = () => {
-      setShowMunicipalityChat(false);
-      setSelectedReportForChat(null);
-      setChatMessages([]);
-      setNewMessage('');
-      setMessageError('');
-    };
-
-    // Render chat message - ADD THIS
-    const renderChatMessage = (message, idx) => {
-      const isCurrentUser = message.authorId === user.id;
-      const displayTime = new Date(message.created_at).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-
-      const messageText = message.message || message.comment || message.text || '';
-      const authorName = message.name || message.senderName || message.authorName || '';
-      const authorSurname = message.surname || message.senderSurname || message.authorSurname || '';
-
-      return (
-        <div
-          key={idx}
-          style={{
-            display: 'flex',
-            justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
-            marginBottom: '1rem',
-            animation: 'slideIn 0.3s ease-out'
-          }}
-        >
-          <div style={{
-            maxWidth: '75%',
-            background: isCurrentUser 
-              ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
-              : 'linear-gradient(135deg, #5e7bb3 0%, #4a5f8f 100%)',
-            color: '#fff',
-            padding: '1rem 1.3rem',
-            borderRadius: isCurrentUser
-              ? '1.5rem 1.5rem 0.3rem 1.5rem'
-              : '1.5rem 1.5rem 1.5rem 0.3rem',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
-            position: 'relative',
-            wordBreak: 'break-word'
-          }}>
-            {!isCurrentUser && (
-              <div style={{
-                fontSize: '0.75rem',
-                fontWeight: '700',
-                marginBottom: '0.5rem',
-                opacity: 0.9
-              }}>
-                {authorName} {authorSurname}
-                <span style={{
-                  marginLeft: '0.5rem',
-                  fontWeight: '500',
-                  opacity: 0.8,
-                  fontSize: '0.7rem'
-                }}>
-                  (Municipality)
-                </span>
-              </div>
-            )}
-            <div style={{
-              fontSize: '0.95rem',
-              lineHeight: '1.5',
-              marginBottom: '0.5rem'
-            }}>
-              {messageText || '(No message text)'}
-            </div>
-            <div style={{
-              fontSize: '0.7rem',
-              opacity: 0.8,
-              textAlign: 'right',
-              fontWeight: '500'
-            }}>
-              {displayTime}
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // Render chat messages content - ADD THIS
-    const renderChatMessagesContent = () => {
-      if (loadingMessages) {
-        return (
-          <div className="text-center py-5">
-            <Spinner animation="border" style={{ color: '#5e7bb3', width: '2.5rem', height: '2.5rem' }} />
-            <p className="mt-3 text-muted fw-medium">Loading messages...</p>
-          </div>
-        );
-      }
-
-      if (messageError && chatMessages.length === 0) {
-        return (
-          <Alert variant="danger" style={{ 
-            borderRadius: '1rem',
-            border: 'none',
-            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
-            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
-          }}>
-            <i className="bi bi-exclamation-triangle-fill me-2"></i>
-            {messageError}
-          </Alert>
-        );
-      }
-
-      if (chatMessages.length === 0) {
-        return (
-          <div className="text-center py-5">
-            <div style={{
-              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-              borderRadius: '50%',
-              width: '120px',
-              height: '120px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-              boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
-            }}>
-              <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
-            </div>
-            <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
-              No messages yet. Start the conversation!
-            </p>
-          </div>
-        );
-      }
-
-      return chatMessages.map((message, idx) => renderChatMessage(message, idx));
-    };
 
     return (
       <Carousel interval={null} className="report-photos-carousel">
@@ -1370,91 +1373,112 @@ const handleSendMessage = async () => {
                         </Alert>
                       ) : (
                         filteredReports.map((report) => (
-                        <ListGroup.Item
-                          key={report.id}
-                          action
-                          active={highlightedReportId === report.id}
-                          onClick={() => handleReportListClick(report.id)}
-                          className="mb-2 report-list-item"
-                          style={{ 
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            border: highlightedReportId === report.id ? '2px solid #5e7bb3' : '1px solid #dee2e6',
-                            backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white',
-                            transition: 'all 0.3s ease',
-                            boxShadow: highlightedReportId === report.id ? '0 4px 12px rgba(94, 123, 179, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (highlightedReportId !== report.id) {
-                              e.currentTarget.style.transform = 'translateX(4px)';
-                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
-                              e.currentTarget.style.borderColor = '#5e7bb3';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (highlightedReportId !== report.id) {
-                              e.currentTarget.style.transform = 'translateX(0)';
-                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-                              e.currentTarget.style.borderColor = '#dee2e6';
-                            }
-                          }}
-                        >
-                          <div className="d-flex justify-content-between align-items-start">
-                            <div className="flex-grow-1">
-                              <div className="d-flex align-items-center mb-1">
-                                <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
-                                <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                                  {report.title}
-                                </strong>
-                              </div>
-                              {/* Username */}
-                              {report.user && (
-                                <div className="mb-2" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
-                                  <i className="bi bi-person-circle me-1 text-secondary"></i>
-                                  <span className="text-secondary">
-                                    {report.user.username || report.user.name || 'Anonymous'}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="mb-1">
-                                <Badge bg={getStatusColor(report.status)} className="me-2">
-                                  {report.status}
-                                </Badge>
-                                <Badge bg="secondary">
-                                  {report.category}
-                                </Badge>
-                              </div>
-                              {report.description && (
-                                <p className="mb-1 text-muted small" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
-                                  {report.description.length > 80 
-                                    ? `${report.description.substring(0, 80)}...` 
-                                    : report.description
-                                  }
-                                </p>
-                              )}
-                              <div className="d-flex justify-content-between align-items-center">
-                                <small className="text-muted">
-                                  <i className="bi bi-calendar me-1"></i>
-                                  {new Date(report.created_at).toLocaleDateString()}
-                                </small>
-                                {report.photoUrls && report.photoUrls.length > 0 && (
-                                  <Badge 
-                                    bg="info" 
-                                    className="report-photo-badge"
-                                    style={{ cursor: 'pointer', fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}
-                                    onClick={(e) => handleViewReportPhotos(report, e)}
-                                  >
-                                    <i className="bi bi-image me-1"></i>
-                                    {report.photoUrls.length}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            {highlightedReportId === report.id && (
-                              <i className="bi bi-check-circle-fill text-primary ms-2" style={{ fontSize: '1.2rem' }}></i>
-                            )}
-                          </div>
-                        </ListGroup.Item>
+  <ListGroup.Item
+    key={report.id}
+    className="mb-2 report-list-item"
+    style={{ 
+      borderRadius: '12px',
+      border: highlightedReportId === report.id ? '2px solid #5e7bb3' : '1px solid #dee2e6',
+      backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white',
+      transition: 'all 0.3s ease',
+      boxShadow: highlightedReportId === report.id ? '0 4px 12px rgba(94, 123, 179, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)'
+    }}
+  >
+    <div 
+      style={{ cursor: 'pointer' }}
+      onClick={() => handleReportListClick(report.id)}
+    >
+      <div className="d-flex justify-content-between align-items-start">
+        <div className="flex-grow-1">
+          <div className="d-flex align-items-center mb-1">
+            <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
+            <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+              {report.title}
+            </strong>
+          </div>
+          {/* Username */}
+          {report.user && (
+            <div className="mb-2" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
+              <i className="bi bi-person-circle me-1 text-secondary"></i>
+              <span className="text-secondary">
+                {report.user.username || report.user.name || 'Anonymous'}
+              </span>
+            </div>
+          )}
+          <div className="mb-1">
+            <Badge bg={getStatusColor(report.status)} className="me-2">
+              {report.status}
+            </Badge>
+            <Badge bg="secondary">
+              {report.category}
+            </Badge>
+          </div>
+          {report.description && (
+            <p className="mb-1 text-muted small" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
+              {report.description.length > 80 
+                ? `${report.description.substring(0, 80)}...` 
+                : report.description
+              }
+            </p>
+          )}
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="text-muted">
+              <i className="bi bi-calendar me-1"></i>
+              {new Date(report.created_at).toLocaleDateString()}
+            </small>
+            {report.photoUrls && report.photoUrls.length > 0 && (
+              <Badge 
+                bg="info" 
+                className="report-photo-badge"
+                style={{ cursor: 'pointer', fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)' }}
+                onClick={(e) => handleViewReportPhotos(report, e)}
+              >
+                <i className="bi bi-image me-1"></i>
+                {report.photoUrls.length}
+              </Badge>
+            )}
+          </div>
+        </div>
+        {highlightedReportId === report.id && (
+          <i className="bi bi-check-circle-fill text-primary ms-2" style={{ fontSize: '1.2rem' }}></i>
+        )}
+      </div>
+    </div>
+
+    {/* ADD THIS: Chat Button - Only for My Reports */}
+    {viewMode === 'myReports' && (
+      <div className="mt-3 pt-3" style={{ borderTop: '1px solid #dee2e6' }}>
+        <Button
+          variant="outline-primary"
+          size="sm"
+          className="w-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenMunicipalityChat(report);
+          }}
+          style={{
+            borderRadius: '8px',
+            fontWeight: '600',
+            fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)';
+            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.borderColor = '#5e7bb3';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '';
+            e.currentTarget.style.color = '';
+            e.currentTarget.style.borderColor = '';
+          }}
+        >
+          <i className="bi bi-chat-dots-fill me-2"></i>
+          Chat with Municipality
+        </Button>
+      </div>
+    )}
+  </ListGroup.Item>
                         ))
                       )}
                     </ListGroup>
@@ -1854,6 +1878,195 @@ const handleSendMessage = async () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Municipality Chat Modal - ADD THIS at the end, before closing div */}
+      <Modal show={showMunicipalityChat} onHide={handleCloseMunicipalityChat} centered size="lg">
+  <Modal.Header closeButton style={{ 
+    background: 'linear-gradient(135deg, #5e7bb3 0%, #7c93c3 100%)', 
+    color: 'white',
+    borderBottom: 'none',
+    padding: '1.5rem 2rem',
+    boxShadow: '0 4px 12px rgba(94, 123, 179, 0.15)'
+  }}>
+    <div style={{ width: '100%' }}>
+      <Modal.Title style={{ 
+        fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
+        fontWeight: '700',
+        display: 'flex',
+        alignItems: 'center',
+        letterSpacing: '-0.02em',
+        marginBottom: '0.75rem'
+      }}>
+        <i className="bi bi-chat-dots-fill me-3" style={{ 
+          fontSize: '1.6rem',
+          animation: 'pulse 2s ease-in-out infinite'
+        }}></i>
+        Chat with Municipality
+      </Modal.Title>
+      {selectedReportForChat && (
+        <div style={{ width: '100%' }}>
+          <div style={{ 
+            fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)',
+            fontWeight: '600',
+            opacity: 0.95,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            flexWrap: 'wrap',
+            marginBottom: '0.75rem'
+          }}>
+            <i className="bi bi-file-text me-1" style={{ fontSize: '1rem' }}></i>
+            <span>{selectedReportForChat.title}</span>
+            <Badge 
+              bg="light" 
+              text="dark" 
+              style={{ 
+                fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                padding: '0.35rem 0.6rem',
+                fontWeight: '600'
+              }}
+            >
+              {selectedReportForChat.category}
+            </Badge>
+            <Badge 
+              bg={getStatusColor(selectedReportForChat.status)} 
+              style={{ 
+                fontSize: 'clamp(0.7rem, 2vw, 0.8rem)',
+                padding: '0.35rem 0.6rem',
+                fontWeight: '600'
+              }}
+            >
+              {selectedReportForChat.status}
+            </Badge>
+          </div>
+          {selectedReportForChat.description && (
+            <div style={{ 
+              fontSize: 'clamp(0.85rem, 2.3vw, 0.95rem)',
+              opacity: 0.9,
+              lineHeight: '1.5',
+              fontStyle: 'italic'
+            }}>
+              <i className="bi bi-quote me-2"></i>
+              {selectedReportForChat.description}
+              <i className="bi bi-quote ms-2" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}></i>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </Modal.Header>
+  <Modal.Body style={{ 
+    backgroundColor: '#f8fafc',
+    padding: '0',
+    maxHeight: '65vh',
+    display: 'flex',
+    flexDirection: 'column'
+  }}>
+    {/* Messages Container */}
+    <div style={{ 
+      flex: 1,
+      overflowY: 'auto',
+      padding: '1.5rem 2rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem',
+      scrollBehavior: 'smooth',
+      background: 'linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%)'
+    }}
+    className="messages-container"
+    >
+      {renderChatMessagesContent()}
+    </div>
+
+    {/* Message Input */}
+    <div style={{ 
+      padding: '1.25rem 2rem 1.5rem',
+      backgroundColor: '#ffffff',
+      borderTop: '2px solid #e2e8f0',
+      boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.05)'
+    }}>
+      {messageError && chatMessages.length > 0 && (
+        <Alert 
+          variant="danger" 
+          dismissible 
+          onClose={() => setMessageError('')} 
+          className="mb-3" 
+          style={{ 
+            fontSize: '0.85rem',
+            borderRadius: '0.75rem',
+            border: 'none',
+            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.15)'
+          }}
+        >
+          <i className="bi bi-exclamation-circle-fill me-2"></i>
+          {messageError}
+        </Alert>
+      )}
+      <Form.Group>
+        <div className="d-flex gap-3 align-items-end">
+          <Form.Control
+            as="textarea"
+            rows={2}
+            placeholder="Type your message to the municipality..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            disabled={sendingMessage}
+            className="message-input"
+            style={{
+              fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+              borderRadius: '1rem',
+              border: '2px solid #e2e8f0',
+              resize: 'none',
+              padding: '0.75rem 1rem',
+              transition: 'all 0.2s ease',
+              backgroundColor: '#f8fafc',
+              lineHeight: '1.5'
+            }}
+          />
+          <Button
+            variant="primary"
+            onClick={handleSendMessage}
+            disabled={sendingMessage || !newMessage.trim()}
+            className="send-button"
+            style={{
+              borderRadius: '1rem',
+              padding: '0.75rem 1.5rem',
+              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              border: 'none',
+              fontWeight: '700',
+              minWidth: '90px',
+              height: '52px',
+              boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)',
+              transition: 'all 0.2s ease',
+              fontSize: '1rem'
+            }}
+          >
+            {sendingMessage ? (
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Sending...</span>
+              </div>
+            ) : (
+              <i className="bi bi-send-fill"></i>
+            )}
+          </Button>
+        </div>
+        <small className="text-muted d-block mt-2" style={{ 
+          fontSize: 'clamp(0.7rem, 1.8vw, 0.75rem)',
+          fontWeight: '500'
+        }}>
+          <i className="bi bi-info-circle me-1"></i>Press Enter to send, Shift+Enter for new line
+        </small>
+      </Form.Group>
+    </div>
+  </Modal.Body>
+</Modal>
     </div>
   );
 }
