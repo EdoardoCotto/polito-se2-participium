@@ -89,13 +89,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
       setLoading(true);
       setError('');
       const reports = await API.getAssignedReports();
-      console.log('📋 Assigned Reports:', reports);
-      
-      // Debug: mostra struttura primo report
-      if (reports.length > 0) {
-        console.log('🔍 Primo report:', reports[0]);
-        console.log('🔍 externalMaintainer:', reports[0].externalMaintainer);
-      }
       
       setAssignedReports(reports);
 
@@ -109,12 +102,12 @@ export default function TechnicalOfficeStaffMember({ user }) {
         
         // Check if assigned to external maintainer usando externalMaintainer
         if (report.externalMaintainer?.id) {
-          console.log(`✅ Report ${report.id} è assegnato a external maintainer:`, report.externalMaintainer);
+        
           assignments[report.id] = report.externalMaintainer;
         }
       });
       
-      console.log('🔍 External assignments mapped:', assignments);
+      
 
     } catch (err) {
       console.error('❌ Error fetching reports:', err);
@@ -129,7 +122,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
     // If clicking on already selected report, deselect it
     if (highlightedLocation?.reportId === report.id) {
       setHighlightedLocation(null);
-      console.log('Report deselected');
       return;
     }
 
@@ -141,7 +133,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
         title: report.title,
         reportId: report.id
       });
-      console.log('Report selected:', report.title, report.latitude, report.longitude);
     }
   };
 
@@ -149,7 +140,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const handleOpenPhotos = (report, e) => {
     e.stopPropagation();
     const photos = report.photoUrls || [];
-    console.log('Photos to display:', photos);
     
     if (photos.length === 0) {
       console.warn('No photos found for this report');
@@ -187,7 +177,6 @@ export default function TechnicalOfficeStaffMember({ user }) {
     try {
       setLoadingMaintainers(true);
       const maintainers = await API.getExternalMaintainers();
-      console.log('🔍 External maintainers loaded:', maintainers);
       setExternalMaintainers(maintainers);
     } catch (err) {
       console.error('Failed to load external maintainers:', err);
@@ -543,7 +532,7 @@ const handleSendComment = async () => {
             lineHeight: '1.5',
             marginBottom: '0.5rem'
           }}>
-            {comment.comment}
+            {comment.message }
           </div>
           <div style={{
             fontSize: '0.7rem',
@@ -613,19 +602,19 @@ const handleSendComment = async () => {
 
     if (!user || !municipalWorkerRoles.includes(user.roles[0])) {
       console.log('user:', user);
-      console.log(`❌ User non è municipal worker`);
+      
       return false;
     }
     
     // Non mostrare il pulsante se già assegnato a external maintainer
     if (report.externalMaintainer?.id) {
-      console.log(`❌ Report già assegnato a external maintainer`);
+      
       return false;
     }
     
     // Mostra il pulsante solo per report accepted, progress, o assigned
     const canAssign = ['accepted', 'progress', 'assigned'].includes(report.status);
-    console.log(`${canAssign ? '✅' : '❌'} Status check: ${report.status}`);
+    
     return canAssign;
   };
 
@@ -633,7 +622,7 @@ const handleSendComment = async () => {
   const isAssignedToExternal = (report) => {
     // Check both externalMaintainer object and maintainerId field
     const isAssigned = report.externalMaintainer?.id || report.maintainerId;
-    console.log(`🔍 isAssignedToExternal per report ${report.id}: ${!!isAssigned}`);
+    
     return !!isAssigned;
   };
 
