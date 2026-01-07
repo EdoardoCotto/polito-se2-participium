@@ -582,3 +582,28 @@ exports.getReportsByUserId = (userId) => {
     });
   });
 };
+
+exports.getReportsByCitizenId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        R.id, R.title, R.description, R.category, R.status, 
+        R.latitude, R.longitude, R.created_at, R.updated_at,
+        R.image_path1, R.image_path2, R.image_path3,
+        R.rejection_reason,
+        -- Se vuoi mostrare anche chi sta gestendo la pratica (opzionale)
+        OFF.name as officerName, OFF.surname as officerSurname
+      FROM Reports R
+      LEFT JOIN Users OFF ON R.officerId = OFF.id
+      WHERE R.userId = ?
+      ORDER BY R.created_at DESC
+    `;
+
+    db.all(sql, [userId], (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(rows);
+    });
+  });
+};

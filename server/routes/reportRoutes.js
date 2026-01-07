@@ -6,6 +6,46 @@ const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
 const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff, isExternalMaintainer,isInternalStaffOrMaintainer } = require('../middlewares/authMiddleware');
 
+
+/**
+ * @swagger
+ * /reports/me:
+ *   get:
+ *     summary: Get all reports created by the logged-in citizen
+ *     tags: [Reports]
+ *     security:
+ *       - sessionAuth: []
+ *     responses:
+ *       200:
+ *         description: List of reports found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                     enum: [pending, assigned, rejected, progress, suspended, resolved]
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get(
+  '/reports/me',
+  isLoggedIn,
+  reportController.getMyReports
+);
+
 /**
  * @swagger
  * /reports:
@@ -707,5 +747,6 @@ router.get('/streets', reportController.getStreets);
  *         description: Internal server error
  */
 router.get('/streets/:name/reports', reportController.getReportsByStreet);
+
 
 module.exports = router;

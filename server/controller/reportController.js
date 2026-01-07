@@ -3,6 +3,7 @@
 
 const reportRepository = require('../repository/reportRepository');
 const streetRepository = require('../repository/streetRepository');
+const reportDao = require('../dao/reportDao');
 
 const AppError = require('../errors/AppError');
 const path = require('node:path');
@@ -466,5 +467,26 @@ exports.getReportsByStreet = async (req, res) => {
     console.error('Error getting reports by street:', err);
     res.status(err.message === 'Street not found' ? 404 : 500)
        .json({ error: err.message });
+  }
+};
+
+exports.getMyReports = async (req, res) => {
+  try {
+    // 1. Recupera l'ID dalla sessione sicura (Passport)
+    const userId = req.user.id;
+    console.log('Fetching reports for user ID:', userId);
+    // 2. Chiama il DAO
+    const reports = await reportDao.getReportsByCitizenId(userId);
+
+    // 3. Costruisci gli URL completi delle foto
+    const enrichedReports = reports.map(report => ({
+      ...report,
+      photoUrls: buildPhotoUrls([report.image_path1, report.image_path2, report.image_path3], req)
+    }));
+
+    res.status(200).json(enrichedReports);
+  } catch (err) {
+    console.error('Error fetching citizen reports:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
