@@ -94,7 +94,7 @@ router.post(
 router.get(
   '/comment/:id/comments', 
   isLoggedIn, 
-  isTechnicalOfficeStaff, 
+  isInternalStaffOrMaintainer, 
   commentController.getComments
 );
 
