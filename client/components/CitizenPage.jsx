@@ -842,59 +842,112 @@ const handleSendMessage = async () => {
 
   return (
     <div className="app-root d-flex flex-column min-vh-100">
-      {/* ADD THIS: Notification Bell Button - Position it in the top-right corner */}
+      {/* ADD THIS: Notification Bell Button - Improved and Responsive */}
       <div style={{
         position: 'fixed',
-        top: '80px',
-        right: '20px',
+        top: 'clamp(70px, 10vh, 80px)',
+        right: 'clamp(10px, 2vw, 20px)',
         zIndex: 1000
       }}>
         <Button
           variant={unreadCount > 0 ? 'danger' : 'primary'}
           onClick={() => setShowNotifications(!showNotifications)}
+          className="notification-bell-button"
           style={{
             borderRadius: '50%',
-            width: '60px',
-            height: '60px',
+            width: 'clamp(50px, 8vw, 65px)',
+            height: 'clamp(50px, 8vw, 65px)',
             position: 'relative',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-            border: 'none',
+            boxShadow: unreadCount > 0 
+              ? '0 6px 20px rgba(220, 53, 69, 0.4), 0 0 30px rgba(220, 53, 69, 0.2)'
+              : '0 6px 20px rgba(94, 123, 179, 0.4)',
+            border: '3px solid white',
             background: unreadCount > 0 
               ? 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)'
-              : 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)'
+              : 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: showNotifications ? 'scale(0.95)' : 'scale(1)',
+            animation: unreadCount > 0 ? 'bellShake 2s ease-in-out infinite' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = unreadCount > 0
+              ? '0 8px 28px rgba(220, 53, 69, 0.5), 0 0 40px rgba(220, 53, 69, 0.3)'
+              : '0 8px 28px rgba(94, 123, 179, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = showNotifications ? 'scale(0.95)' : 'scale(1)';
+            e.currentTarget.style.boxShadow = unreadCount > 0
+              ? '0 6px 20px rgba(220, 53, 69, 0.4), 0 0 30px rgba(220, 53, 69, 0.2)'
+              : '0 6px 20px rgba(94, 123, 179, 0.4)';
           }}
         >
-          <i className="bi bi-bell-fill" style={{ fontSize: '1.5rem' }}></i>
+          <i 
+            className={`bi ${unreadCount > 0 ? 'bi-bell-fill' : 'bi-bell'}`}
+            style={{ 
+              fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))',
+              animation: unreadCount > 0 ? 'bellRing 1s ease-in-out infinite' : 'none'
+            }}
+          ></i>
           {unreadCount > 0 && (
-            <Badge
-              bg="light"
-              text="danger"
-              pill
-              style={{
+            <>
+              {/* Pulsating ring effect */}
+              <div style={{
                 position: 'absolute',
-                top: '0',
-                right: '0',
-                fontSize: '0.7rem',
-                fontWeight: 'bold',
-                minWidth: '20px',
-                border: '2px solid white'
-              }}
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
+                top: '-4px',
+                right: '-4px',
+                bottom: '-4px',
+                left: '-4px',
+                borderRadius: '50%',
+                border: '2px solid rgba(220, 53, 69, 0.5)',
+                animation: 'pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+              }} />
+              
+              {/* Badge with improved styling */}
+              <Badge
+                bg="light"
+                text="danger"
+                pill
+                style={{
+                  position: 'absolute',
+                  top: '-3px',
+                  right: '-3px',
+                  fontSize: 'clamp(0.65rem, 1.5vw, 0.75rem)',
+                  fontWeight: '800',
+                  minWidth: 'clamp(20px, 4vw, 24px)',
+                  height: 'clamp(20px, 4vw, 24px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 8px rgba(220, 53, 69, 0.4)',
+                  background: 'linear-gradient(135deg, #fff 0%, #ffe0e0 100%)',
+                  animation: 'badge-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                  padding: 'clamp(2px, 0.5vw, 4px)'
+                }}
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Badge>
+            </>
           )}
         </Button>
       </div>
 
-      {/* ADD THIS: Notifications Panel */}
+      {/* ADD THIS: Notifications Panel - Fully Responsive */}
       <div style={{
         position: 'fixed',
-        top: '150px',
-        right: showNotifications ? '20px' : '-400px',
-        width: '380px',
-        maxHeight: 'calc(100vh - 170px)',
+        top: 'clamp(140px, 18vh, 150px)',
+        right: showNotifications ? 'clamp(10px, 2vw, 20px)' : '-100vw',
+        width: 'clamp(280px, 90vw, 380px)',
+        maxWidth: '95vw',
+        maxHeight: 'calc(100vh - clamp(160px, 20vh, 170px))',
         backgroundColor: 'white',
-        borderRadius: '16px',
+        borderRadius: 'clamp(12px, 2vw, 16px)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
         transition: 'right 0.3s ease-in-out',
         zIndex: 999,
@@ -904,14 +957,14 @@ const handleSendMessage = async () => {
       }}>
         {/* Notifications Header */}
         <div style={{
-          padding: '1.25rem',
+          padding: 'clamp(1rem, 2.5vw, 1.25rem)',
           background: 'linear-gradient(135deg, #5e7bb3 0%, #7b9fd9 100%)',
           color: 'white',
-          borderTopLeftRadius: '16px',
-          borderTopRightRadius: '16px'
+          borderTopLeftRadius: 'clamp(12px, 2vw, 16px)',
+          borderTopRightRadius: 'clamp(12px, 2vw, 16px)'
         }}>
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="mb-0 fw-bold">
+            <h5 className="mb-0 fw-bold" style={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
               <i className="bi bi-bell-fill me-2"></i>Notifications
             </h5>
             <Button
@@ -921,18 +974,23 @@ const handleSendMessage = async () => {
               onClick={() => setShowNotifications(false)}
               style={{ textDecoration: 'none' }}
             >
-              <i className="bi bi-x-lg" style={{ fontSize: '1.2rem' }}></i>
+              <i className="bi bi-x-lg" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)' }}></i>
             </Button>
           </div>
           {unreadCount > 0 && (
-            <div className="d-flex justify-content-between align-items-center">
-              <small>{unreadCount} unread notification{unreadCount === 1 ? '' : 's'}</small>
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <small style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>
+                {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}
+              </small>
               <Button
                 variant="link"
                 size="sm"
                 className="text-white p-0"
                 onClick={handleMarkAllAsRead}
-                style={{ textDecoration: 'underline', fontSize: '0.85rem' }}
+                style={{ 
+                  textDecoration: 'underline', 
+                  fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' 
+                }}
               >
                 Mark all as read
               </Button>
@@ -944,19 +1002,29 @@ const handleSendMessage = async () => {
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '0.5rem'
+          padding: 'clamp(0.25rem, 1vw, 0.5rem)'
         }}>
           {loadingNotifications ? (
             <div className="text-center py-5">
-              <div className="spinner-border text-primary" style={{ width: '2rem', height: '2rem' }}>
+              <div className="spinner-border text-primary" style={{ 
+                width: 'clamp(1.5rem, 4vw, 2rem)', 
+                height: 'clamp(1.5rem, 4vw, 2rem)' 
+              }}>
                 <span className="visually-hidden">Loading...</span>
               </div>
-              <p className="mt-3 text-muted">Loading notifications...</p>
+              <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                Loading notifications...
+              </p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-5">
-              <i className="bi bi-bell-slash" style={{ fontSize: '3rem', color: '#dee2e6' }}></i>
-              <p className="mt-3 text-muted">No notifications yet</p>
+              <i className="bi bi-bell-slash" style={{ 
+                fontSize: 'clamp(2rem, 6vw, 3rem)', 
+                color: '#dee2e6' 
+              }}></i>
+              <p className="mt-3 text-muted" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>
+                No notifications yet
+              </p>
             </div>
           ) : (
             <ListGroup variant="flush">
@@ -967,9 +1035,9 @@ const handleSendMessage = async () => {
                     backgroundColor: notification.is_read ? 'white' : '#f0f7ff',
                     border: 'none',
                     borderBottom: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    marginBottom: '0.5rem',
-                    padding: '1rem',
+                    borderRadius: 'clamp(6px, 1.5vw, 8px)',
+                    marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)',
+                    padding: 'clamp(0.75rem, 2vw, 1rem)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
                   }}
@@ -987,18 +1055,19 @@ const handleSendMessage = async () => {
                     <div className="d-flex align-items-center flex-grow-1">
                       {!notification.is_read && (
                         <div style={{
-                          width: '8px',
-                          height: '8px',
+                          width: 'clamp(6px, 1.5vw, 8px)',
+                          height: 'clamp(6px, 1.5vw, 8px)',
                           borderRadius: '50%',
                           backgroundColor: '#dc3545',
-                          marginRight: '8px',
+                          marginRight: 'clamp(6px, 1.5vw, 8px)',
                           flexShrink: 0
                         }} />
                       )}
                       <strong style={{
-                        fontSize: '0.95rem',
+                        fontSize: 'clamp(0.8rem, 2vw, 0.95rem)',
                         color: '#2c3e50',
-                        fontWeight: notification.is_read ? '600' : '700'
+                        fontWeight: notification.is_read ? '600' : '700',
+                        lineHeight: '1.3'
                       }}>
                         {notification.title}
                       </strong>
@@ -1013,24 +1082,24 @@ const handleSendMessage = async () => {
                       }}
                       style={{ flexShrink: 0 }}
                     >
-                      <i className="bi bi-x-circle"></i>
+                      <i className="bi bi-x-circle" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}></i>
                     </Button>
                   </div>
                   <p style={{
-                    fontSize: '0.85rem',
+                    fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)',
                     color: '#6c757d',
-                    marginBottom: '0.5rem',
+                    marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)',
                     lineHeight: '1.4'
                   }}>
                     {notification.message}
                   </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small className="text-muted" style={{ fontSize: 'clamp(0.7rem, 1.6vw, 0.75rem)' }}>
                       <i className="bi bi-clock me-1"></i>
                       {formatNotificationDate(notification.created_at)}
                     </small>
                     {notification.reportId && (
-                      <Badge bg="primary" style={{ fontSize: '0.7rem' }}>
+                      <Badge bg="primary" style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.7rem)' }}>
                         Report #{notification.reportId}
                       </Badge>
                     )}
