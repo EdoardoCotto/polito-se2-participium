@@ -1986,7 +1986,7 @@ const handleSendMessage = async () => {
         <i className="bi bi-chat-dots-fill me-3" style={{ 
           fontSize: '1.6rem',
           animation: 'pulse 2s ease-in-out infinite'
-        }}></i>
+        }}></i>{' '}
         Chat with Municipality
       </Modal.Title>
       {selectedReportForChat && (
