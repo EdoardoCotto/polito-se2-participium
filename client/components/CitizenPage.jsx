@@ -1464,19 +1464,19 @@ const handleSendMessage = async () => {
                         filteredReports.map((report) => (
   <ListGroup.Item
     key={report.id}
+    action
+    active={highlightedReportId === report.id}
+    onClick={() => handleReportListClick(report.id)}
     className="mb-2 report-list-item"
     style={{ 
       borderRadius: '12px',
+      cursor: 'pointer',
       border: highlightedReportId === report.id ? '2px solid #5e7bb3' : '1px solid #dee2e6',
       backgroundColor: highlightedReportId === report.id ? '#e8f0ff' : 'white',
       transition: 'all 0.3s ease',
       boxShadow: highlightedReportId === report.id ? '0 4px 12px rgba(94, 123, 179, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)'
     }}
   >
-    <div 
-      style={{ cursor: 'pointer' }}
-      onClick={() => handleReportListClick(report.id)}
-    >
       <div className="d-flex justify-content-between align-items-start">
         <div className="flex-grow-1">
           <div className="d-flex align-items-center mb-1">
@@ -1532,7 +1532,6 @@ const handleSendMessage = async () => {
           <i className="bi bi-check-circle-fill text-primary ms-2" style={{ fontSize: '1.2rem' }}></i>
         )}
       </div>
-    </div>
 
     {/* ADD THIS: Chat Button - Only for My Reports */}
     {viewMode === 'myReports' && (
