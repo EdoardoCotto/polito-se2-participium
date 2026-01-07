@@ -168,7 +168,7 @@ export default function ExternalMaintainer({ user }) {
       setStatusError('');
       
       // Use the existing API method
-      await API.updateMaintainerStatus(selectedReport.id, newStatus);
+      await API.updateStatus(selectedReport.id, newStatus);
       
       const selectedStatusOption = statusOptions.find(s => s.value === newStatus);
       setStatusSuccess(`Report status updated to "${selectedStatusOption?.label}"!`);

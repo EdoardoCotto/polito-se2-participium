@@ -532,7 +532,7 @@ const handleSendComment = async () => {
             lineHeight: '1.5',
             marginBottom: '0.5rem'
           }}>
-            {comment.message }
+            {comment.message || comment.comment}
           </div>
           <div style={{
             fontSize: '0.7rem',
@@ -754,7 +754,7 @@ const handleSendComment = async () => {
       setUpdatingStatus(true);
       setStatusError('');
       
-      await API.updateMunicipalStatus(
+      await API.updateStatus(
         selectedReportForStatus.id, 
         newStatus,
         statusNote.trim()

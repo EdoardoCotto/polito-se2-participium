@@ -662,8 +662,8 @@ const assignReportToExternalMaintainer = async (reportId, externalMaintainerId) 
 };
 
 /**
- * Update Report Status (External Maintainer)
- * Allows an External Maintainer to update the status of a report assigned to them
+ * Update Report Status 
+ * Allows an External Maintainer and Municipality to update the status of a report assigned to them
  * Allowed statuses: "progress", "suspended", "resolved"
  * Requires external maintainer authentication
  * @param {number} reportId - The ID of the report to update
@@ -671,7 +671,7 @@ const assignReportToExternalMaintainer = async (reportId, externalMaintainerId) 
  * @returns {Promise<Object>} - Updated report object with photoUrls
  * @throws {Error} - If update fails (validation error, unauthorized, forbidden, not found, etc.)
  */
-const updateMaintainerStatus = async (reportId, status) => {
+const updateStatus = async (reportId, status) => {
   const response = await fetch(`${SERVER_URL}/reports/${reportId}/status`, {
     method: 'PUT',
     headers: {
@@ -686,35 +686,6 @@ const updateMaintainerStatus = async (reportId, status) => {
   }
 
   return await response.json();
-};
-
-/**
- * Update Report Status (Municipal Staff convenience)
- * NOTE: Backend supports:
- * - Accept/Reject via review endpoint (requires technicalOffice or explanation)
- * - Assign to external via assign-external endpoint
- * - Progress/Suspended/Resolved via maintainer endpoint (external maintainer only)
- *
- * This helper routes allowed statuses to the correct backend or throws for unsupported flows.
- * @param {number} reportId
- * @param {string} status - accepted | rejected | assigned | progress | suspended | resolved
- * @param {string} [note] - optional note/explanation (used by review flows in UI, not supported here)
- * @returns {Promise<Object>}
- */
-const updateMunicipalStatus = async (reportId, status, note) => {
-  const normalized = String(status || '').toLowerCase();
-  
-  // Delegate statuses that are only allowed for external maintainers
-  if (['progress', 'suspended', 'resolved'].includes(normalized)) {
-    return await updateMaintainerStatus(reportId, normalized);
-  }
-  
-  // For review-related statuses, guide the caller to use the proper flow
-  if (normalized === 'accepted' || normalized === 'rejected' || normalized === 'assigned') {
-    throw new Error('Use the review/assignment flows to change status (accept/reject/assign).');
-  }
-  
-  throw new Error('Invalid status value');
 };
 
 /**
@@ -1060,8 +1031,8 @@ const API = {
   getReportById,
   reviewReport,
   assignReportToExternalMaintainer,
-  updateMaintainerStatus,
-  updateMunicipalStatus,
+  updateStatus,
+
 
   // Comment management
   createComment,
