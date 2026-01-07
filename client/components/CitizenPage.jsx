@@ -60,6 +60,10 @@ export default function CitizenPage({ user }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [selectedReportForChat, setSelectedReportForChat] = useState(null);
 
+  // ADD THIS STATE
+  const [myReports, setMyReports] = useState([]);
+  const [loadingMyReports, setLoadingMyReports] = useState(false);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -109,6 +113,24 @@ const fetchMessages = async (reportId) => {
     setChatMessages([]);
   } finally {
     setLoadingMessages(false);
+  }
+};
+
+// ADD THIS FUNCTION - Fetch citizen's own reports
+const fetchMyReports = async () => {
+  try {
+    setLoadingMyReports(true);
+    setReportsError('');
+    const reports = await API.getMyCitizenReports();
+    console.log('📋 My reports:', reports);
+    setMyReports(reports);
+    setAllReports(reports); // Use the same state for filtering
+    setTimeout(() => setSelectedLocation(null), 100);
+  } catch (err) {
+    console.error('Failed to fetch my reports:', err);
+    setReportsError(err.message || 'Failed to load your reports');
+  } finally {
+    setLoadingMyReports(false);
   }
 };
 
@@ -247,6 +269,9 @@ const handleSendMessage = async () => {
       } finally {
         setLoadingReports(false);
       }
+    } else if (mode === 'myReports') {
+    // Fetch only current user's reports - ADD THIS
+    await fetchMyReports();
     } else if (mode === 'create') {
       // Clear reports and street area when switching to create mode
       setAllReports([]);
@@ -561,6 +586,8 @@ const handleSendMessage = async () => {
         return 'Create Report';
       case 'view':
         return 'View Reports on Map';
+      case 'myReports':
+        return 'My Reports';
       default:
         return 'Create Report';
     }
@@ -568,11 +595,29 @@ const handleSendMessage = async () => {
 
   // Helper functions to reduce cognitive complexity
   const getMapTitle = () => {
-    return viewMode === 'create' ? 'Select a location on the map' : 'Reports Map View';
+     switch (viewMode) {
+    case 'create':
+      return 'Select a location on the map';
+    case 'view':
+      return 'All Reports Map View';
+    case 'myReports':
+      return 'My Reports Map View';
+    default:
+      return 'Select a location on the map';
+  }
   };
 
   const getMapTitleMobile = () => {
-    return viewMode === 'create' ? 'Select Location' : 'Map View';
+    switch (viewMode) {
+    case 'create':
+      return 'Select Location';
+    case 'view':
+      return 'All Reports';
+    case 'myReports':
+      return 'My Reports';
+    default:
+      return 'Select Location';
+    }
   };
 
   const getReportCountBadge = () => {
@@ -634,7 +679,16 @@ const handleSendMessage = async () => {
   };
 
   const getViewModeIcon = () => {
-    return viewMode === 'create' ? 'bi-file-earmark-plus' : 'bi-eye';
+    switch (viewMode) {
+    case 'create':
+      return 'bi-file-earmark-plus';
+    case 'view':
+      return 'bi-eye';
+    case 'myReports':
+      return 'bi-person-lines-fill';
+    default:
+      return 'bi-file-earmark-plus';
+    }
   };
 
   // Handle street suggestion selection
@@ -1082,23 +1136,36 @@ const handleSendMessage = async () => {
                     >
                       <i className="bi bi-eye me-2"></i>View Reports on Map
                     </Dropdown.Item>
+                     <Dropdown.Item 
+                      active={viewMode === 'myReports'}
+                      onClick={() => handleViewModeChange('myReports')}
+                      className="d-flex align-items-center"
+                      style={{ 
+                        fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
+                        padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)'
+                      }}
+                    >
+                      <i className="bi bi-person-lines-fill me-2"></i>My Reports
+                    </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               </Card.Header>
               <Card.Body className="p-2 p-md-4" style={{ maxHeight: 'calc(750px - 4rem)', overflowY: 'auto' }}>
 
                 {/* Show loading state when fetching reports */}
-                {viewMode === 'view' && loadingReports && (
+                {(viewMode === 'view' || viewMode === 'myReports') && (loadingReports || loadingMyReports) && (
                   <div className="text-center py-5 report-loading-state">
                     <div className="spinner-border text-primary mb-3" aria-hidden="true" style={{ width: '3rem', height: '3rem' }}>
                       <span className="visually-hidden">Loading reports...</span>
                     </div>
-                    <output className="mt-3 text-muted fw-semibold d-block">Loading reports...</output>
+                    <output className="mt-3 text-muted fw-semibold d-block">
+                      {viewMode === 'myReports' ? 'Loading your reports...' : 'Loading reports...'}
+                    </output>
                   </div>
                 )}
 
                 {/* Show error if reports failed to load */}
-                {viewMode === 'view' && reportsError && (
+                {(viewMode === 'view' || viewMode === 'myReports') && reportsError && (
                   <Alert variant="danger" dismissible onClose={() => setReportsError('')}>
                     <i className="bi bi-exclamation-triangle me-2"></i>
                     {reportsError}
@@ -1106,7 +1173,7 @@ const handleSendMessage = async () => {
                 )}
 
                 {/* Show reports list when in view mode and reports loaded */}
-                {viewMode === 'view' && !loadingReports && !reportsError && allReports.length > 0 && (
+                {(viewMode === 'view' || viewMode === 'myReports') && !loadingReports && !loadingMyReports && !reportsError && allReports.length > 0 && (
                   <div>
                     {/* Search and Filters */}
                     <div className="mb-3">
@@ -1395,29 +1462,42 @@ const handleSendMessage = async () => {
                 )}
 
                 {/* Show message when in view mode with no reports */}
-                {viewMode === 'view' && !loadingReports && !reportsError && allReports.length === 0 && (
+                {(viewMode === 'view' || viewMode === 'myReports') && !loadingReports && !loadingMyReports && !reportsError && allReports.length === 0 && (
                   <div className="text-center py-5 report-empty-state">
                     <div className="report-empty-icon mb-3">
                       <i className="bi bi-inbox"></i>
                     </div>
                     <h5 className="mt-3 mb-2 fw-bold">
-                      {selectedStreetArea ? 'No Reports in This Area' : 'No Reports Available'}
+                      {viewMode === 'myReports' ? 'No Reports Yet' : 'No Reports Available'}
                     </h5>
                     <p className="text-muted" style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                      {selectedStreetArea 
-                        ? `No reports found in the area of ${selectedStreetArea.streetName}.`
-                        : 'There are no approved reports to display at the moment.'
+                      {viewMode === 'myReports' 
+                        ? 'You haven\'t created any reports yet. Start by creating your first report!'
+                        : selectedStreetArea 
+                          ? `No reports found in the area of ${selectedStreetArea.streetName}.`
+                          : 'There are no approved reports to display at the moment.'
                       }
                     </p>
-                    {selectedStreetArea && (
+                    {selectedStreetArea && viewMode === 'view' && (
                       <Button
                         variant="outline-primary"
                         size="sm"
                         onClick={handleClearStreetArea}
                         className="mt-2"
                       >
-                        <i className="bi bi-arrow-left me-2"></i>{' '}
+                        <i className="bi bi-arrow-left me-2"></i>
                         View All Reports
+                      </Button>
+                    )}
+                    {viewMode === 'myReports' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleViewModeChange('create')}
+                        className="mt-2"
+                      >
+                        <i className="bi bi-plus-circle me-2"></i>
+                        Create Your First Report
                       </Button>
                     )}
                   </div>
@@ -1734,6 +1814,7 @@ const handleSendMessage = async () => {
               )}
             </>
           )}
+       
         </Modal.Body>
         <Modal.Footer className="report-detail-footer">
           <Button variant="secondary" onClick={handleCloseReportDetail}>

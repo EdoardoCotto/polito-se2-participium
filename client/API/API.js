@@ -615,6 +615,26 @@ const getAssignedReports = async () => {
 };
 
 /**
+ * Get My Citizen Reports
+ * Retrieves all reports created by the logged-in citizen
+ * Requires citizen authentication
+ * @returns {Promise<Array>} - Array of report objects created by the citizen with photoUrls
+ * @throws {Error} - If request fails (unauthorized, etc.)
+ */
+const getMyCitizenReports = async () => {
+  const response = await fetch(`${SERVER_URL}/reports/me`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get my reports');
+  }
+
+  return await response.json();
+};
+
+/**
  * Get External Maintainers
  * Retrieves a list of all external maintainers
  * Requires technical office staff authentication
@@ -1028,6 +1048,7 @@ const API = {
   getCitizenReports,
   getAssignedReports,
   getExternalAssignedReports,
+  getMyCitizenReports,
   getReportById,
   reviewReport,
   assignReportToExternalMaintainer,
