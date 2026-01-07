@@ -165,6 +165,63 @@ exports.getReportsByStatus = (status, options = {}) => {
   });
 };
 
+exports.getReportsForUnlogged = (status, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const { boundingBox } = options || {};
+
+    let sql = `
+      SELECT 
+        R.id          AS reportId,
+        R.userId      AS reportUserId,
+        R.latitude,
+        R.longitude,
+        R.title,
+        R.description,
+        R.category,
+        R.status,
+        R.rejection_reason,
+        R.technical_office,
+        R.created_at,
+        R.updated_at,
+        R.image_path1,
+        R.image_path2,
+        R.image_path3,
+        U.id          AS userId,
+        U.username    AS userUsername,
+        U.name        AS userName,
+        U.surname     AS userSurname,
+        U.email       AS userEmail
+      FROM Reports R
+      LEFT JOIN Users U ON R.userId = U.id
+      WHERE R.status != 'pending' AND R.status != 'rejected' 
+    `;
+
+    const params = [];
+
+    if (boundingBox) {
+      sql += `
+        AND R.latitude BETWEEN ? AND ?
+        AND R.longitude BETWEEN ? AND ?
+      `;
+      params.push(
+        boundingBox.south,
+        boundingBox.north,
+        boundingBox.west,
+        boundingBox.east,
+      );
+    }
+
+    sql += ' ORDER BY R.created_at DESC';
+
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        return reject(err);
+      }
+      console
+      resolve(rows || []);
+    });
+  });
+};
 
 
 exports.getCitizenReports = (options = {}) => {

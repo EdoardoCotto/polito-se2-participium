@@ -348,7 +348,7 @@ exports.getPendingReports = async () => {
  * @param {{ boundingBox?: { north: number, south: number, east: number, west: number } }} options
  */
 exports.getApprovedReports = async (options = {}) => {
-  return getReportsByStatusInternal(REPORT_STATUSES.ASSIGNED, options);
+  return reportDao.getReportsForUnlogged(options);
 };
 
 exports.getCitizenReports = async (options = {}) => {
