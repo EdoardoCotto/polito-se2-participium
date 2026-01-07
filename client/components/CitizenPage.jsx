@@ -375,6 +375,7 @@ const handleSendMessage = async () => {
           </div>
         </div>
       );
+
     };
 
     // Render chat messages content - ADD THIS
@@ -624,15 +625,15 @@ const handleSendMessage = async () => {
   };
 
   const getReportCountBadge = () => {
-    if (viewMode !== 'view' || allReports.length === 0) return null;
-    
-    const count = filteredReports.length === allReports.length 
-      ? allReports.length 
-      : `${filteredReports.length}/${allReports.length}`;
-    const label = filteredReports.length === 1 ? 'report' : 'reports';
-    
-    return `${count} ${label}`;
-  };
+    if ((viewMode !== 'view' && viewMode !== 'myReports') || allReports.length === 0) return null;
+  
+  const count = filteredReports.length === allReports.length 
+    ? allReports.length 
+    : `${filteredReports.length}/${allReports.length}`;
+  const label = filteredReports.length === 1 ? 'report' : 'reports';
+  
+  return `${count} ${label}`;
+};
 
   const getLocationStatusStyles = () => {
     return {
@@ -1080,11 +1081,11 @@ const handleSendMessage = async () => {
                   <TurinMap 
                     onLocationSelected={viewMode === 'create' ? setSelectedLocation : undefined}
                     selectedLocation={selectedLocation}
-                    readOnly={viewMode === 'view'}
-                    allReports={viewMode === 'view' ? filteredReports : []}
-                    onReportMarkerClick={viewMode === 'view' ? handleReportMarkerClick : undefined}
+                    readOnly={viewMode === 'view' || viewMode === 'myReports'} // ADD myReports here
+                    allReports={(viewMode === 'view' || viewMode === 'myReports') ? filteredReports : []} // ADD myReports here
+                    onReportMarkerClick={(viewMode === 'view' || viewMode === 'myReports') ? handleReportMarkerClick : undefined} // ADD myReports here
                     highlightedReportId={highlightedReportId}
-                    shouldZoomToSelection={viewMode === 'view' && highlightedReportId !== null}
+                    shouldZoomToSelection={(viewMode === 'view' || viewMode === 'myReports') && highlightedReportId !== null} // ADD myReports here
                     streetArea={selectedStreetArea}
                   />
                 </div>
