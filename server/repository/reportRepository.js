@@ -416,7 +416,10 @@ exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId
   if (!maintainer) {
     throw new NotFoundError('External maintainer not found');
   }
-  if (!maintainer.roles.includes('external_maintainer')) {
+  const isExternalMaintainer =
+    maintainer?.type === 'external_maintainer' ||
+    (Array.isArray(maintainer.roles) && maintainer.roles.includes('external_maintainer'));
+  if (!isExternalMaintainer) {
     throw new BadRequestError('The specified user is not an external maintainer');
   }
 
