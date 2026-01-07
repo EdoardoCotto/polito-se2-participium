@@ -1940,7 +1940,10 @@ TechnicalOfficeStaffMember.propTypes = {
     id: PropTypes.number,
     name: PropTypes.string,
     surname: PropTypes.string,
+    username: PropTypes.string,
     type: PropTypes.string,
+    role: PropTypes.string,
+    roles: PropTypes.arrayOf(PropTypes.string),
   }),
 };
 

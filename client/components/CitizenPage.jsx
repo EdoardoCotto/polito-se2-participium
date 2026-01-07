@@ -2162,6 +2162,7 @@ CitizenPage.propTypes = {
     id: PropTypes.number,
     username: PropTypes.string,
     name: PropTypes.string,
+    surname: PropTypes.string,
     role: PropTypes.string,
   }),
 };
