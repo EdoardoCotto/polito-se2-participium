@@ -35,6 +35,11 @@ export default function TechnicalOfficeStaffMember({ user }) {
   const [commentError, setCommentError] = useState('');
   const [newComment, setNewComment] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
+  const [chatRecipient, setChatRecipient] = useState(null); // ADD THIS: 'citizen' | 'external'
+
+  // Recipient selection modal state - ADD THIS
+  const [showRecipientModal, setShowRecipientModal] = useState(false);
+  const [reportForChat, setReportForChat] = useState(null);
 
   // Status update modal state - ADD THIS
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -255,45 +260,68 @@ export default function TechnicalOfficeStaffMember({ user }) {
     setCommentError('');
   };
 
-  // Fetch comments for a report
-  const fetchComments = async (reportId) => {
+  // Fetch comments for a report - UPDATED
+  const fetchComments = async (reportId, recipient) => {
     try {
       setLoadingComments(true);
       setCommentError('');
-      const fetchedComments = await API.getComments(reportId);
-      setComments(fetchedComments);
-    } catch (err) {
-      console.error('Failed to load comments:', err);
-      setCommentError(err.message || 'Failed to load comments');
-    } finally {
-      setLoadingComments(false);
+    console.log('🔍 Fetching messages for recipient:', recipient);
+    
+    let allComments;
+    
+    if (recipient === 'citizen') {
+      // Use getMessages for citizen chat
+      allComments = await API.getMessages(reportId);
+      console.log('📨 Messages with citizen:', allComments);
+    } else if (recipient === 'external') {
+      // Use getComments for external maintainer chat
+      allComments = await API.getComments(reportId);
+      console.log('📨 Comments with external maintainer:', allComments);
     }
-  };
+    
+    setComments(allComments || []);
+  } catch (err) {
+    console.error('❌ Failed to load messages:', err);
+    setCommentError(err.message || 'Failed to load messages');
+    setComments([]);
+  } finally {
+    setLoadingComments(false);
+  }
+};
 
-  // Send new comment
-  const handleSendComment = async () => {
-    if (!newComment.trim()) {
-      setCommentError('Please enter a message');
-      return;
-    }
+  // Send new comment - UPDATED
+const handleSendComment = async () => {
+  if (!newComment.trim()) {
+    setCommentError('Please enter a message');
+    return;
+  }
 
-    try {
-      setSendingComment(true);
-      setCommentError('');
-      
+  try {
+    setSendingComment(true);
+    setCommentError('');
+    
+    if (chatRecipient === 'citizen') {
+      // Use createMessage for citizen chat
+      console.log('📤 Sending message to citizen');
+      await API.createMessage(selectedReport.id, newComment.trim());
+    } else if (chatRecipient === 'external') {
+      // Use createComment for external maintainer chat
+      console.log('📤 Sending comment to external maintainer');
       await API.createComment(selectedReport.id, newComment.trim());
-      setNewComment('');
-      
-      // Refresh comments
-      await fetchComments(selectedReport.id);
-      
-    } catch (err) {
-      console.error('Failed to send comment:', err);
-      setCommentError(err.message || 'Failed to send message');
-    } finally {
-      setSendingComment(false);
     }
-  };
+    
+    setNewComment('');
+    
+    // Refresh messages/comments
+    await fetchComments(selectedReport.id, chatRecipient);
+    
+  } catch (err) {
+    console.error('❌ Failed to send message:', err);
+    setCommentError(err.message || 'Failed to send message');
+  } finally {
+    setSendingComment(false);
+  }
+};
 
   // Format date
   const formatDate = (dateString) => {
@@ -564,7 +592,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
   // Check if report can be assigned to external maintainer
   const canAssignToExternal = (report) => {
     console.log(`🔍 canAssignToExternal per report ${report.id}:`, {
-      userType: user?.type,
+      userType: user?.roles,
       hasExternal: !!report.externalMaintainer,
       status: report.status
     });
@@ -583,7 +611,8 @@ export default function TechnicalOfficeStaffMember({ user }) {
       'technical_office_staff_member',
     ];
 
-    if (!user || !municipalWorkerRoles.includes(user.type)) {
+    if (!user || !municipalWorkerRoles.includes(user.roles[0])) {
+      console.log('user:', user);
       console.log(`❌ User non è municipal worker`);
       return false;
     }
@@ -602,15 +631,25 @@ export default function TechnicalOfficeStaffMember({ user }) {
 
   // Check if report is already assigned to external maintainer
   const isAssignedToExternal = (report) => {
-    const isAssigned = report.externalMaintainer?.id;
-    console.log(`🔍 isAssignedToExternal per report ${report.id}: ${isAssigned}`);
-    return isAssigned;
+    // Check both externalMaintainer object and maintainerId field
+    const isAssigned = report.externalMaintainer?.id || report.maintainerId;
+    console.log(`🔍 isAssignedToExternal per report ${report.id}: ${!!isAssigned}`);
+    return !!isAssigned;
   };
 
   // Get external maintainer info for assigned report
   const getExternalMaintainerInfo = (report) => {
     if (report.externalMaintainer?.id) {
       return report.externalMaintainer;
+    }
+    // Fallback to maintainer fields
+    if (report.maintainerId) {
+      return {
+        id: report.maintainerId,
+        username: report.maintainerUsername,
+        name: report.maintainerName,
+        surname: report.maintainerSurname
+      };
     }
     return null;
   };
@@ -762,6 +801,32 @@ export default function TechnicalOfficeStaffMember({ user }) {
     { value: 'resolved', label: 'Resolved', icon: 'bi-check-circle-fill' },
     { value: 'suspended', label: 'Suspended', icon: 'bi-pause-circle' },
   ];
+
+  // Open recipient selection modal - ADD THIS
+  const handleOpenRecipientModal = (report, e) => {
+    e.stopPropagation();
+    setReportForChat(report);
+    setShowRecipientModal(true);
+  };
+
+  // Close recipient modal - ADD THIS
+  const handleCloseRecipientModal = () => {
+    setShowRecipientModal(false);
+    setReportForChat(null);
+  };
+
+  // Select recipient and open chat - ADD THIS
+  const handleSelectRecipient = async (recipient) => {
+    setShowRecipientModal(false);
+    setChatRecipient(recipient);
+    setSelectedReport(reportForChat);
+    setComments([]);
+    setNewComment('');
+    setCommentError('');
+    setShowCommentsModal(true);
+    await fetchComments(reportForChat.id, recipient);
+    setReportForChat(null);
+  };
 
   return (
     <div className="app-root d-flex flex-column min-vh-100">
@@ -1079,7 +1144,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
                             <Button
                               variant="outline-primary"
                               size="sm"
-                              onClick={(e) => handleOpenCommentsModal(report, e)}
+                              onClick={(e) => handleOpenRecipientModal(report, e)}
                               style={{
                                 fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
                                 borderRadius: '0.5rem',
@@ -1396,8 +1461,8 @@ export default function TechnicalOfficeStaffMember({ user }) {
               <i className="bi bi-chat-dots-fill me-3" style={{ 
                 fontSize: '1.6rem',
                 animation: 'pulse 2s ease-in-out infinite'
-              }}></i>{' '}
-              Messages
+              }}></i>
+              Messages with {chatRecipient === 'citizen' ? 'Citizen' : 'External Maintainer'}
             </Modal.Title>
             {selectedReport && (
               <div style={{ width: '100%' }}>
@@ -1611,7 +1676,137 @@ export default function TechnicalOfficeStaffMember({ user }) {
         </Modal.Body>
       </Modal>
 
-      {/* ADD THIS: Status Update Modal */}
+      {/* Recipient Selection Modal - ADD THIS */}
+      <Modal show={showRecipientModal} onHide={handleCloseRecipientModal} centered>
+        <Modal.Header closeButton style={{ 
+          background: 'linear-gradient(135deg, #5e7bb3 0%, #7c93c3 100%)', 
+          color: 'white',
+          borderBottom: 'none',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ 
+            fontSize: 'clamp(1.1rem, 3vw, 1.3rem)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <i className="bi bi-people me-2"></i>Select Chat Recipient
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4" style={{ backgroundColor: '#f8f9fa' }}>
+          <p className="text-muted mb-4" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+            Who would you like to chat with about this report?
+          </p>
+          
+          {/* Chat with Citizen Option */}
+          <Card 
+            className="mb-3 shadow-sm" 
+            style={{ 
+              cursor: 'pointer',
+              border: '2px solid #e0e0e0',
+              borderRadius: '0.75rem',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handleSelectRecipient('citizen')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#5e7bb3';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(94, 123, 179, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e0e0e0';
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '';
+            }}
+          >
+            <Card.Body className="p-3 d-flex align-items-center">
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #5e7bb3 0%, #7c93c3 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '1rem',
+                flexShrink: 0
+              }}>
+                <i className="bi bi-person-circle" style={{ fontSize: '1.8rem', color: 'white' }}></i>
+              </div>
+              <div style={{ flex: 1 }}>
+                <h6 className="mb-1 fw-bold" style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', color: '#2c3e50' }}>
+                  Chat with Citizen
+                </h6>
+                <small className="text-muted" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.85rem)' }}>
+                  Communicate with the citizen who submitted this report
+                </small>
+              </div>
+              <i className="bi bi-chevron-right" style={{ fontSize: '1.5rem', color: '#5e7bb3' }}></i>
+            </Card.Body>
+          </Card>
+
+          {/* Chat with External Maintainer Option - only if assigned */}
+          {reportForChat && isAssignedToExternal(reportForChat) && (
+            <Card 
+              className="shadow-sm" 
+              style={{ 
+                cursor: 'pointer',
+                border: '2px solid #e0e0e0',
+                borderRadius: '0.75rem',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={() => handleSelectRecipient('external')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#28a745';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e0e0e0';
+                e.currentTarget.style.transform = '';
+                e.currentTarget.style.boxShadow = '';
+              }}
+            >
+              <Card.Body className="p-3 d-flex align-items-center">
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '1rem'
+                }}>
+                  <i className="bi bi-person-gear" style={{ fontSize: '1.8rem', color: 'white' }}></i>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h6 className="mb-1 fw-bold" style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)', color: '#2c3e50' }}>
+                    Chat with External Maintainer
+                  </h6>
+                  <small className="text-muted" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.85rem)' }}>
+                    {getExternalMaintainerInfo(reportForChat).name} {getExternalMaintainerInfo(reportForChat).surname}
+                  </small>
+                </div>
+                <i className="bi bi-chevron-right" style={{ fontSize: '1.5rem', color: '#28a745' }}></i>
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Info message if no external maintainer */}
+          {reportForChat && !isAssignedToExternal(reportForChat) && (
+            <Alert variant="info" className="mt-3 mb-0" style={{ 
+              fontSize: 'clamp(0.85rem, 2vw, 0.9rem)',
+              borderRadius: '0.75rem'
+            }}>
+              <i className="bi bi-info-circle me-2"></i>
+              No external maintainer assigned yet. You can only chat with the citizen.
+            </Alert>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Status Update Modal */}
       <Modal show={showStatusModal} onHide={handleCloseStatusModal} centered size="lg">
         <Modal.Header closeButton style={{ 
           background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)', 
