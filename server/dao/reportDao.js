@@ -217,7 +217,6 @@ exports.getReportsForUnlogged = (status, options = {}) => {
       if (err) {
         return reject(err);
       }
-      console
       resolve(rows || []);
     });
   });
