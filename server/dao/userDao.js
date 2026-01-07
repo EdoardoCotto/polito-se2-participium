@@ -76,17 +76,26 @@ exports.getUser = (username, password) => {
  */
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
+    console.log('[DAO getUserById] START - id:', id);
     const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, UR.role, U.telegram_nickname, U.personal_photo_path, U.mail_notifications 
     FROM Users U
     LEFT JOIN UsersRoles UR ON U.id = UR.userId
     WHERE U.id = ?`;
+    console.log('[DAO getUserById] Executing SQL:', sql);
     db.all(sql, [id], (err, rows) => {
+      console.log('[DAO getUserById] Query completed');
+      console.log('[DAO getUserById] err:', err);
+      console.log('[DAO getUserById] rows:', rows);
+      console.log('[DAO getUserById] rows length:', rows?.length);
+      
       if (err) {
+        console.log('[DAO getUserById] Database error, rejecting');
         reject(err);
         return;
       }
       
       if (!rows || rows.length === 0) {
+        console.log('[DAO getUserById] No rows found, resolving null');
         resolve(null);
         return;
       }
@@ -111,6 +120,7 @@ exports.getUserById = (id) => {
         roles: roles
       };
       
+      console.log('[DAO getUserById] END - Constructed user object:', user);
       resolve(user);
     });
   });
@@ -404,10 +414,17 @@ function buildResultObject(userId, updateData, currentUser) {
 
 exports.updateUserProfile = (userId, updateData) => {
   return new Promise((resolve, reject) => {
+    console.log('[DAO updateUserProfile] START - userId:', userId);
+    console.log('[DAO updateUserProfile] updateData:', updateData);
+    
     // Prima recupera i dati attuali dell'utente
     const selectSql = 'SELECT telegram_nickname, personal_photo_path, mail_notifications FROM Users WHERE id = ?';
+    console.log('[DAO updateUserProfile] Selecting current user data...');
     
     db.get(selectSql, [userId], (err, currentUser) => {
+      console.log('[DAO updateUserProfile] Select completed');
+      console.log('[DAO updateUserProfile] err:', err);
+      console.log('[DAO updateUserProfile] currentUser:', currentUser);
       if (err) {
         reject(err);
         return;
@@ -419,7 +436,10 @@ exports.updateUserProfile = (userId, updateData) => {
       }
 
       // Costruisci dinamicamente la query in base ai campi
+      console.log('[DAO updateUserProfile] Building update fields...');
       const { fields, values } = buildUpdateFields(updateData, currentUser);
+      console.log('[DAO updateUserProfile] fields:', fields);
+      console.log('[DAO updateUserProfile] values:', values);
 
       // Se non ci sono campi da aggiornare, ritorna senza fare nulla
       if (fields.length === 0) {
@@ -433,15 +453,22 @@ exports.updateUserProfile = (userId, updateData) => {
       // Costruisci la query SQL
       const sql = `UPDATE Users SET ${fields.join(', ')} WHERE id = ?`;
       values.push(userId);
+      console.log('[DAO updateUserProfile] Executing UPDATE SQL:', sql);
+      console.log('[DAO updateUserProfile] With values:', values);
 
       db.run(sql, values, function (err) {
+        console.log('[DAO updateUserProfile] UPDATE completed');
+        console.log('[DAO updateUserProfile] err:', err);
+        console.log('[DAO updateUserProfile] this.changes:', this.changes);
         if (err) {
+          console.log('[DAO updateUserProfile] Database error during update, rejecting');
           reject(err);
           return;
         }
         
         // Restituisci solo i campi effettivamente aggiornati
         const result = buildResultObject(userId, updateData, currentUser);
+        console.log('[DAO updateUserProfile] END - Built result:', result);
         resolve(result);
       });
     });

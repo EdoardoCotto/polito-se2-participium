@@ -9,19 +9,30 @@ const emailService = require('../services/emailService')
 
 
 exports.getUserById = async (userId) => {
+    console.log('[REPO getUserById] START - userId:', userId);
     const userNotMapped = await userDao.getUserById(userId);
-    if (!userNotMapped || userNotMapped.length === 0) {
+    
+    console.log('[REPO getUserById] userNotMapped:', userNotMapped);
+    console.log('[REPO getUserById] userNotMapped type:', typeof userNotMapped);
+    console.log('[REPO getUserById] userNotMapped length:', userNotMapped?.length);
+    
+    if (!userNotMapped) {
+        console.log('[REPO getUserById] User not found, throwing error');
         throw new NotFoundError('User not found')
     }
-    const firstRow = userNotMapped[0];
+
+    console.log('[REPO getUserById] firstRow:', firstRow);
     const user = {
-        id: firstRow.id,
-        username: firstRow.username,
-        email: firstRow.email,
-        name: firstRow.name,
-        surname: firstRow.surname,
-        roles: userNotMapped.map(row => row.type),
-        telegram_nickname: firstRow.telegram_nickname
+        id: userNotMapped.id,
+        username: userNotMapped.username,
+        email: userNotMapped.email,
+        name: userNotMapped.name,
+        surname: userNotMapped.surname,
+        type: userNotMapped.type,
+        roles: userNotMapped.map(row => row.role),
+        telegram_nickname: userNotMapped.telegram_nickname,
+        personal_photo_path: userNotMapped.personal_photo_path, // Aggiungi questo
+        mail_notifications: userNotMapped.mail_notifications      // Aggiungi questo
     }
     return user
 }
@@ -137,24 +148,37 @@ exports.getMunicipalityUsers = async (adminId) => {
 };
 
 exports.updateUserProfile = async (userId, updateData) => {
+    console.log('[REPO updateUserProfile] START - userId:', userId);
+    console.log('[REPO updateUserProfile] updateData:', updateData);
+    
     if (!Number.isInteger(userId)){
+        console.log('[REPO updateUserProfile] Invalid user id');
         throw new BadRequestError('Invalid user id')
     }
     
+    console.log('[REPO updateUserProfile] Calling getUserById...');
     const user = await exports.getUserById(userId);
+    console.log('[REPO updateUserProfile] getUserById returned:', user);
+    
     if (!user){
+        console.log('[REPO updateUserProfile] User not found');
         throw new NotFoundError('User not found');
     }
 
     if (updateData.personal_photo_path) {
+        console.log('[REPO updateUserProfile] Validating photo extension...');
         const validExtensions = ['.jpg', '.png', '.jpeg'];
         const fileExtension = updateData.personal_photo_path.toLowerCase().slice(updateData.personal_photo_path.lastIndexOf('.'));
         if (!validExtensions.includes(fileExtension)) {
+            console.log('[REPO updateUserProfile] Invalid file extension:', fileExtension);
             throw new BadRequestError('Invalid file extension');
         }
+        console.log('[REPO updateUserProfile] Photo extension valid:', fileExtension);
     }
     
+    console.log('[REPO updateUserProfile] Calling DAO updateUserProfile...');
     const result = await userDao.updateUserProfile(userId, updateData);
+    console.log('[REPO updateUserProfile] END - DAO returned:', result);
     return result;
 }
 
