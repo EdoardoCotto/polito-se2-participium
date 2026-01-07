@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const reportController = require('../controller/reportController')
 const uploadMiddleware = require('../middlewares/uploadMiddleware.js');
-const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff, isExternalMaintainer } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isMunicipal_public_relations_officer, isTechnicalOfficeStaff, isExternalMaintainer,isInternalStaffOrMaintainer } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -577,7 +577,7 @@ router.put('/reports/:id/assign-external', isLoggedIn, isTechnicalOfficeStaff, r
 router.put(
   '/reports/:id/status', 
   isLoggedIn, 
-  isExternalMaintainer,
+  isInternalStaffOrMaintainer,
   reportController.updateMaintainerStatus
 );
 

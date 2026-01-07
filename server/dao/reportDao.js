@@ -423,6 +423,63 @@ exports.updateReportStatusByExternalMaintainer = (reportId, maintainerId, newSta
     });
   });
 };
+exports.updateReportStatusByAssignee = (reportId, userId, newStatus) => {
+  return new Promise((resolve, reject) => {
+    // 1. UPDATE: Controlliamo se l'utente è maintainer OPPURE officer
+    const sqlUpdate = `
+      UPDATE Reports
+      SET status = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? 
+      AND (external_maintainerId = ? OR officerId = ?)
+    `;
+
+    // NOTA: Passiamo userId due volte, una per il check su maintainer, una per officer
+    db.run(sqlUpdate, [newStatus, reportId, userId, userId], function (err) {
+      if (err) return reject(err);
+      
+      if (this.changes === 0) {
+        // Nessuna riga aggiornata: report inesistente o utente non assegnato
+        return resolve(null);
+      }
+
+      // 2. SELECT: La logica di selezione rimane invariata per restituire i dati aggiornati
+      const sqlSelect = `
+        SELECT 
+          R.id          AS reportId,
+          R.userId      AS reportUserId,
+          R.latitude, R.longitude, R.title, R.description, R.category,
+          R.status, R.rejection_reason, R.technical_office,
+          R.created_at, R.updated_at,
+          R.image_path1, R.image_path2, R.image_path3,
+          
+          -- Dati Utente
+          U.id AS userId, U.username AS userUsername, U.name AS userName, 
+          U.surname AS userSurname, U.email AS userEmail,
+
+          -- Dati Officer
+          OFF.id AS officerId, OFF.username AS officerUsername, 
+          OFF.name AS officerName, OFF.surname AS officerSurname, OFF.email AS officerEmail,
+
+          -- Dati Maintainer (Opzionale, utile aggiungerlo se serve al frontend)
+          M.id AS maintainerId, M.username AS maintainerUsername,
+          M.name AS maintainerName, M.surname AS maintainerSurname
+
+        FROM Reports R
+        LEFT JOIN Users U ON R.userId = U.id
+        LEFT JOIN Users OFF ON R.officerId = OFF.id
+        LEFT JOIN Users M ON R.external_maintainerId = M.id
+        WHERE R.id = ?
+      `;
+
+      db.get(sqlSelect, [reportId], (err2, row) => {
+        if (err2) return reject(err2);
+        resolve(row);
+      });
+    });
+  });
+};
+
 /**
  * Get reports assigned to a specific external maintainer
  * @param {number} maintainerId

@@ -439,12 +439,12 @@ exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId
  * @param {string} newStatus
  * @returns {Promise<Object>}
  */
-exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
+exports.updateMaintainerStatus = async (reportId, userId, newStatus) => {
   if (!reportId || !Number.isInteger(reportId)) {
     throw new BadRequestError('Invalid report ID');
   }
-  if (!maintainerId) {
-    throw new UnauthorizedError('Maintainer ID is required');
+  if (!userId) {
+    throw new UnauthorizedError('User ID is required');
   }
 
   if (typeof newStatus !== 'string') {
@@ -453,7 +453,7 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
 
   const normalizedStatus = newStatus.toLowerCase().trim();
   
-  // Stati permessi per il manutentore esterno
+  // Stati permessi per chi lavora sul ticket (sia officer che maintainer)
   const ALLOWED_STATUSES = [
     'progress',
     'suspended',
@@ -464,8 +464,7 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
     throw new BadRequestError(`Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
   }
 
-  // Try to get the current report to know the old status (optional)
-  // Do not fail early here; let the DAO update drive existence checks.
+  // Recupero vecchio stato (opzionale, per notifiche)
   let oldStatus = null;
   try {
     const currentReport = await reportDao.getReportById(reportId);
@@ -473,33 +472,31 @@ exports.updateMaintainerStatus = async (reportId, maintainerId, newStatus) => {
       oldStatus = currentReport.status;
     }
   } catch (_e) {
-    // Ignore; will handle not found if update returns null below
+    // Ignora errori qui
   }
 
-  // CHIAMATA CORRETTA AL NUOVO METODO DAO
-  const updatedRow = await reportDao.updateReportStatusByExternalMaintainer(reportId, maintainerId, normalizedStatus);
+  // CHIAMATA AL NUOVO METODO DAO (passiamo userId generico)
+  const updatedRow = await reportDao.updateReportStatusByAssignee(reportId, userId, normalizedStatus);
 
   if (!updatedRow) {
-    // Check esistenza per errore preciso
     const reportExists = await reportDao.getReportById(reportId);
     if (!reportExists) {
       throw new NotFoundError('Report not found');
     }
-    // Se esiste, allora non era assegnato a questo maintainer
-    throw new UnauthorizedError('You are not assigned to this report as external maintainer');
+    // Errore generico: non sei assegnato (nè come officer, nè come maintainer)
+    throw new UnauthorizedError('You are not assigned to this report (neither as Officer nor External Maintainer)');
   }
 
-  // Create notification for status change (async, don't wait)
+  // Notifiche
   notificationService.createStatusChangeNotification(
     reportId,
     normalizedStatus,
     oldStatus,
     null
   ).catch(err => {
-    console.error('Error creating notification in updateMaintainerStatus:', err);
+    console.error('Error creating notification:', err);
   });
 
-  // Ora updatedRow contiene tutte le join, quindi mapReportRow funziona
   return mapReportRow(updatedRow);
 };
 /**
