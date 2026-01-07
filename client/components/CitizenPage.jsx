@@ -1543,8 +1543,7 @@ const handleSendMessage = async () => {
             e.currentTarget.style.borderColor = '';
           }}
         >
-          <i className="bi bi-chat-dots-fill me-2"></i>
-          Chat with Municipality
+          <i className="bi bi-chat-dots-fill me-2"></i>Chat with Municipality
         </Button>
       </div>
     )}
@@ -1579,8 +1578,7 @@ const handleSendMessage = async () => {
                         onClick={handleClearStreetArea}
                         className="mt-2"
                       >
-                        <i className="bi bi-arrow-left me-2"></i>
-                        View All Reports
+                        <i className="bi bi-arrow-left me-2"></i>View All Reports
                       </Button>
                     )}
                     {viewMode === 'myReports' && (
@@ -1590,8 +1588,7 @@ const handleSendMessage = async () => {
                         onClick={() => handleViewModeChange('create')}
                         className="mt-2"
                       >
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Create Your First Report
+                        <i className="bi bi-plus-circle me-2"></i>Create Your First Report
                       </Button>
                     )}
                   </div>
