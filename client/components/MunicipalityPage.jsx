@@ -474,12 +474,13 @@ const handleSendComment = async () => {
 
   // Render individual comment helper
   const renderComment = (comment, idx) => {
-    const isCurrentUser = comment.authorId === user.id;
+    const isCurrentUser = (comment.authorId === user.id) || (comment.senderId === user.id);
     const displayTime = new Date(comment.created_at).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
     });
+    const authorRole = comment.senderRole || comment.authorRole || comment.role || comment.type || '';
 
     return (
       <div
@@ -516,14 +517,33 @@ const handleSendComment = async () => {
               color: '#5e7bb3',
               letterSpacing: '0.02em'
             }}>
-              {comment.name} {comment.surname}
+              {comment.name || comment.senderName || comment.authorName || ''} {comment.surname || comment.senderSurname || comment.authorSurname || ''}
               <span style={{
                 marginLeft: '0.5rem',
                 fontWeight: '500',
                 color: '#64748b',
                 fontSize: '0.7rem'
               }}>
-                ({getCommentAuthorRole(comment.authorRole)})
+                ({getCommentAuthorRole(authorRole) || 'Citizen'})
+              </span>
+            </div>
+          )}
+          {isCurrentUser && (
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              opacity: 0.9,
+              letterSpacing: '0.02em'
+            }}>
+              {user.name || user.username || comment.name || ''} {user.surname || comment.surname || ''}
+              <span style={{
+                marginLeft: '0.5rem',
+                fontWeight: '500',
+                opacity: 0.8,
+                fontSize: '0.7rem'
+              }}>
+                ({getCommentAuthorRole(user.role || user.type || authorRole) || 'Municipality'})
               </span>
             </div>
           )}

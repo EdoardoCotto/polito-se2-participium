@@ -304,7 +304,7 @@ const handleSendMessage = async () => {
 
     // Render chat message - ADD THIS
     const renderChatMessage = (message, idx) => {
-      const isCurrentUser = message.authorId === user.id;
+      const isCurrentUser = (message.authorId === user.id) || (message.senderId === user.id);
       const displayTime = new Date(message.created_at).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
@@ -314,6 +314,7 @@ const handleSendMessage = async () => {
       const messageText = message.message || message.comment || message.text || '';
       const authorName = message.name || message.senderName || message.authorName || '';
       const authorSurname = message.surname || message.senderSurname || message.authorSurname || '';
+      const authorRole = message.senderRole || message.role || message.type || '';
 
       return (
         <div
@@ -353,7 +354,25 @@ const handleSendMessage = async () => {
                   opacity: 0.8,
                   fontSize: '0.7rem'
                 }}>
-                  (Municipality)
+                  ({authorRole || 'Municipality'})
+                </span>
+              </div>
+            )}
+            {isCurrentUser && (
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                marginBottom: '0.5rem',
+                opacity: 0.9
+              }}>
+                {user.name || user.username || authorName} {user.surname || authorSurname}
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontWeight: '500',
+                  opacity: 0.8,
+                  fontSize: '0.7rem'
+                }}>
+                  ({user.role || 'Citizen'})
                 </span>
               </div>
             )}
