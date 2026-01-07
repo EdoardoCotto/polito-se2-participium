@@ -51,6 +51,15 @@ export default function CitizenPage({ user }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
 
+  // Chat with Municipality state - ADD THIS after notification states
+  const [showMunicipalityChat, setShowMunicipalityChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messageError, setMessageError] = useState('');
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [selectedReportForChat, setSelectedReportForChat] = useState(null);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -82,6 +91,53 @@ export default function CitizenPage({ user }) {
 
     return () => clearTimeout(delayTimer);
   }, [streetSearchQuery]);
+
+  // Fetch messages for a report - ADD THIS
+const fetchMessages = async (reportId) => {
+  try {
+    setLoadingMessages(true);
+    setMessageError('');
+    
+    console.log('🔍 Fetching messages for report:', reportId);
+    const messages = await API.getMessages(reportId);
+    console.log('📨 Messages received:', messages);
+    
+    setChatMessages(messages || []);
+  } catch (err) {
+    console.error('❌ Failed to load messages:', err);
+    setMessageError(err.message || 'Failed to load messages');
+    setChatMessages([]);
+  } finally {
+    setLoadingMessages(false);
+  }
+};
+
+// Send message to municipality - ADD THIS
+const handleSendMessage = async () => {
+  if (!newMessage.trim() || !selectedReportForChat) {
+    setMessageError('Please enter a message');
+    return;
+  }
+
+  try {
+    setSendingMessage(true);
+    setMessageError('');
+    
+    console.log('📤 Sending message for report:', selectedReportForChat.id);
+    await API.createMessage(selectedReportForChat.id, newMessage.trim());
+    
+    setNewMessage('');
+    
+    // Refresh messages
+    await fetchMessages(selectedReportForChat.id);
+    
+  } catch (err) {
+    console.error('❌ Failed to send message:', err);
+    setMessageError(err.message || 'Failed to send message');
+  } finally {
+    setSendingMessage(false);
+  }
+};
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -304,6 +360,150 @@ export default function CitizenPage({ user }) {
         </div>
       );
     }
+    // Open municipality chat - ADD THIS
+    const handleOpenMunicipalityChat = async (report) => {
+      setSelectedReportForChat(report);
+      setChatMessages([]);
+      setNewMessage('');
+      setMessageError('');
+      setShowMunicipalityChat(true);
+      await fetchMessages(report.id);
+    };
+
+    // Close municipality chat - ADD THIS
+    const handleCloseMunicipalityChat = () => {
+      setShowMunicipalityChat(false);
+      setSelectedReportForChat(null);
+      setChatMessages([]);
+      setNewMessage('');
+      setMessageError('');
+    };
+
+    // Render chat message - ADD THIS
+    const renderChatMessage = (message, idx) => {
+      const isCurrentUser = message.authorId === user.id;
+      const displayTime = new Date(message.created_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      const messageText = message.message || message.comment || message.text || '';
+      const authorName = message.name || message.senderName || message.authorName || '';
+      const authorSurname = message.surname || message.senderSurname || message.authorSurname || '';
+
+      return (
+        <div
+          key={idx}
+          style={{
+            display: 'flex',
+            justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+            marginBottom: '1rem',
+            animation: 'slideIn 0.3s ease-out'
+          }}
+        >
+          <div style={{
+            maxWidth: '75%',
+            background: isCurrentUser 
+              ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'
+              : 'linear-gradient(135deg, #5e7bb3 0%, #4a5f8f 100%)',
+            color: '#fff',
+            padding: '1rem 1.3rem',
+            borderRadius: isCurrentUser
+              ? '1.5rem 1.5rem 0.3rem 1.5rem'
+              : '1.5rem 1.5rem 1.5rem 0.3rem',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+            position: 'relative',
+            wordBreak: 'break-word'
+          }}>
+            {!isCurrentUser && (
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                marginBottom: '0.5rem',
+                opacity: 0.9
+              }}>
+                {authorName} {authorSurname}
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontWeight: '500',
+                  opacity: 0.8,
+                  fontSize: '0.7rem'
+                }}>
+                  (Municipality)
+                </span>
+              </div>
+            )}
+            <div style={{
+              fontSize: '0.95rem',
+              lineHeight: '1.5',
+              marginBottom: '0.5rem'
+            }}>
+              {messageText || '(No message text)'}
+            </div>
+            <div style={{
+              fontSize: '0.7rem',
+              opacity: 0.8,
+              textAlign: 'right',
+              fontWeight: '500'
+            }}>
+              {displayTime}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Render chat messages content - ADD THIS
+    const renderChatMessagesContent = () => {
+      if (loadingMessages) {
+        return (
+          <div className="text-center py-5">
+            <Spinner animation="border" style={{ color: '#5e7bb3', width: '2.5rem', height: '2.5rem' }} />
+            <p className="mt-3 text-muted fw-medium">Loading messages...</p>
+          </div>
+        );
+      }
+
+      if (messageError && chatMessages.length === 0) {
+        return (
+          <Alert variant="danger" style={{ 
+            borderRadius: '1rem',
+            border: 'none',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
+            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
+          }}>
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            {messageError}
+          </Alert>
+        );
+      }
+
+      if (chatMessages.length === 0) {
+        return (
+          <div className="text-center py-5">
+            <div style={{
+              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+              borderRadius: '50%',
+              width: '120px',
+              height: '120px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+              boxShadow: '0 8px 24px rgba(94, 123, 179, 0.15)'
+            }}>
+              <i className="bi bi-chat-heart" style={{ fontSize: '3.5rem', color: '#5e7bb3' }}></i>
+            </div>
+            <p className="mt-3 text-muted fw-medium" style={{ fontSize: '1.1rem' }}>
+              No messages yet. Start the conversation!
+            </p>
+          </div>
+        );
+      }
+
+      return chatMessages.map((message, idx) => renderChatMessage(message, idx));
+    };
 
     return (
       <Carousel interval={null} className="report-photos-carousel">
