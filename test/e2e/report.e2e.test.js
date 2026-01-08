@@ -242,7 +242,9 @@ describe('Reports API End-to-End', () => {
   test('Approved endpoint lists the accepted report; invalid bbox returns 400', async () => {
     const list = await request(app).get('/api/reports/approved');
     expect(list.statusCode).toBe(200);
-    const ids = list.body.map(r => r.id);
+    const ids = list.body
+      .map(r => (r && (r.id ?? r.reportId)))
+      .filter(Boolean);
     expect(ids).toContain(reportIdAccepted);
 
     const badBox = await request(app).get('/api/reports/approved?north=45');
