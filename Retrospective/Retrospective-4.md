@@ -70,7 +70,7 @@ sections:
   - Total hours estimated 7,5
   - Total hours spent 8,5
 - Technical Debt management:
-  - Strategy adopted: we decide to obtain at least grade B across all analysis sections and focus on items with high impact.
+  - Strategy adopted: we decide to obtain at least grade A across all analysis sections and focus on items with high impact.
   - Total hours estimated at sprint planning 10 h
   - Total hours spent 10 h
   
