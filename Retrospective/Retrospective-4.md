@@ -60,9 +60,6 @@ sections:
   - Total hours spent 8,5
   - Nr of automated unit test cases  722
   - Coverage (if available) 87,8%
-- Integration testing:
-  - Total hours estimated
-  - Total hours spent
 - E2E testing:
   - Total hours estimated 6,5
   - Total hours spent 6,5
@@ -80,37 +77,24 @@ sections:
 
 - What caused your errors in estimation (if any)?
   
-  Our estimation error was very low this sprint (around 4%). This minor discrepancy was mainly due to a misunderstanding of the effort required for User Story 10bis as you can see in the low number of history points we gave to it. Initially, we planned only to allow admins to change technical officer roles; however, during the sprint, we realized technical users needed to support multiple roles, which led to a significant backend refactor.
+  Our estimation error was very low this sprint (around 4%). This minor discrepancy was mainly due to a misunderstanding of the effort required for User Story 10bis as you can see in the low number of history points we gave to it. Initially, we understood only to allow admins to change technical officer roles; however, during the sprint, we realized technical users needed to support multiple roles, which led to a significant backend refactor.
 
 - What lessons did you learn (both positive and negative) in this sprint?
 
-  Positive: We learned how to do a good role division: in this way it was more difficult to have cases where one person had to wait 
+  Positive: We learned how to improve our task allocation and role division, which significantly reduced dependencies. This allowed team members to work more independently without having to wait for others to finish their tasks the most of the time. 
 
-  Negative (Velocity Trade-off): We learned that there is a trade-off between "Technical Tasks" and "User Stories." Because we spent more than 50% of our time on SonarQube, we could only complete 23 Story Points of new features (compared to 51 points in the previous sprint). We learned we need to balance this better so the customer sees more new features.
+  Negative (Velocity Trade-off): We learned to not overstimate the time that we have available. In this sprint we start to work hard a bit too late so in the last days the effort was higher than estimated. 
 
 - Which improvement goals set in the previous retrospective were you able to achieve? 
 
-  "Better task time estimation": We successfully achieved this goal. In Retrospective 2, we promised to discuss tasks more deeply to find hidden details. We did this, and the result is that our estimation error is now only 4%.
+  "Estimation and organization of the technical tasks": In this sprint, we spent more time and more carefully, trying to give greater depth to technical tasks and technologies we weren't familiar with, such as the Telegram environment. This was all done from the initial planning stage and was then maintained by everyone individually and as a team throughout the sprint. 
 
-  "Better time management / Coordination": We improved our coordination between Backend and Frontend. The proof is that we successfully passed 22 End-to-End tests. In the previous sprint, we had issues with tasks depending on each other, but this time we managed the flow better.
-  
+  "Balance Technical Debt vs. New Features": In the last sprint, we aimed for a better ratio between technical debt mitigation and new feature development. We achieved good SonarQube metrics with relatively low effort, which allowed us to complete more stories than in previous sprints.
+
 - Which ones you were not able to achieve? Why?
 
-  We actually achieved the main goals we set in the previous retrospective (Estimation and Coordination).
-  However, one area we are still perfecting is the optimization of technical tasks. We spent a lot of effort on infrastructure to ensure high quality. While this was necessary, we want to find a way to do these technical tasks faster in the future so we can spend even more time on user features.
-
-- Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
-
-  Goal: Balance Technical Debt vs. New Features.
-
-  How: In the next Sprint Planning, we will set a strict limit on SonarQube. We will try to allocate maximum 30% of our hours to technical tasks and 70% to User Stories. This will help us deliver more value to the stakeholders.
-
-  Goal: Maintain Granular Breakdown.
-
-  How: We want to keep our estimation accuracy high. We will continue the rule of breaking down tasks until they are smaller than 4 hours. If a task is bigger, we must split it during the planning meeting.
-
-
+  We struggled more with time management compared to Sprint 3. We didn't take full advantage of the longer duration of this sprint; as a result, the workload in the final week was much heavier than expected.    
 
 - One thing you are proud of as a Team!!
 
-  We are proud of our reliability. In this sprint, we proved that we can deliver exactly what we promise. We combined high-quality engineering (98% test coverage) with precise planning (only 4% estimation error), showing that we have successfully overcome the coordination struggles of the previous sprint.
+  We are proud of successfully completing the project, consistently delivering all planned stories without bugs during our demos. Throughout the semester, we maintained great team chemistry; despite some initial differences in our working styles, we collaborated effectively to find the best solutions for everyone.
