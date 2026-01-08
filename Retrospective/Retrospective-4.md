@@ -79,14 +79,12 @@ sections:
 ## ASSESSMENT
 
 - What caused your errors in estimation (if any)?
-
-  Our estimation error was very low this sprint (4%), which means our planning process is working very well. We planned 99 hours and spent 103 hours.
-  The minor error: The small difference (4 hours total) came mostly from Story 24 and Story 25. In these stories, we encountered some small implementation details we did not expect.
-  Why we were successful: The main reason our estimation was accurate is that we kept our tasks small. Our average task duration was 2.2 hours. When tasks are this small, it is much easier to predict how long they will take compared to large tasks of 8 or 10 hours.
+  
+  Our estimation error was very low this sprint (around 4%). This minor discrepancy was mainly due to a misunderstanding of the effort required for User Story 10bis as you can see in the low number of history points we gave to it. Initially, we planned only to allow admins to change technical officer roles; however, during the sprint, we realized technical users needed to support multiple roles, which led to a significant backend refactor.
 
 - What lessons did you learn (both positive and negative) in this sprint?
 
-  Positive (Quality Strategy): We learned that investing heavily in Technical Infrastructure and Refactoring pays off in stability. We spent 57.5 hours on this, which allowed us to reach 98.3% code coverage and pass 22 End-to-End tests. This confirms that high quality requires dedicated time.
+  Positive: We learned how to do a good role division: in this way it was more difficult to have cases where one person had to wait 
 
   Negative (Velocity Trade-off): We learned that there is a trade-off between "Technical Tasks" and "User Stories." Because we spent more than 50% of our time on SonarQube, we could only complete 23 Story Points of new features (compared to 51 points in the previous sprint). We learned we need to balance this better so the customer sees more new features.
 
