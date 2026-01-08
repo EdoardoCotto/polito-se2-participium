@@ -18,10 +18,10 @@ sections:
 
 **Remember**  a story is done ONLY if it fits the Definition of Done:
  
-- Unit Tests passing 455
+- Unit Tests passing 722
 - Code review completed 7
 - Code present on VCS
-- End-to-End tests performed 22
+- End-to-End tests performed 56
 
 > Please refine your DoD 
 
@@ -29,10 +29,14 @@ sections:
 
 | Story  | # Tasks | Points | Hours est. | Hours actual |
 |--------|---------|--------|------------|--------------|
-| _#0_   |   18    |    -   |     57     |      57,5    |
-|   24   |    9    |    5   |    12,5    |      14      |
-|   25   |    9    |    5   |    11,5    |      13      |
-|   26   |   10    |    13  |    18      |      18,5    |
+| _#0_   |    3    |    -   |     14     |      14      |
+|   28   |    6    |    3   |      7     |       8      |
+|   27   |    7    |   13   |     10     |      10      |
+|   30   |    8    |   13   |    12,5    |      14,5    |
+|  10bis |    8    |    5   |     9,5    |      10,5    |
+|   11   |   10    |   13   |    15,5    |      16      |
+|   12   |    8    |   13   |    19,5    |      19,5    |
+|   13   |    8    |    5   |      8     |       8      |
    
 
 > place technical tasks corresponding to story `#0` and leave out story points (not applicable in this case)
@@ -41,10 +45,10 @@ sections:
 
 |            | Mean | StDev |
 |------------|------|-------|
-| Estimation | 2,15 | 1,799 | 
-| Actual     | 2,24 | 1,805 |
+| Estimation | 1,65 |  1,47 | 
+| Actual     | 1,73 |  1,50 |
 
-- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1 = 0,0404
+- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1 = 0,047
 
   $$\frac{\sum_i spent_{task_i}}{\sum_i estimation_{task_i}} - 1$$
 
@@ -52,25 +56,25 @@ sections:
 ## QUALITY MEASURES 
 
 - Unit Testing:
-  - Total hours estimated 4,5
-  - Total hours spent 5,5
-  - Nr of automated unit test cases  455
-  - Coverage (if available) 98,3%
+  - Total hours estimated 8,5
+  - Total hours spent 8,5
+  - Nr of automated unit test cases  722
+  - Coverage (if available) 87,8%
 - Integration testing:
   - Total hours estimated
   - Total hours spent
 - E2E testing:
-  - Total hours estimated 7
+  - Total hours estimated 6,5
   - Total hours spent 6,5
 - Code review: 
-  - Total hours estimated 3
-  - Total hours spent 3
+  - Total hours estimated 7,5
+  - Total hours spent 8,5
 - Technical Debt management:
   - Strategy adopted: we decide to obtain at least grade B across all analysis sections and focus on items with high impact.
-  - Total hours estimated at sprint planning 27,5h
-  - Total hours spent 28h
+  - Total hours estimated at sprint planning 10 h
+  - Total hours spent 10 h
   
-  ![Graph](image.png)
+  ![Graph](image2.png)
 
 ## ASSESSMENT
 

@@ -131,7 +131,8 @@ describe('authMiddleware', () => {
 
   describe('isExternalMaintainer', () => {
     it('calls next if user is external_maintainer', () => {
-      req.user = { type: 'external_maintainer' };
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { roles: ['external_maintainer'], type: 'municipality_user' };
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
       isExternalMaintainer(req, res, next);
@@ -139,7 +140,8 @@ describe('authMiddleware', () => {
     });
 
     it('returns 403 if user is not external_maintainer', () => {
-      req.user = { type: 'citizen' };
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = { roles: [], type: 'citizen' };
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
       isExternalMaintainer(req, res, next);
@@ -148,7 +150,8 @@ describe('authMiddleware', () => {
     });
 
     it('returns 403 if user is not set', () => {
-      req.user = null;
+      req.isAuthenticated.mockReturnValue(true);
+      req.user = {};
       res.status = jest.fn().mockReturnThis();
       res.json = jest.fn();
       isExternalMaintainer(req, res, next);
@@ -160,7 +163,7 @@ describe('authMiddleware', () => {
   describe('isInternalStaffOrMaintainer', () => {
     it('should call next() if user is authenticated and is technical office staff', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'urban_planner' };
+      req.user = { roles: ['urban_planner'], type: 'municipality_user' };
 
       isInternalStaffOrMaintainer(req, res, next);
 
@@ -169,7 +172,7 @@ describe('authMiddleware', () => {
 
     it('should call next() if user is authenticated and is external_maintainer', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'external_maintainer' };
+      req.user = { roles: ['external_maintainer'], type: 'municipality_user' };
 
       isInternalStaffOrMaintainer(req, res, next);
 
@@ -178,7 +181,7 @@ describe('authMiddleware', () => {
 
     it('should call next() if user is authenticated and is external_maintainer (typo version)', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'external_maintainer' };
+      req.user = { roles: ['external_maintainer'], type: 'municipality_user' };
 
       isInternalStaffOrMaintainer(req, res, next);
 
@@ -187,7 +190,7 @@ describe('authMiddleware', () => {
 
     it('should call next() with UnauthorizedError if user is authenticated but not authorized', () => {
       req.isAuthenticated.mockReturnValue(true);
-      req.user = { type: 'citizen' };
+      req.user = { roles: [], type: 'citizen' };
 
       isInternalStaffOrMaintainer(req, res, next);
 

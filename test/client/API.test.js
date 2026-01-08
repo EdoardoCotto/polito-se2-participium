@@ -464,7 +464,7 @@ describe('API Client', () => {
           json: async () => ({ id: 1, status: 'progress' }),
         });
 
-        const result = await API.updateMaintainerStatus(1, 'progress');
+        const result = await API.updateStatus(1, 'progress');
 
         expect(fetch).toHaveBeenCalledWith(
           'http://localhost:3001/api/reports/1/status',
@@ -830,7 +830,7 @@ describe('API Client', () => {
         json: async () => ({ error: 'Status update failed' }),
       });
 
-      await expect(API.updateMaintainerStatus(1, 'progress'))
+      await expect(API.updateStatus(1, 'progress'))
         .rejects.toThrow('Status update failed');
     });
 

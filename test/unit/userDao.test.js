@@ -448,7 +448,7 @@ describe('userDao Functions', () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: null, mail_notifications: 0 }),
-          runImpl: (_s, _p, cb) => cb(null),
+          runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
         },
         async (d) => {
           const uId = 702;
@@ -463,7 +463,7 @@ describe('userDao Functions', () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: null, personal_photo_path: 'has.png', mail_notifications: 1 }),
-          runImpl: (_s, _p, cb) => cb(null),
+          runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
         },
         async (d) => {
           const uId = 703;
@@ -481,7 +481,7 @@ describe('userDao Functions', () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: 'temp', personal_photo_path: null, mail_notifications: 0 }),
-          runImpl: (_s, _p, cb) => cb(null),
+          runImpl: (_s, _p, cb) => cb.call({ changes: 1 }, null),
         },
         async (d) => {
           const uId = 704;
@@ -705,7 +705,7 @@ describe('userDao Functions', () => {
       await withSqliteMock(
         {
           getImpl: (_s, _p, cb) => cb(null, { telegram_nickname: 'x', personal_photo_path: 'y', mail_notifications: 0 }),
-          runImpl: (_s, _p, cb) => cb(new Error('Update Error')),
+          runImpl: (_s, _p, cb) => cb.call({ changes: 0 }, new Error('Update Error')),
         },
         async (d) => {
           await expect(d.updateUserProfile(7, { telegram_nickname: 'z' })).rejects.toThrow('Update Error');

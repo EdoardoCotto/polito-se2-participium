@@ -38,8 +38,8 @@ describe('userRepository.getUserById', () => {
     userDao.getUserById.mockResolvedValue(rows);
 
     const result = await userRepository.getUserById(1);
-
-    expect(result).toMatchObject({ id: 1, username: 'testuser' });
+    expect(Array.isArray(result)).toBe(true);
+    expect(result[0]).toMatchObject({ id: 1, username: 'testuser' });
     expect(userDao.getUserById).toHaveBeenCalledWith(1);
   });
 

@@ -489,11 +489,13 @@ describe("reportRepository.getReportsByStatus and helpers", () => {
   });
 
   test("getApprovedReports uses assigned", async () => {
-    reportDao.getReportsByStatus.mockResolvedValue([daoRow]);
+    // Repository now delegates to getReportsForUnlogged without mapping
+    reportDao.getReportsForUnlogged = jest.fn().mockResolvedValue([{ id: 20, status: REPORT_STATUSES.PENDING }]);
     const opt = { boundingBox: { north: 1 } };
     const res = await reportRepository.getApprovedReports(opt);
-    expect(reportDao.getReportsByStatus).toHaveBeenCalledWith(REPORT_STATUSES.ASSIGNED, opt);
-    expect(res[0].status).toBe(REPORT_STATUSES.PENDING); // original row status preserved
+    expect(reportDao.getReportsForUnlogged).toHaveBeenCalledWith(opt);
+    expect(res[0].id).toBe(20);
+    expect(res[0].status).toBe(REPORT_STATUSES.PENDING);
   });
 });
 
@@ -727,7 +729,7 @@ describe("reportRepository.updateMaintainerStatus", () => {
   test("throws if maintainerId is missing", async () => {
     await expect(
       reportRepository.updateMaintainerStatus(10, null, "progress")
-    ).rejects.toThrow(/Maintainer ID is required/);
+    ).rejects.toThrow(/User ID is required/);
   });
 
   test("throws if status is not a string", async () => {
@@ -751,11 +753,11 @@ describe("reportRepository.updateMaintainerStatus", () => {
   });
 
   test("throws if dao returns null and report exists (not assigned to maintainer)", async () => {
-    reportDao.updateReportStatusByExternalMaintainer = jest.fn().mockResolvedValue(null);
+    reportDao.updateReportStatusByAssignee = jest.fn().mockResolvedValue(null);
     reportDao.getReportById = jest.fn().mockResolvedValue({ reportId: 10 });
     await expect(
       reportRepository.updateMaintainerStatus(10, 5, "progress")
-    ).rejects.toThrow(/You are not assigned to this report as external maintainer/);
+    ).rejects.toThrow(/You are not assigned to this report \(neither as Officer nor External Maintainer\)/);
   });
 
   test("success - returns mapped report", async () => {
@@ -781,7 +783,7 @@ describe("reportRepository.updateMaintainerStatus", () => {
       userEmail: "e@test.com",
       officerId: 5,
     };
-    reportDao.updateReportStatusByExternalMaintainer = jest.fn().mockResolvedValue(updatedRow);
+    reportDao.updateReportStatusByAssignee = jest.fn().mockResolvedValue(updatedRow);
     const result = await reportRepository.updateMaintainerStatus(10, 5, "progress");
     expect(result).toMatchObject({ id: 10, status: REPORT_STATUSES.PROGRESS });
   });
