@@ -1,7 +1,8 @@
 const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const DB_PATH = './participium.db';
+const DB_PATH = path.join(__dirname, 'participium.db');
 const CITY_NAME = 'Torino';
 
 const db = new sqlite3.Database(DB_PATH);
