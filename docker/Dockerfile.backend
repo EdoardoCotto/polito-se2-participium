@@ -19,6 +19,7 @@ RUN mkdir -p /app/db-init && \
     cp /app/server/db/init.js /app/db-init/ && \
     cp /app/server/db/schema.sql /app/db-init/ && \
     cp /app/server/db/seedCitizen.js /app/db-init/ && \
+    cp /app/server/db/seedStreets.js /app/db-init/ && \
     echo "✅ DB init files copied"
 
 EXPOSE 3001
@@ -27,5 +28,5 @@ WORKDIR /app/server
 
 # Initialize database and start server (same as monolithic app)
 # Copy init files to db directory (volume mount) before running init.js
-CMD ["sh", "-c", "cp /app/db-init/* /app/server/db/ && cd /app/server && node db/init.js  && node db/seedCitizen.js && node index.js"]
+CMD ["sh", "-c", "cp /app/db-init/* /app/server/db/ && cd /app/server && node db/init.js  && node db/seedCitizen.js && node db/seedStreets.js && node index.js"]
 
