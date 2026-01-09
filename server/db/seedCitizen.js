@@ -706,7 +706,7 @@ const reports = [
     latitude: 45.0719,
     longitude: 7.6641,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'pending',
+    status: 'assigned',
     author_username: 'diego_testa',
     technical_office: null
   },
@@ -761,7 +761,7 @@ const reports = [
     latitude: 45.0643,
     longitude: 7.6705,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'pending',
+    status: 'assigned',
     author_username: 'bianca_valentini',
     technical_office: null
   }
