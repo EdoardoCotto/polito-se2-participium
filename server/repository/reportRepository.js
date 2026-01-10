@@ -348,7 +348,8 @@ exports.getPendingReports = async () => {
  * @param {{ boundingBox?: { north: number, south: number, east: number, west: number } }} options
  */
 exports.getApprovedReports = async (options = {}) => {
-  return reportDao.getReportsForUnlogged(options);
+  const rows = await reportDao.getReportsForUnlogged(options);
+  return rows.map(mapReportRow);
 };
 
 exports.getCitizenReports = async (options = {}) => {
