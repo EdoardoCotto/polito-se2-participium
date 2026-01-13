@@ -2,6 +2,7 @@ import { Container, Card, Row, Col, Button, Alert, ListGroup, Badge, InputGroup,
 import { useState, useEffect, useMemo } from 'react';
 import TurinMap from './TurinMap';
 import API from '../API/API.js';
+import './styles/App.css';
 
 export default function UnregisteredMap() {
   const [allReports, setAllReports] = useState([]);
@@ -213,17 +214,6 @@ export default function UnregisteredMap() {
       'Other': 'bi-three-dots'
     };
     return icons[category] || 'bi-flag';
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'pending': 'warning',
-      'approved': 'success',
-      'progress': 'info',
-      'resolved': 'primary',
-      'rejected': 'danger'
-    };
-    return colors[status] || 'secondary';
   };
 
   const reportPhotosContent = useMemo(() => {
@@ -594,12 +584,34 @@ export default function UnregisteredMap() {
                           >
                             <div className="d-flex justify-content-between align-items-start">
                               <div className="flex-grow-1">
-                                <div className="d-flex align-items-center mb-1">
-                                  <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
-                                  <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-                                    {report.title}
-                                  </strong>
+                                {/* Title and Status Badge in the same row */}
+                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                  <div className="d-flex align-items-center flex-grow-1">
+                                    <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
+                                    <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                                      {report.title}
+                                    </strong>
+                                  </div>
+                                  <Badge 
+                                    className={`ms-2 status-badge-${report.status}`}
+                                    style={{ 
+                                      fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)',
+                                      flexShrink: 0
+                                    }}
+                                  >
+                                    {report.status}
+                                  </Badge>
                                 </div>
+
+
+                                {/* Category Badge only */}
+                                <div className="mb-1">
+                                  <Badge bg="secondary">
+                                    {report.category}
+                                  </Badge>
+                                </div>
+
+                                {/* Username */}
                                 {report.user && (
                                   <div className="mb-2" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
                                     <i className="bi bi-person-circle me-1 text-secondary"></i>
@@ -608,14 +620,7 @@ export default function UnregisteredMap() {
                                     </span>
                                   </div>
                                 )}
-                                <div className="mb-1">
-                                  <Badge bg={getStatusColor(report.status)} className="me-2">
-                                    {report.status}
-                                  </Badge>
-                                  <Badge bg="secondary">
-                                    {report.category}
-                                  </Badge>
-                                </div>
+
                                 {report.description && (
                                   <p className="mb-1 text-muted small" style={{ fontSize: 'clamp(0.75rem, 1.8vw, 0.85rem)' }}>
                                     {report.description.length > 80 
@@ -624,6 +629,7 @@ export default function UnregisteredMap() {
                                     }
                                   </p>
                                 )}
+
                                 <div className="d-flex justify-content-between align-items-center">
                                   <small className="text-muted">
                                     <i className="bi bi-calendar me-1"></i>
