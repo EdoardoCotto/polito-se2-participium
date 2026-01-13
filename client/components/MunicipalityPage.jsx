@@ -855,18 +855,40 @@ const handleSendComment = async () => {
               <span className="d-none d-sm-inline">Welcome, {user?.name} {user?.surname}!</span>
               <span className="d-inline d-sm-none">Welcome!</span>
             </h2>
-            <div className="d-flex align-items-center flex-wrap">
-              <span className="badge" style={{ 
-                backgroundColor: '#5e7bb3', 
-                fontSize: 'clamp(0.8rem, 2vw, 1rem)',
-                padding: 'clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
-                borderRadius: '8px',
-                fontWeight: '500'
-              }}>
+             <div className="d-flex align-items-center flex-wrap gap-2">
+            {user?.roles && user.roles.length > 0 ? (
+              user.roles.map((role, index) => (
+                <span 
+                  key={index}
+                  className="badge" 
+                  style={{ 
+                    backgroundColor: '#5e7bb3', 
+                    fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                    padding: 'clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
+                    borderRadius: '8px',
+                    fontWeight: '500'
+                  }}
+                >
+                  <i className="bi bi-shield-check me-2"></i>
+                  {getRoleDisplayName(role)}
+                </span>
+              ))
+            ) : (
+              <span 
+                className="badge" 
+                style={{ 
+                  backgroundColor: '#6c757d', 
+                  fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                  padding: 'clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
+                  borderRadius: '8px',
+                  fontWeight: '500'
+                }}
+              >
                 <i className="bi bi-shield-check me-2"></i>
-                {getRoleDisplayName(user?.type)}
+                No roles assigned
               </span>
-            </div>
+            )}
+          </div>
           </Card.Body>
         </Card>
       </Container>

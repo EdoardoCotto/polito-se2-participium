@@ -631,7 +631,7 @@ export default function ExternalMaintainer({ user }) {
                 fontWeight: '500'
               }}>
                 <i className="bi bi-shield-check me-2"></i>
-                {getRoleDisplayName(user?.type)}
+                {getRoleDisplayName(user?.roles[0])}
               </span>
             </div>
           </Card.Body>
