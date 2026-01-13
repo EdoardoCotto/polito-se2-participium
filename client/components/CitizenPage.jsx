@@ -1479,11 +1479,23 @@ const handleSendMessage = async () => {
   >
       <div className="d-flex justify-content-between align-items-start">
         <div className="flex-grow-1">
-          <div className="d-flex align-items-center mb-1">
-            <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
-            <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
-              {report.title}
-            </strong>
+           {/* Title and Status Badge in the same row */}
+          <div className="d-flex justify-content-between align-items-start mb-2">
+            <div className="d-flex align-items-center flex-grow-1">
+              <i className={`bi ${getCategoryIcon(report.category)} me-2 text-primary`}></i>
+              <strong style={{ fontSize: 'clamp(0.85rem, 2vw, 0.95rem)' }}>
+                {report.title}
+              </strong>
+            </div>
+            <Badge 
+              bg={getStatusColor(report.status)} className="me-2"
+              style={{ 
+                fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)',
+                flexShrink: 0
+              }}
+            >
+              {report.status}
+            </Badge>
           </div>
           {/* Username */}
           {report.user && (
@@ -1495,9 +1507,6 @@ const handleSendMessage = async () => {
             </div>
           )}
           <div className="mb-1">
-            <Badge bg={getStatusColor(report.status)} className="me-2">
-              {report.status}
-            </Badge>
             <Badge bg="secondary">
               {report.category}
             </Badge>

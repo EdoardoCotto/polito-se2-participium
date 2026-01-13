@@ -216,6 +216,19 @@ export default function UnregisteredMap() {
     return icons[category] || 'bi-flag';
   };
 
+  // Get status color
+  const getStatusColor = (status) => {
+    const colors = {
+      'pending': 'warning',
+      'approved': 'success',
+      'progress': 'info',
+      'resolved': 'primary',
+      'rejected': 'danger'
+    };
+    return colors[status] || 'secondary';
+  };
+
+
   const reportPhotosContent = useMemo(() => {
     if (selectedReportPhotos.length === 0) {
       return (
@@ -593,7 +606,7 @@ export default function UnregisteredMap() {
                                     </strong>
                                   </div>
                                   <Badge 
-                                    className={`ms-2 status-badge-${report.status}`}
+                                     bg={getStatusColor(report.status)}
                                     style={{ 
                                       fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)',
                                       flexShrink: 0
@@ -601,6 +614,7 @@ export default function UnregisteredMap() {
                                   >
                                     {report.status}
                                   </Badge>
+                                  
                                 </div>
 
 
