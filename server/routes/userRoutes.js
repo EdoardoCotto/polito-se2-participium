@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
-const { isLoggedIn, isAdmin, isTechnicalOfficeStaff } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isTechnicalOfficeStaff, isTechnicalOfficeStaffOrAdmin } = require('../middlewares/authMiddleware');
 const { updateProfile } = require('../middlewares/uploadMiddleware')
 
 /**
@@ -303,7 +303,7 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff || isAdmin, userController.getExternalMaintainers);
+router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaffOrAdmin, userController.getExternalMaintainers);
 
 /**
  * @swagger

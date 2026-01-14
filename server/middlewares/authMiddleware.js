@@ -97,3 +97,12 @@ exports.isInternalStaffOrMaintainer = (req, res, next) => {
 
     return next(new UnauthorizedError('Access forbidden: technical office staff or external maintainer only'));
 };
+
+const isTechnicalOfficeStaffOrAdmin = (req, res, next) => {
+  if (req.user && (req.user.type === 'admin' || req.user.type === 'technical_office_staff_member')) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Access denied: requires technical office staff or admin privileges' });
+};
+
+module.exports = { isLoggedIn, isAdmin, isTechnicalOfficeStaff, isTechnicalOfficeStaffOrAdmin };
