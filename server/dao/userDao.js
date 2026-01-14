@@ -244,20 +244,16 @@ function generateConfirmationCode() {
 
 /**
  * Create a new user (registration)
- * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, skipConfirmation?: boolean }} newUser
+ * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, company_id?: number, roles?: string[], skipConfirmation?: boolean }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string, confirmationCode?: string }>}
  */
-exports.createUser = ({ username, email, name, surname, password, type = 'citizen', skipConfirmation = false }) => {
+exports.createUser = ({ username, email, name, surname, password, type = 'citizen', company_id = null, roles = [], skipConfirmation = false }) => {
 
-  // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
   return new Promise((resolve, reject) => { 
 
-    // 2. Avviamo una Funzione Anonima Auto-Eseguita Asincrona (IIFE)
-    // Questo crea un contesto 'async' valido per 'await'
     (async () => {
       try {
 
-        // Uso di await qui DENTRO è ora consentito!
         const saltRounds = 10;
         const salt = await bcrypt.genSalt(saltRounds);
         const hash = await bcrypt.hash(password, salt);
@@ -269,16 +265,15 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
 
         if (type === 'citizen' && !skipConfirmation) {
           confirmationCode = generateConfirmationCode();
-          // Set expiry to 30 minutes from now
           const expiryDate = new Date(Date.now() + 30 * 60 * 1000);
           confirmationExpiresAt = expiryDate.toISOString();
           isConfirmed = 0; // Citizen needs to confirm
         }
 
-        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const insertSql = `INSERT INTO Users (username, email, name, surname, type, company_id, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
+        db.run(insertSql, [username, email, name, surname, type, company_id, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr);
@@ -286,22 +281,47 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
           }
           const userId = this.lastID;
 
-          const result = { id: userId, username, email, name, surname, type };
-          if (confirmationCode) {
-            result.confirmationCode = confirmationCode;
+          // Insert roles if provided
+          if (roles && roles.length > 0) {
+            const roleInsertPromises = roles.map(role => {
+              return new Promise((resolveRole, rejectRole) => {
+                const roleSql = `INSERT INTO UsersRoles (userId, role) VALUES (?, ?)`;
+                db.run(roleSql, [userId, role], (roleErr) => {
+                  if (roleErr) {
+                    console.error(`Error inserting role ${role} for user ${userId}:`, roleErr);
+                    rejectRole(roleErr);
+                  } else {
+                    resolveRole();
+                  }
+                });
+              });
+            });
+
+            Promise.all(roleInsertPromises)
+              .then(() => {
+                const result = { id: userId, username, email, name, surname, type };
+                if (confirmationCode) {
+                  result.confirmationCode = confirmationCode;
+                }
+                resolve(result);
+              })
+              .catch((roleErr) => {
+                reject(roleErr);
+              });
+          } else {
+            // No roles to insert
+            const result = { id: userId, username, email, name, surname, type };
+            if (confirmationCode) {
+              result.confirmationCode = confirmationCode;
+            }
+            resolve(result);
           }
-          resolve(result);
         });
 
       } catch (e) {
-        // Qualsiasi errore da await (bcrypt) viene catturato e rigetta la Promise esterna
         reject(e);
       }
-    })(); // La funzione viene eseguita immediatamente
-
-    // NOTA: il blocco try-catch esterno non è più necessario
-    // in quanto tutte le operazioni asincrone e sincrone sono gestite
-    // all'interno dell'IIFE
+    })();
     
   });
 };
