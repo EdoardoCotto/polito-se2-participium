@@ -55,8 +55,11 @@ export default function MapPage() {
     setIsLoadingUsers(true);
     setUsersError('');
     try {
-      const fetchedUsers = await API.getMunicipalityUsers();
-      setUsers(Array.isArray(fetchedUsers) ? fetchedUsers : []);
+      const fetchedUsers = await API.getMunicipalityUsers() ;
+      const fetchedExternalMaintainers = await API.getExternalMaintainers();
+      // Combine both user lists
+      const combinedUsers = [...fetchedUsers, ...fetchedExternalMaintainers];
+      setUsers(Array.isArray(combinedUsers) ? combinedUsers : []);
     } catch (err) {
       setUsersError(err?.message || 'Failed to load users');
       setUsers([]);
