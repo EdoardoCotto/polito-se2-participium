@@ -171,7 +171,8 @@ CREATE TABLE IF NOT EXISTS UsersRoles (
     'public_works_engineer',
     'mobility_traffic_engineer',
     'environment_technician',
-    'technical_office_staff_member'
+    'technical_office_staff_member',
+    'external_maintainer'
   ))
 );
 

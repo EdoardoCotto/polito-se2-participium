@@ -224,64 +224,70 @@ export default function MapPage() {
                             {getRoleLabel(role)}
                           </span>
                         ))}
+                        {/* Show modify button only if user is NOT external_maintainer */}
+                        {user.type !== 'external_maintainer' && (
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => handleOpenRoleModal(user)}
+                            className="d-flex align-items-center"
+                            style={{
+                              fontSize: '0.75rem',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              borderColor: '#5e7bb3',
+                              borderWidth: '1.5px',
+                              color: '#5e7bb3',
+                              backgroundColor: 'transparent',
+                              padding: '0.25rem 0.5rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                            title="Modify roles"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#5e7bb3';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = '#5e7bb3';
+                            }}
+                          >
+                            <i className="bi bi-pencil-square"></i>
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      /* Show "Assign Roles" button only if user is NOT external_maintainer */
+                      user.type !== 'external_maintainer' && (
                         <Button
                           variant="outline-primary"
                           size="sm"
                           onClick={() => handleOpenRoleModal(user)}
                           className="d-flex align-items-center"
                           style={{
-                            fontSize: '0.75rem',
-                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            borderRadius: '8px',
                             fontWeight: '500',
                             borderColor: '#5e7bb3',
                             borderWidth: '1.5px',
                             color: '#5e7bb3',
-                            backgroundColor: 'transparent',
-                            padding: '0.25rem 0.5rem',
+                            backgroundColor: '#f8f9ff',
+                            padding: '0.4rem 0.8rem',
                             transition: 'all 0.2s ease'
                           }}
-                          title="Modify roles"
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#5e7bb3';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.backgroundColor = '#f8f9ff';
                             e.currentTarget.style.color = '#5e7bb3';
                           }}
                         >
-                          <i className="bi bi-pencil-square"></i>
+                          <i className="bi bi-shield-check me-2"></i>{' '}
+                          Assign Roles
                         </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => handleOpenRoleModal(user)}
-                        className="d-flex align-items-center"
-                        style={{
-                          fontSize: '0.875rem',
-                          borderRadius: '8px',
-                          fontWeight: '500',
-                          borderColor: '#5e7bb3',
-                          borderWidth: '1.5px',
-                          color: '#5e7bb3',
-                          backgroundColor: '#f8f9ff',
-                          padding: '0.4rem 0.8rem',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#5e7bb3';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8f9ff';
-                          e.currentTarget.style.color = '#5e7bb3';
-                        }}
-                      >
-                        <i className="bi bi-shield-check me-2"></i>{' '}
-                        Assign Roles
-                      </Button>
+                      )
                     )}
                   </div>
                 </td>

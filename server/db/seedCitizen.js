@@ -68,12 +68,12 @@ const workers = [
 
   // EXTERNAL MAINTAINERS (now with type 'external_maintainer' and company association)
   // FixRoads Srl employees
-  { username: 'fixroads_mario', email: 'mario@fixroads.it', name: 'Mario', surname: 'Strada', type: 'external_maintainer', company: 'FixRoads Srl', roles: [] },
-  { username: 'fixroads_luigi', email: 'luigi@fixroads.it', name: 'Luigi', surname: 'Asfalto', type: 'external_maintainer', company: 'FixRoads Srl', roles: [] },
+  { username: 'fixroads_mario', email: 'mario@fixroads.it', name: 'Mario', surname: 'Strada', type: 'external_maintainer', company: 'FixRoads Srl', roles: ['external_maintainer'] },
+  { username: 'fixroads_luigi', email: 'luigi@fixroads.it', name: 'Luigi', surname: 'Asfalto', type: 'external_maintainer', company: 'FixRoads Srl', roles: ['external_maintainer'] },
   // GreenCare SpA employees
-  { username: 'greencare_anna', email: 'anna@greencare.it', name: 'Anna', surname: 'Fiori', type: 'external_maintainer', company: 'GreenCare SpA', roles: [] },
+  { username: 'greencare_anna', email: 'anna@greencare.it', name: 'Anna', surname: 'Fiori', type: 'external_maintainer', company: 'GreenCare SpA', roles: ['external_maintainer'] },
   // LightTech Srl employees
-  { username: 'lighttech_paolo', email: 'paolo@lighttech.it', name: 'Paolo', surname: 'Luce', type: 'external_maintainer', company: 'LightTech Srl', roles: [] },
+  { username: 'lighttech_paolo', email: 'paolo@lighttech.it', name: 'Paolo', surname: 'Luce', type: 'external_maintainer', company: 'LightTech Srl', roles: ['external_maintainer'] },
 
   // USERS WITH MULTIPLE ROLES (only municipality_user can have multiple roles)
   { username: 'multi_tech1', email: 'multi1@comune.test.it', name: 'Mario', surname: 'Multiruolo', type: 'municipality_user', roles: ['urban_planner', 'public_works_engineer'] },
@@ -873,15 +873,23 @@ function runQuery(query, params = []) {
       const userId = result.lastID;
       userMap[w.username] = userId;
 
-      // Insert roles into UsersRoles table ONLY if municipality_user and has roles
-      if (w.type === 'municipality_user' && w.roles.length > 0) {
-        for (const role of w.roles) {
-          await runQuery(
-            `INSERT INTO UsersRoles (userId, role) VALUES (?, ?)`,
-            [userId, role]
-          );
+      // Insert roles into UsersRoles table
+      if (w.roles && w.roles.length > 0) {
+        // Insert roles for municipality_user OR external_maintainer
+        if (w.type === 'municipality_user' || w.type === 'external_maintainer') {
+          for (const role of w.roles) {
+            await runQuery(
+              `INSERT INTO UsersRoles (userId, role) VALUES (?, ?)`,
+              [userId, role]
+            );
+          }
+          
+          if (w.type === 'municipality_user') {
+            console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} with roles: ${w.roles.join(', ')}`);
+          } else if (w.type === 'external_maintainer' && w.company) {
+            console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} company: ${w.company} with role: ${w.roles.join(', ')}`);
+          }
         }
-        console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} with roles: ${w.roles.join(', ')}`);
       } else if (w.type === 'external_maintainer' && w.company) {
         console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} company: ${w.company}`);
       } else {

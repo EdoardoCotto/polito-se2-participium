@@ -348,29 +348,47 @@ exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.company_id,
-             C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address
+             C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address, 
+             UR.role
       FROM Users U
       LEFT JOIN Companies C ON U.company_id = C.id
+      LEFT JOIN UsersRoles UR ON U.id = UR.userId
       WHERE U.type = 'external_maintainer'
       ORDER BY C.name ASC, U.surname ASC, U.name ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(err);
-      const users = rows.map(row => ({
-        id: row.id,
-        username: row.username,
-        email: row.email,
-        name: row.name,
-        surname: row.surname,
-        type: row.type,
-        company: row.company_id ? {
-          id: row.company_id,
-          name: row.company_name,
-          phone: row.company_phone,
-          email: row.company_email,
-          address: row.company_address
-        } : null
-      }));
+      
+      // Raggruppa i risultati per utente (come in getUserById)
+      const usersMap = new Map();
+      
+      for (const row of rows) {
+        if (!usersMap.has(row.id)) {
+          usersMap.set(row.id, {
+            id: row.id,
+            username: row.username,
+            email: row.email,
+            name: row.name,
+            surname: row.surname,
+            type: row.type,
+            roles: [],
+            company: row.company_id ? {
+              id: row.company_id,
+              name: row.company_name,
+              phone: row.company_phone,
+              email: row.company_email,
+              address: row.company_address
+            } : null
+          });
+        }
+        
+        // Aggiungi il ruolo se esiste
+        if (row.role) {
+          usersMap.get(row.id).roles.push(row.role);
+        }
+      }
+      
+      const users = Array.from(usersMap.values());
       resolve(users);
     });
   });

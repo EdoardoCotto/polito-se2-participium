@@ -138,6 +138,7 @@ exports.updateUserProfile = async (req, res) => {
 exports.getExternalMaintainers = async (req, res) => {
   try {
     const maintainers = await userRepository.getExternalMaintainers();
+    console.log('External maintainers retrieved:', maintainers);
     return res.status(200).json(maintainers);
   } catch (err) {
     if (err instanceof AppError) {
