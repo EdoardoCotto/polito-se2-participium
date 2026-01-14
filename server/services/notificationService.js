@@ -137,3 +137,51 @@ exports.deleteNotification = async (notificationId, userId) => {
   return await notificationDao.deleteNotification(notificationId, userId);
 };
 
+/**
+ * Create notifications for PR officers when a new report is created
+ * @param {Object} report - The newly created report
+ * @returns {Promise<void>}
+ */
+exports.createNewReportNotification = async (report) => {
+  try {
+    if (!report || !report.id) {
+      console.error('Invalid report for new report notification');
+      return;
+    }
+
+    // Get all users with the municipal_public_relations_officer role
+    const municipalityUsers = await userDao.findMunicipalityUsers();
+    const prOfficers = municipalityUsers.filter(user =>
+      user.roles && user.roles.includes('municipal_public_relations_officer')
+    );
+
+    if (prOfficers.length === 0) {
+      console.log('No PR officers found to notify about new report');
+      return;
+    }
+
+    const title = 'New Report Submitted';
+    const message = `A new report "${report.title}" has been submitted and requires review.\n\nCategory: ${report.category}`;
+
+    // Create notification for each PR officer
+    for (const prOfficer of prOfficers) {
+      await notificationDao.createNotification({
+        userId: prOfficer.id,
+        reportId: report.id,
+        title: title,
+        message: message
+      });
+
+      // Send email notification if enabled
+      if (prOfficer.mail_notifications === 1 && prOfficer.email) {
+        const emailSubject = `New Report: ${report.title}`;
+        await emailService.sendNotificationEmail(prOfficer.email, emailSubject, message);
+      }
+    }
+
+    console.log(`Notifications created for ${prOfficers.length} PR officer(s) about new report ${report.id}`);
+  } catch (error) {
+    console.error(`Error creating new report notification:`, error);
+    // Don't throw - notification failure shouldn't break report creation
+  }
+};

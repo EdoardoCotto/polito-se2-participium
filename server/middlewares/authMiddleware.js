@@ -6,14 +6,9 @@ const UnauthorizedError = require('../errors/UnauthorizedError');
 // Importiamo le costanti dal tuo file roles.js
 const { TECHNICAL_OFFICER_ROLES } = require('../constants/roles');
 
-// Definiamo il ruolo specifico del manutentore esterno
-const ROLE_EXTERNAL_MAINTAINER = 'external_maintainer';
-
-// Definiamo i ruoli "Interni" filtrando via il manutentore esterno dalla lista tecnica
-// (Questo serve per isTechnicalOfficeStaff che presume sia personale interno)
-const INTERNAL_TECHNICAL_ROLES = TECHNICAL_OFFICER_ROLES.filter(
-    role => role !== ROLE_EXTERNAL_MAINTAINER
-);
+// NOTE: external_maintainer is now a USER TYPE (not a role)
+// External maintainers have type='external_maintainer' and are associated with a company
+// TECHNICAL_OFFICER_ROLES now only contains internal municipality roles
 
 exports.isLoggedIn = (req, res, next) => {
     if (req.isAuthenticated()) {
@@ -52,9 +47,9 @@ exports.isTechnicalOfficeStaff = (req, res, next) => {
     }
 
     const userRoles = req.user.roles || [];
-    
-    // Verifica se l'utente ha uno dei ruoli tecnici INTERNI (escluso external_maintainer)
-    const isInternalTech = userRoles.some(role => INTERNAL_TECHNICAL_ROLES.includes(role));
+
+    // Verifica se l'utente ha uno dei ruoli tecnici (municipality_user with technical roles)
+    const isInternalTech = userRoles.some(role => TECHNICAL_OFFICER_ROLES.includes(role));
 
     if (isInternalTech) {
         return next();
@@ -67,13 +62,12 @@ exports.isExternalMaintainer = (req, res, next) => {
         return next(new UnauthorizedError('User not authenticated'));
     }
 
-    const userRoles = req.user.roles || [];
-
-    if (userRoles.includes(ROLE_EXTERNAL_MAINTAINER)) {
+    // external_maintainer is now a USER TYPE, not a role
+    if (req.user.type === 'external_maintainer') {
         return next();
     }
 
-    // Qui usiamo 403 Forbidden perché l'utente è autenticato ma non ha il ruolo giusto
+    // 403 Forbidden because the user is authenticated but doesn't have the right type
     return res.status(403).json({ error: 'Access forbidden: external maintainer only' });
 };
 
@@ -88,14 +82,16 @@ exports.isInternalStaffOrMaintainer = (req, res, next) => {
 
     const userRoles = req.user.roles || [];
 
-    // Poiché nel tuo file roles.js TECHNICAL_OFFICER_ROLES include GIÀ 'external_maintainer',
-    // qui basta controllare se l'utente ha un qualsiasi ruolo presente in quella lista.
-    const hasAccess = userRoles.some(role => TECHNICAL_OFFICER_ROLES.includes(role));
+    // Check if user is a technical office staff (municipality_user with technical roles)
+    const isTechnicalStaff = userRoles.some(role => TECHNICAL_OFFICER_ROLES.includes(role));
 
-    // Aggiungiamo anche l'admin per sicurezza (spesso l'admin deve vedere tutto)
+    // Check if user is an external maintainer (by type)
+    const isExternalMaintainer = req.user.type === 'external_maintainer';
+
+    // Admin can also access
     const isAdmin = req.user.type === 'admin';
 
-    if (hasAccess || isAdmin) {
+    if (isTechnicalStaff || isExternalMaintainer || isAdmin) {
         return next();
     }
 

@@ -77,9 +77,13 @@ exports.getUser = (username, password) => {
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
     console.log('[DAO getUserById] START - id:', id);
-    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, UR.role, U.telegram_nickname, U.personal_photo_path, U.mail_notifications 
+    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.company_id,
+                        U.telegram_nickname, U.personal_photo_path, U.mail_notifications,
+                        UR.role,
+                        C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address
     FROM Users U
     LEFT JOIN UsersRoles UR ON U.id = UR.userId
+    LEFT JOIN Companies C ON U.company_id = C.id
     WHERE U.id = ?`;
     console.log('[DAO getUserById] Executing SQL:', sql);
     db.all(sql, [id], (err, rows) => {
@@ -87,13 +91,13 @@ exports.getUserById = (id) => {
       console.log('[DAO getUserById] err:', err);
       console.log('[DAO getUserById] rows:', rows);
       console.log('[DAO getUserById] rows length:', rows?.length);
-      
+
       if (err) {
         console.log('[DAO getUserById] Database error, rejecting');
         reject(err);
         return;
       }
-      
+
       if (!rows || rows.length === 0) {
         console.log('[DAO getUserById] No rows found, resolving null');
         resolve(null);
@@ -102,10 +106,10 @@ exports.getUserById = (id) => {
 
       // Prendi la prima riga per i dati comuni dell'utente
       const firstRow = rows[0];
-      
+
       // Estrai tutti i ruoli dall'array di righe (solo per municipality_user)
       const roles = rows.map(row => row.role).filter(role => role !== null);
-      
+
       // Costruisci l'oggetto user
       const user = {
         id: firstRow.id,
@@ -119,7 +123,18 @@ exports.getUserById = (id) => {
         mail_notifications: firstRow.mail_notifications,
         roles: roles
       };
-      
+
+      // Add company info for external_maintainer users
+      if (firstRow.type === 'external_maintainer' && firstRow.company_id) {
+        user.company = {
+          id: firstRow.company_id,
+          name: firstRow.company_name,
+          phone: firstRow.company_phone,
+          email: firstRow.company_email,
+          address: firstRow.company_address
+        };
+      }
+
       console.log('[DAO getUserById] END - Constructed user object:', user);
       resolve(user);
     });
@@ -326,27 +341,35 @@ exports.findMunicipalityUsers = () => {
 };
 
 /**
- * Get all external maintainers
+ * Get all external maintainers (now using type='external_maintainer' with company info)
  * @returns {Promise<Object[]>}
  */
-
-//TO UPDATE
 exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, GROUP_CONCAT(UR.role) as roles
+      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.company_id,
+             C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address
       FROM Users U
-      INNER JOIN UsersRoles UR ON U.id = UR.userId
-      WHERE U.type = 'municipality_user' AND UR.role = 'external_maintainer'
-      GROUP BY U.id
-      ORDER BY U.surname ASC, U.name ASC, U.username ASC
+      LEFT JOIN Companies C ON U.company_id = C.id
+      WHERE U.type = 'external_maintainer'
+      ORDER BY C.name ASC, U.surname ASC, U.name ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(err);
-      // Trasforma roles da stringa a array
       const users = rows.map(row => ({
-        ...row,
-        roles: row.roles ? row.roles.split(',') : []
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        name: row.name,
+        surname: row.surname,
+        type: row.type,
+        company: row.company_id ? {
+          id: row.company_id,
+          name: row.company_name,
+          phone: row.company_phone,
+          email: row.company_email,
+          address: row.company_address
+        } : null
       }));
       resolve(users);
     });

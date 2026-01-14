@@ -23,12 +23,38 @@ const db = new sqlite.Database(dbPath, (err) => {
   console.log('✅ Connesso al DB:', dbPath);
 });
 
+// --- 0. COMPANIES DATA TO INSERT ---
+const companies = [
+  {
+    name: 'FixRoads Srl',
+    phone: '800 123 456',
+    email: 'urban-reports-turin@fixroads.it',
+    address: 'Via delle Strade 42, 10100 Torino'
+  },
+  {
+    name: 'GreenCare SpA',
+    phone: '800 789 012',
+    email: 'info@greencare.it',
+    address: 'Corso Verde 15, 10100 Torino'
+  },
+  {
+    name: 'LightTech Srl',
+    phone: '800 345 678',
+    email: 'support@lighttech.it',
+    address: 'Via Illuminazione 8, 10100 Torino'
+  }
+];
+
 // --- 1. USER DATA TO INSERT ---
 const workers = [
   // CITIZENS AND ADMIN
   { username: 'citizen', email: 'citizen@participium.test', name: 'Davide', surname: 'Idini', type: 'citizen', roles: [] },
   { username: 'admin_main', email: 'admin@participium.test', name: 'Super', surname: 'Admin', type: 'admin', roles: [] },
   { username: 'pr_officer1', email: 'pr@comune.test.it', name: 'Sara', surname: 'Comunicazione', type: 'municipality_user', roles: ['municipal_public_relations_officer'] },
+
+  // DEMO USER: Rosa (citizen who reports the pothole)
+  { username: 'rosa_bianchi', email: 'rosa.bianchi@email.it', name: 'Rosa', surname: 'Bianchi', type: 'citizen', roles: [] },
+
   // TECHNICIANS
   { username: 'urban_planner1', email: 'planner@comune.test.it', name: 'Giulia', surname: 'Rossi', type: 'municipality_user', roles: ['urban_planner'] },
   { username: 'urban_planner2', email: 'planner2@comune.test.it', name: 'Luca', surname: 'Rossi', type: 'municipality_user', roles: ['urban_planner'] },
@@ -36,10 +62,20 @@ const workers = [
   { username: 'env_tech1', email: 'env@comune.test.it', name: 'Elena', surname: 'Verdi', type: 'municipality_user', roles: ['environment_technician'] },
   { username: 'traffic_eng1', email: 'traffic@comune.test.it', name: 'Roberto', surname: 'Neri', type: 'municipality_user', roles: ['mobility_traffic_engineer'] },
   { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'municipality_user', roles: ['building_inspector'] },
-  // EXTERNAL MAINTAINERS
-  { username: 'ext_maint1', email: 'maint1@external.com', name: 'Paolo', surname: 'Bianchi', type: 'municipality_user', roles: ['external_maintainer'] },
-  { username: 'ext_maint2', email: 'maint2@external.com', name: 'Francesca', surname: 'Russo', type: 'municipality_user', roles: ['external_maintainer'] },
-  // USERS WITH MULTIPLE ROLES
+
+  // DEMO USER: Ada Lovelace (technical office staff member - public works engineer)
+  { username: 'ada_lovelace', email: 'ada.lovelace@comune.torino.it', name: 'Ada', surname: 'Lovelace', type: 'municipality_user', roles: ['public_works_engineer'] },
+
+  // EXTERNAL MAINTAINERS (now with type 'external_maintainer' and company association)
+  // FixRoads Srl employees
+  { username: 'fixroads_mario', email: 'mario@fixroads.it', name: 'Mario', surname: 'Strada', type: 'external_maintainer', company: 'FixRoads Srl', roles: [] },
+  { username: 'fixroads_luigi', email: 'luigi@fixroads.it', name: 'Luigi', surname: 'Asfalto', type: 'external_maintainer', company: 'FixRoads Srl', roles: [] },
+  // GreenCare SpA employees
+  { username: 'greencare_anna', email: 'anna@greencare.it', name: 'Anna', surname: 'Fiori', type: 'external_maintainer', company: 'GreenCare SpA', roles: [] },
+  // LightTech Srl employees
+  { username: 'lighttech_paolo', email: 'paolo@lighttech.it', name: 'Paolo', surname: 'Luce', type: 'external_maintainer', company: 'LightTech Srl', roles: [] },
+
+  // USERS WITH MULTIPLE ROLES (only municipality_user can have multiple roles)
   { username: 'multi_tech1', email: 'multi1@comune.test.it', name: 'Mario', surname: 'Multiruolo', type: 'municipality_user', roles: ['urban_planner', 'public_works_engineer'] },
   { username: 'multi_tech2', email: 'multi2@comune.test.it', name: 'Laura', surname: 'Polivalente', type: 'municipality_user', roles: ['environment_technician', 'mobility_traffic_engineer'] },
   { username: 'multi_tech3', email: 'multi3@comune.test.it', name: 'Giorgio', surname: 'Tuttofare', type: 'municipality_user', roles: ['building_inspector', 'public_works_engineer', 'urban_planner'] },
@@ -788,37 +824,55 @@ function runQuery(query, params = []) {
     console.log("🧹 Cleaning old data...");
     try {
         await runQuery(`DELETE FROM Reports`);
+        await runQuery(`DELETE FROM UsersRoles`);
         await runQuery(`DELETE FROM Users`);
+        await runQuery(`DELETE FROM Companies`);
         // Reset autoincrement ID to 1
-        await runQuery(`DELETE FROM sqlite_sequence WHERE name='Users' OR name='Reports'`);
+        await runQuery(`DELETE FROM sqlite_sequence WHERE name='Users' OR name='Reports' OR name='Companies' OR name='UsersRoles'`);
     } catch {
         // Ignore errors: tables may be empty or non-existent on first run
         // This is expected behavior, so we continue with seeding
         console.log("   Info: Tables may be empty or non-existent, continuing.");
     }
 
-    // B. USER INSERTION
+    // B. COMPANIES INSERTION
+    console.log("🏢 Inserting companies...");
+    const companyMap = {};
+
+    for (const c of companies) {
+      const result = await runQuery(
+        `INSERT INTO Companies (name, phone, email, address) VALUES (?, ?, ?, ?)`,
+        [c.name, c.phone, c.email, c.address]
+      );
+      companyMap[c.name] = result.lastID;
+      console.log(`   ✅ Company inserted: ${c.name} (ID: ${result.lastID})`);
+    }
+
+    // C. USER INSERTION
     console.log("👥 Inserting users...");
-    
+
     const testCredential = process.env.SEED_PASSWORD || 'test1234';
     const saltRounds = 10;
-    
-    const userMap = {}; 
+
+    const userMap = {};
 
     for (const w of workers) {
       const salt = await bcrypt.genSalt(saltRounds);
       const hash = await bcrypt.hash(testCredential, salt);
 
-      // Insert user (WITH type)
+      // Get company_id if user is external_maintainer
+      const companyId = w.company ? companyMap[w.company] : null;
+
+      // Insert user (WITH type and company_id)
       const result = await runQuery(
-        `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [w.username, w.email, w.name, w.surname, w.type, hash, salt, 1]
+        `INSERT INTO Users (username, email, name, surname, type, company_id, password, salt, is_confirmed)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [w.username, w.email, w.name, w.surname, w.type, companyId, hash, salt, 1]
       );
-      
+
       const userId = result.lastID;
       userMap[w.username] = userId;
-      
+
       // Insert roles into UsersRoles table ONLY if municipality_user and has roles
       if (w.type === 'municipality_user' && w.roles.length > 0) {
         for (const role of w.roles) {
@@ -828,12 +882,14 @@ function runQuery(query, params = []) {
           );
         }
         console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} with roles: ${w.roles.join(', ')}`);
+      } else if (w.type === 'external_maintainer' && w.company) {
+        console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type} company: ${w.company}`);
       } else {
         console.log(`   ✅ User inserted: ${w.username} (ID: ${userId}) type: ${w.type}`);
       }
     }
 
-    // C. REPORT INSERTION
+    // D. REPORT INSERTION
     console.log("📝 Inserting reports...");
     
     for (const r of reports) {

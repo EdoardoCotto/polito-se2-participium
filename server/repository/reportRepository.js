@@ -1,6 +1,7 @@
 const reportDao = require('../dao/reportDao');
 const userDao = require('../dao/userDao');
 const notificationService = require('../services/notificationService');
+const { createNewReportNotification } = notificationService;
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
@@ -162,7 +163,14 @@ exports.createReport = async (reportData, anonymous) => {
       userEmail: null
     };
 
-    return mapReportRow(mappedRow);
+    const createdReport = mapReportRow(mappedRow);
+
+    // Notify PR officers about the new report (async, don't wait)
+    createNewReportNotification(createdReport).catch(err => {
+      console.error('Error creating new report notification:', err);
+    });
+
+    return createdReport;
   } catch (err) {
     console.error('Error in createReport repository:', err);
     throw err;
@@ -412,15 +420,12 @@ exports.assignReportToExternalMaintainer = async (reportId, externalMaintainerId
     throw new UnauthorizedError('You can only assign reports that are assigned to you');
   }
 
-  // Verify the external maintainer exists and is actually an external maintainer
+  // Verify the external maintainer exists and is actually an external maintainer (by type)
   const maintainer = await userDao.getUserById(externalMaintainerId);
   if (!maintainer) {
     throw new NotFoundError('External maintainer not found');
   }
-  const isExternalMaintainer =
-    maintainer?.type === 'external_maintainer' ||
-    (Array.isArray(maintainer.roles) && maintainer.roles.includes('external_maintainer'));
-  if (!isExternalMaintainer) {
+  if (maintainer.type !== 'external_maintainer') {
     throw new BadRequestError('The specified user is not an external maintainer');
   }
 
