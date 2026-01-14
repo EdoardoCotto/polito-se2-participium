@@ -303,7 +303,7 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, userController.getExternalMaintainers);
+router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff || isAdmin, userController.getExternalMaintainers);
 
 /**
  * @swagger
