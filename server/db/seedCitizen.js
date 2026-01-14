@@ -193,11 +193,11 @@ const reports = [
     latitude: 45.0653,
     longitude: 7.6809,
     image_path1: 'static/uploads/public lighting.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'citizen',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
-  // New reports - Public Lighting
+  // New reports - Public Lighting (all set to pending)
   {
     title: 'Streetlight off in Corso Vittorio Emanuele',
     description: 'Streetlight completely off for several days, poorly lit area.',
@@ -216,9 +216,9 @@ const reports = [
     latitude: 45.0691,
     longitude: 7.6823,
     image_path1: 'static/uploads/public lighting.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'luisa_verdi',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Broken lamp in Piazza San Carlo',
@@ -227,9 +227,9 @@ const reports = [
     latitude: 45.0705,
     longitude: 7.6798,
     image_path1: 'static/uploads/public lighting.png',
-    status: 'progress',
+    status: 'pending',
     author_username: 'giovanni_bianchi',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Damaged streetlight in Via Lagrange',
@@ -242,7 +242,7 @@ const reports = [
     author_username: 'francesca_neri',
     technical_office: null
   },
-  // Waste
+  // Waste (all set to pending)
   {
     title: 'Abandoned waste in Via Pietro Micca',
     description: 'Garbage bag abandoned on the sidewalk for days.',
@@ -261,9 +261,9 @@ const reports = [
     latitude: 45.0712,
     longitude: 7.6615,
     image_path1: 'static/uploads/waste.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'chiara_esposito',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Illegal dump in Via Nizza',
@@ -283,11 +283,11 @@ const reports = [
     latitude: 45.0659,
     longitude: 7.6738,
     image_path1: 'static/uploads/waste.jpg',
-    status: 'resolved',
+    status: 'pending',
     author_username: 'valentina_colombo',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
-  // Roads and Urban Furnishings
+  // Roads and Urban Furnishings (all set to pending)
   {
     title: 'Pothole in sidewalk on Via XX Settembre',
     description: 'Deep pothole in the sidewalk that poses a danger to pedestrians.',
@@ -306,9 +306,9 @@ const reports = [
     latitude: 45.0542,
     longitude: 7.6887,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'sofia_marino',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Damaged asphalt in Corso Re Umberto',
@@ -317,9 +317,9 @@ const reports = [
     latitude: 45.0627,
     longitude: 7.6776,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'progress',
+    status: 'pending',
     author_username: 'alessandro_greco',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Bent road sign',
@@ -328,7 +328,7 @@ const reports = [
     latitude: 45.0718,
     longitude: 7.6654,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'elena_bruno',
     technical_office: null
   },
@@ -343,7 +343,7 @@ const reports = [
     author_username: 'davide_gallo',
     technical_office: null
   },
-  // Architectural Barriers
+  // Architectural Barriers (all set to pending)
   {
     title: 'Step too high for disabled people',
     description: 'Store access step too high, not accessible for wheelchairs.',
@@ -351,7 +351,7 @@ const reports = [
     latitude: 45.0697,
     longitude: 7.6834,
     image_path1: 'static/uploads/Architectural Barriers.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'giulia_conti',
     technical_office: null
   },
@@ -362,9 +362,9 @@ const reports = [
     latitude: 45.0665,
     longitude: 7.6742,
     image_path1: 'static/uploads/Architectural Barriers.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'federico_costa',
-    technical_office: 'urban_planner'
+    technical_office: null
   },
   {
     title: 'Sidewalk without curb ramp',
@@ -377,7 +377,7 @@ const reports = [
     author_username: 'martina_fontana',
     technical_office: null
   },
-  // Water Supply - Drinking Water
+  // Water Supply - Drinking Water (all set to pending)
   {
     title: 'Non-functioning public water fountain',
     description: 'Public water fountain has not been dispensing water for weeks.',
@@ -385,7 +385,7 @@ const reports = [
     latitude: 45.0679,
     longitude: 7.6792,
     image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'riccardo_caruso',
     technical_office: null
   },
@@ -396,9 +396,9 @@ const reports = [
     latitude: 45.0656,
     longitude: 7.6827,
     image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'alice_mancini',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Broken water fountain in Parco della Pellerina',
@@ -411,7 +411,7 @@ const reports = [
     author_username: 'simone_serra',
     technical_office: null
   },
-  // Sewer System
+  // Sewer System (all set to pending)
   {
     title: 'Sewer manhole with bad odor',
     description: 'Sewer manhole emitting bad odor, possible obstruction.',
@@ -430,9 +430,9 @@ const reports = [
     latitude: 45.0593,
     longitude: 7.6751,
     image_path1: 'static/uploads/Sewer System.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'lorenzo_barbieri',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Clogged sewer grate',
@@ -441,11 +441,11 @@ const reports = [
     latitude: 45.0645,
     longitude: 7.6801,
     image_path1: 'static/uploads/Sewer System.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'greta_fiore',
     technical_office: null
   },
-  // Road Signs and Traffic Lights
+  // Road Signs and Traffic Lights (all set to pending)
   {
     title: 'Non-functioning traffic light',
     description: 'Traffic light at intersection completely off, danger for traffic.',
@@ -453,9 +453,9 @@ const reports = [
     latitude: 45.0701,
     longitude: 7.6778,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'tommaso_moretti',
-    technical_office: 'mobility_traffic_engineer'
+    technical_office: null
   },
   {
     title: 'Road sign covered by vegetation',
@@ -464,7 +464,7 @@ const reports = [
     latitude: 45.0631,
     longitude: 7.6687,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'aurora_marchetti',
     technical_office: null
   },
@@ -475,9 +475,9 @@ const reports = [
     latitude: 45.0662,
     longitude: 7.6819,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'progress',
+    status: 'pending',
     author_username: 'nicola_ferretti',
-    technical_office: 'mobility_traffic_engineer'
+    technical_office: null
   },
   {
     title: 'Missing road sign',
@@ -486,11 +486,11 @@ const reports = [
     latitude: 45.0694,
     longitude: 7.6735,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'emma_santoro',
     technical_office: null
   },
-  // Public Green Areas and Playgrounds
+  // Public Green Areas and Playgrounds (all set to pending)
   {
     title: 'Broken swing in playground',
     description: 'Swing in playground with broken chain, danger for children.',
@@ -498,7 +498,7 @@ const reports = [
     latitude: 45.0615,
     longitude: 7.6865,
     image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'gabriele_rinaldi',
     technical_office: null
   },
@@ -509,9 +509,9 @@ const reports = [
     latitude: 45.0728,
     longitude: 7.6672,
     image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'giorgia_palmieri',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Damaged slide in park',
@@ -531,9 +531,9 @@ const reports = [
     latitude: 45.0689,
     longitude: 7.6703,
     image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'caterina_pellegrini',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Uncut grass in park',
@@ -546,7 +546,7 @@ const reports = [
     author_username: 'emanuele_vitale',
     technical_office: null
   },
-  // Other
+  // Other (all set to pending)
   {
     title: 'Graffiti on public wall',
     description: 'Vandal graffiti on public wall that deface the urban landscape.',
@@ -565,11 +565,11 @@ const reports = [
     latitude: 45.0715,
     longitude: 7.6847,
     image_path1: 'static/uploads/other.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'filippo_martini',
-    technical_office: 'building_inspector'
+    technical_office: null
   },
-  // Other various reports
+  // Other various reports (all set to pending)
   {
     title: 'Flickering streetlight in Via Cavour',
     description: 'Streetlight that flashes continuously, probable electrical problem.',
@@ -588,9 +588,9 @@ const reports = [
     latitude: 45.0608,
     longitude: 7.6718,
     image_path1: 'static/uploads/waste.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'leonardo_battaglia',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Deep pothole in Corso Inghilterra',
@@ -599,9 +599,9 @@ const reports = [
     latitude: 45.0623,
     longitude: 7.6746,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'progress',
+    status: 'pending',
     author_username: 'sara_bernardi',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Missing curb ramp for disabled people',
@@ -621,9 +621,9 @@ const reports = [
     latitude: 45.0647,
     longitude: 7.6772,
     image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'anna_parisi',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Sewer manhole without cover',
@@ -632,9 +632,9 @@ const reports = [
     latitude: 45.0711,
     longitude: 7.6698,
     image_path1: 'static/uploads/Sewer System.jpg',
-    status: 'assigned',    
+    status: 'pending',    
     author_username: 'marco_gentile',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Traffic light with yellow light always on',
@@ -643,9 +643,9 @@ const reports = [
     latitude: 45.0668,
     longitude: 7.6759,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'francesca_amato',
-    technical_office: 'mobility_traffic_engineer'
+    technical_office: null
   },
   {
     title: 'Broken carousel in park',
@@ -654,7 +654,7 @@ const reports = [
     latitude: 45.0564,
     longitude: 7.6853,
     image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
-    status: 'assigned',    
+    status: 'pending',    
     author_username: 'giacomo_baldini',
     technical_office: null
   },
@@ -676,7 +676,7 @@ const reports = [
     latitude: 45.0636,
     longitude: 7.6794,
     image_path1: 'static/uploads/public lighting.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'pietro_sorrentino',
     technical_office: null
   },
@@ -687,9 +687,9 @@ const reports = [
     latitude: 45.0707,
     longitude: 7.6783,
     image_path1: 'static/uploads/waste.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'ludovica_damico',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Road with multiple potholes',
@@ -698,9 +698,9 @@ const reports = [
     latitude: 45.0619,
     longitude: 7.6732,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'progress',
+    status: 'pending',
     author_username: 'cristian_pagano',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Ramp for disabled people too steep',
@@ -720,9 +720,9 @@ const reports = [
     latitude: 45.0654,
     longitude: 7.6767,
     image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'samuele_guida',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Recurring flooding',
@@ -731,7 +731,7 @@ const reports = [
     latitude: 45.0597,
     longitude: 7.6765,
     image_path1: 'static/uploads/Sewer System.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'rebecca_mazza',
     technical_office: null
   },
@@ -742,7 +742,7 @@ const reports = [
     latitude: 45.0719,
     longitude: 7.6641,
     image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'diego_testa',
     technical_office: null
   },
@@ -753,9 +753,9 @@ const reports = [
     latitude: 45.0548,
     longitude: 7.6871,
     image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'camilla_ferrara',
-    technical_office: 'environment_technician'
+    technical_office: null
   },
   {
     title: 'Damage to public property',
@@ -775,9 +775,9 @@ const reports = [
     latitude: 45.0628,
     longitude: 7.6781,
     image_path1: 'static/uploads/public lighting.png',
-    status: 'resolved',
+    status: 'pending',
     author_username: 'ginevra_marini',
-    technical_office: 'public_works_engineer'
+    technical_office: null
   },
   {
     title: 'Waste collection not performed',
@@ -797,11 +797,101 @@ const reports = [
     latitude: 45.0643,
     longitude: 7.6705,
     image_path1: 'static/uploads/Roads and Urban Furnishings.png',
-    status: 'assigned',
+    status: 'pending',
     author_username: 'bianca_valentini',
     technical_office: null
   }
 ];
+
+// --- 3. REPORT ASSIGNMENTS DATA ---
+const reportAssignments = [
+  // ASSIGNED REPORTS (50+)
+  
+  // Public Lighting - assigned
+  { title: 'Broken streetlight in Via Roma', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Insufficient lighting in Via Garibaldi', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'ada_lovelace' },
+  { title: 'Streetlight off in Corso Vittorio Emanuele', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'multi_tech1' },
+  { title: 'Damaged streetlight in Via Lagrange', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'lighttech_paolo' },
+  { title: 'Flickering streetlight in Via Cavour', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'lighttech_paolo' },
+  { title: 'Insufficient nighttime lighting', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'ada_lovelace' },
+  
+  // Waste - assigned
+  { title: 'Public trash bin overflowing in Corso Francia', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'env_tech1' },
+  { title: 'Abandoned waste in Via Pietro Micca', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'env_tech1' },
+  { title: 'Illegal dump in Via Nizza', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'multi_tech2' },
+  { title: 'Damaged waste container', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'env_tech1' },
+  { title: 'Abandoned hazardous waste', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'env_tech1' },
+  { title: 'Missing trash bin', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'multi_tech2' },
+  
+  // Roads and Urban Furnishings - assigned
+  { title: 'Broken bench in Parco del Valentino', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'ada_lovelace' },
+  { title: 'Pothole in sidewalk on Via XX Settembre', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Bent road sign', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_mario' },
+  { title: 'Uneven sidewalk in Via Montebello', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_luigi' },
+  { title: 'Deep pothole in Corso Inghilterra', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_luigi' },
+  { title: 'Road with multiple potholes', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_mario' },
+  { title: 'Sidewalk with broken slabs', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'multi_tech1' },
+  
+  // Architectural Barriers - assigned
+  { title: 'Missing ramp for disabled people', status: 'assigned', technical_office: 'urban_planner', assignee_username: 'urban_planner1' },
+  { title: 'Step too high for disabled people', status: 'assigned', technical_office: 'urban_planner', assignee_username: 'urban_planner2' },
+  { title: 'Sidewalk without curb ramp', status: 'assigned', technical_office: 'urban_planner', assignee_username: 'urban_planner1' },
+  { title: 'Missing curb ramp for disabled people', status: 'assigned', technical_office: 'urban_planner', assignee_username: 'multi_tech3' },
+  { title: 'Ramp for disabled people too steep', status: 'assigned', technical_office: 'urban_planner', assignee_username: 'urban_planner2' },
+  
+  // Water Supply - assigned
+  { title: 'Water fountain with leak', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_mario' },
+  { title: 'Non-functioning public water fountain', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Water fountain with cloudy water', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'fixroads_mario' },
+  { title: 'Water fountain with broken tap', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'ada_lovelace' },
+  
+  // Sewer System - assigned
+  { title: 'Sewer manhole with bad odor', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'multi_tech1' },
+  { title: 'Clogged sewer grate', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Sewer manhole without cover', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Recurring flooding', status: 'assigned', technical_office: 'public_works_engineer', assignee_username: 'multi_tech3' },
+  
+  // Traffic Lights and Signs - assigned
+  { title: 'Non-functioning traffic light', status: 'assigned', technical_office: 'mobility_traffic_engineer', assignee_username: 'traffic_eng1' },
+  { title: 'Road sign covered by vegetation', status: 'assigned', technical_office: 'mobility_traffic_engineer', assignee_username: 'traffic_eng1' },
+  { title: 'Missing road sign', status: 'assigned', technical_office: 'mobility_traffic_engineer', assignee_username: 'multi_tech2' },
+  { title: 'Traffic light with yellow light always on', status: 'assigned', technical_office: 'mobility_traffic_engineer', assignee_username: 'traffic_eng1' },
+  { title: 'Illegible speed limit sign', status: 'assigned', technical_office: 'mobility_traffic_engineer', assignee_username: 'multi_tech2' },
+  
+  // Green Areas and Playgrounds - assigned
+  { title: 'Abandoned flowerbed in Piazza Statuto', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  { title: 'Unstable tree in Via Verdi', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  { title: 'Broken swing in playground', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'multi_tech2' },
+  { title: 'Damaged slide in park', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  { title: 'Uncut grass in park', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  { title: 'Playground without maintenance', status: 'assigned', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  
+  // Other - assigned
+  { title: 'Broken window', status: 'assigned', technical_office: 'building_inspector', assignee_username: 'inspector1' },
+  { title: 'Graffiti on public wall', status: 'assigned', technical_office: 'building_inspector', assignee_username: 'inspector1' },
+  { title: 'Vandalism on bench', status: 'assigned', technical_office: 'building_inspector', assignee_username: 'multi_tech3' },
+  { title: 'Damage to public property', status: 'assigned', technical_office: 'building_inspector', assignee_username: 'inspector1' },
+  
+  // IN PROGRESS REPORTS (some assigned reports moved to progress)
+  { title: 'Broken lamp in Piazza San Carlo', status: 'progress', technical_office: 'public_works_engineer', assignee_username: 'civil_eng1' },
+  { title: 'Damaged asphalt in Corso Re Umberto', status: 'progress', technical_office: 'public_works_engineer', assignee_username: 'multi_tech1' },
+  { title: 'Broken pedestrian traffic light', status: 'progress', technical_office: 'mobility_traffic_engineer', assignee_username: 'traffic_eng1' },
+  { title: 'Flooding in Via Madama Cristina', status: 'progress', technical_office: 'public_works_engineer', assignee_username: 'ada_lovelace' },
+  { title: 'Broken carousel in park', status: 'progress', technical_office: 'environment_technician', assignee_username: 'greencare_anna' },
+  
+  // RESOLVED REPORTS
+  { title: 'Streetlight with intermittent light', status: 'resolved', technical_office: 'public_works_engineer', assignee_username: 'lighttech_paolo' }
+];
+
+// Add more pending reports (keeping 30+ pending - these are the ones NOT in reportAssignments)
+// The following reports will remain pending (not assigned):
+// - Weed too high on sidewalk
+// - Damaged playground
+// - Abandoned waste in Piazza Castello
+// - Architectural barrier in Via Po
+// - Broken water fountain in Parco della Pellerina
+// - Waste collection not performed
+// ... and 24 more from the original list
 
 // --- HELPER FOR PROMISE ---
 // Transforms db.run (which uses callbacks) into a Promise to use async/await
@@ -900,6 +990,8 @@ function runQuery(query, params = []) {
     // D. REPORT INSERTION
     console.log("📝 Inserting reports...");
     
+    const reportMap = {}; // Map to store report IDs by title
+    
     for (const r of reports) {
       // Find the author user ID using the map created earlier
       const userId = userMap[r.author_username];
@@ -909,7 +1001,7 @@ function runQuery(query, params = []) {
         continue;
       }
 
-      await runQuery(
+      const result = await runQuery(
         `INSERT INTO Reports (
             userId, title, description, category, 
             latitude, longitude, image_path1, status, technical_office
@@ -919,7 +1011,54 @@ function runQuery(query, params = []) {
             r.latitude, r.longitude, r.image_path1, r.status, r.technical_office
         ]
       );
-      console.log(`   ✅ Report created: "${r.title}" (Author ID: ${userId})`);
+      
+      reportMap[r.title] = result.lastID;
+      console.log(`   ✅ Report created: "${r.title}" (ID: ${result.lastID}, Author ID: ${userId})`);
+    }
+
+    // E. ASSIGN REPORTS TO USERS
+    console.log("🎯 Assigning reports to municipality users and external maintainers...");
+    
+    for (const assignment of reportAssignments) {
+      const reportId = reportMap[assignment.title];
+      const assigneeId = userMap[assignment.assignee_username];
+      
+      if (!reportId) {
+        console.warn(`   ⚠️ Skipped assignment: Report "${assignment.title}" not found.`);
+        continue;
+      }
+      
+      if (!assigneeId) {
+        console.warn(`   ⚠️ Skipped assignment: User ${assignment.assignee_username} not found.`);
+        continue;
+      }
+
+      // Get user info to determine if it's an external maintainer or municipality user
+      const assigneeUser = workers.find(w => w.username === assignment.assignee_username);
+      
+      if (!assigneeUser) {
+        console.warn(`   ⚠️ Skipped assignment: User data not found for ${assignment.assignee_username}`);
+        continue;
+      }
+
+      // Determine which field to update based on user type
+      let updateSql;
+      if (assigneeUser.type === 'external_maintainer') {
+        // For external maintainers, use external_maintainerId
+        updateSql = `UPDATE Reports 
+                     SET status = ?, technical_office = ?, external_maintainerId = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE id = ?`;
+      } else {
+        // For municipality users, use officerId
+        updateSql = `UPDATE Reports 
+                     SET status = ?, technical_office = ?, officerId = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE id = ?`;
+      }
+
+      await runQuery(updateSql, [assignment.status, assignment.technical_office, assigneeId, reportId]);
+      
+      const assigneeType = assigneeUser.type === 'external_maintainer' ? 'external maintainer' : 'municipality user';
+      console.log(`   ✅ Report "${assignment.title}" assigned to ${assignment.assignee_username} (${assigneeType}, status: ${assignment.status})`);
     }
 
     console.log("🎉 Seeding completed successfully!");
