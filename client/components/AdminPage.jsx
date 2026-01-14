@@ -337,11 +337,23 @@ export default function MapPage() {
 
   const handleRoleToggle = (role) => {
     setSelectedRoles(prev => {
+      const isPRO = role === 'municipal_public_relations_officer';
+      const hasPRO = prev.includes('municipal_public_relations_officer');
+      const hasOtherRoles = prev.some(r => r !== 'municipal_public_relations_officer');
+      
       if (prev.includes(role)) {
         // Remove role
         return prev.filter(r => r !== role);
       } else {
         // Add role
+        // If trying to add PRO but other roles exist, block it
+        if (isPRO && hasOtherRoles) {
+          return prev;
+        }
+        // If trying to add another role but PRO exists, block it
+        if (!isPRO && hasPRO) {
+          return prev;
+        }
         return [...prev, role];
       }
     });
@@ -859,6 +871,19 @@ export default function MapPage() {
                 <div className="form-label fw-semibold mb-3" style={{ color: '#495057' }}>
                   <i className="bi bi-tag-fill me-2"></i>Available Roles
                 </div>
+                {/* Warning message for role exclusivity */}
+                {selectedRoles.includes('municipal_public_relations_officer') && (
+                  <Alert variant="info" className="mb-3">
+                    <i className="bi bi-info-circle me-2"></i>
+                    Public Relations Officer cannot have other roles. Deselect it to assign additional roles.
+                  </Alert>
+                )}
+                {selectedRoles.length > 0 && !selectedRoles.includes('municipal_public_relations_officer') && (
+                  <Alert variant="info" className="mb-3">
+                    <i className="bi bi-info-circle me-2"></i>
+                    Public Relations Officer cannot be combined with other roles. Deselect all roles first to assign it.
+                  </Alert>
+                )}
                 {usersError && (
                   <Alert variant="danger" dismissible onClose={() => setUsersError('')} className="mb-3">
                     <i className="bi bi-exclamation-triangle me-2"></i>{' '}
@@ -868,29 +893,38 @@ export default function MapPage() {
                 <div className="d-flex flex-column gap-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   {availableRoles.map((role) => {
                     const isSelected = selectedRoles.includes(role);
+                    const isPRO = role === 'municipal_public_relations_officer';
+                    const hasPRO = selectedRoles.includes('municipal_public_relations_officer');
+                    const hasOtherRoles = selectedRoles.some(r => r !== 'municipal_public_relations_officer');
+                    
+                    // Disable PRO if other roles are selected
+                    // Disable other roles if PRO is selected
+                    const isDisabled = (isPRO && hasOtherRoles) || (!isPRO && hasPRO);
+                    
                     return (
                       <label
                         key={role}
                         className="p-3"
                         style={{
-                          backgroundColor: isSelected ? '#e7f3ff' : '#ffffff',
-                          color: '#212529',
-                          border: isSelected ? '2px solid #5e7bb3' : '2px solid #e0e6ed',
+                          backgroundColor: isSelected ? '#e7f3ff' : (isDisabled ? '#f8f9fa' : '#ffffff'),
+                          color: isDisabled ? '#adb5bd' : '#212529',
+                          border: isSelected ? '2px solid #5e7bb3' : (isDisabled ? '2px solid #e9ecef' : '2px solid #e0e6ed'),
                           borderRadius: '10px',
-                          cursor: 'pointer',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
                           transition: 'all 0.2s ease',
                           fontWeight: isSelected ? '600' : '400',
                           boxShadow: isSelected ? '0 2px 8px rgba(94, 123, 179, 0.15)' : 'none',
-                          display: 'block'
+                          display: 'block',
+                          opacity: isDisabled ? 0.6 : 1
                         }}
                         onMouseEnter={(e) => {
-                          if (!isSelected) {
+                          if (!isSelected && !isDisabled) {
                             e.currentTarget.style.backgroundColor = '#f8f9ff';
                             e.currentTarget.style.borderColor = '#5e7bb3';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (!isSelected) {
+                          if (!isSelected && !isDisabled) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
                             e.currentTarget.style.borderColor = '#e0e6ed';
                           }
@@ -900,12 +934,13 @@ export default function MapPage() {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => handleRoleToggle(role)}
+                            onChange={() => !isDisabled && handleRoleToggle(role)}
+                            disabled={isDisabled}
                             className="me-3"
                             style={{
                               width: '1.25rem',
                               height: '1.25rem',
-                              cursor: 'pointer',
+                              cursor: isDisabled ? 'not-allowed' : 'pointer',
                               accentColor: '#5e7bb3'
                             }}
                           />
@@ -921,6 +956,12 @@ export default function MapPage() {
                             <i className="bi bi-check-circle-fill" style={{ 
                               fontSize: '1.25rem', 
                               color: '#5e7bb3' 
+                            }}></i>
+                          )}
+                          {isDisabled && !isSelected && (
+                            <i className="bi bi-lock-fill" style={{ 
+                              fontSize: '1.25rem', 
+                              color: '#adb5bd' 
                             }}></i>
                           )}
                         </div>
