@@ -1020,6 +1020,32 @@ const deleteNotification = async (notificationId) => {
   return await response.json();
 };
 
+const createExternalMaintainer = async (userData) => {
+  const response = await fetch(`${SERVER_URL}/users/external-maintainers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to create external maintainer');
+  }
+  return await response.json();
+}
+
+const getCompanies = async () => {
+  const response = await fetch(`${SERVER_URL}/users/companies`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    await handleErrorResponse(response, 'Failed to get companies');
+  }
+  return await response.json();
+}
+
 // Export all API functions as a single object
 const API = {
   // Session management
@@ -1039,6 +1065,8 @@ const API = {
   getMunicipalityUsers,
   updateUserProfile,
   getExternalMaintainers,
+  createExternalMaintainer,
+  getCompanies,
 
   // Report management
   createReport,

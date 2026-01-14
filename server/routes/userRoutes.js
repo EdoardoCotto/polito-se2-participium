@@ -615,4 +615,65 @@ router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRol
  */
 router.delete('/users/:id/remove-role', isLoggedIn, isAdmin, userController.deleteRoleFromUser);
 
+/**
+ * @swagger
+ * /users/companies:
+ *   get:
+ *     summary: Get all companies
+ *     description: Returns a list of all registered companies (external maintainer companies). Available to admin users.
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of companies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "FixRoads Srl"
+ *                   phone:
+ *                     type: string
+ *                     example: "800 123 456"
+ *                   email:
+ *                     type: string
+ *                     example: "urban-reports-turin@fixroads.it"
+ *                   address:
+ *                     type: string
+ *                     example: "Via delle Strade 42, 10100 Torino"
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   updated_at:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/users/companies', isLoggedIn, isAdmin, userController.getCompanies);
+
 module.exports = router;

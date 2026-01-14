@@ -686,3 +686,16 @@ exports.addRoleToUser = (userId, role) => {
     });
   });
 };
+
+exports.getCompanies = () => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT id, name, phone, email, address FROM Companies ORDER BY name ASC';
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows);
+    });
+  });
+};

@@ -304,3 +304,11 @@ exports.addRoleToUser = async (adminId, targetUserId, roleToAdd) => {
     const result = await userDao.addRoleToUser(targetUserId, roleToAdd);
     return result;
 }
+
+exports.getCompanies = async () => {
+    const companies = await userDao.getCompanies();
+    if (!companies) {
+        throw new NotFoundError('No companies found');
+    }   
+    return companies;
+}

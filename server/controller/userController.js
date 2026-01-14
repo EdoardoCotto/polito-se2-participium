@@ -236,3 +236,16 @@ exports.addRoleToUser = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+exports.getCompanies = async (req, res) => {
+  try {
+    const companies = await userRepository.getCompanies();
+    return res.status(200).json(companies);
+  }
+  catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
