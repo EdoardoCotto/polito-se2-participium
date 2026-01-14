@@ -177,6 +177,7 @@ export default function TechnicalOfficeStaffMember({ user }) {
     try {
       setLoadingMaintainers(true);
       const maintainers = await API.getExternalMaintainers();
+      console.log('🔍 Loaded external maintainers:', maintainers);
       setExternalMaintainers(maintainers);
     } catch (err) {
       console.error('Failed to load external maintainers:', err);
@@ -1392,7 +1393,7 @@ const handleSendComment = async () => {
                     <option value="">Select an external maintainer...</option>
                     {externalMaintainers.map((maintainer) => (
                       <option key={maintainer.id} value={maintainer.id}>
-                        {maintainer.name} {maintainer.surname} ({maintainer.username})
+                        {maintainer.name} {maintainer.surname} ({maintainer.company.name})
                       </option>
                     ))}
                   </Form.Select>
