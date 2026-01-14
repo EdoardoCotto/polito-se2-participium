@@ -61,6 +61,24 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.createExternalMaintainer = async (req, res) => {
+  try {
+    const externalMaintainerData = {
+      ...req.body,
+      type: 'external_maintainer',
+      roles: ['external_maintainer']
+    };
+    
+    const created = await userRepository.createUserIfAdmin(req.user.id, externalMaintainerData);
+    return res.status(201).json(created);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 /**
  * Admin creates any user with a specific role.
  */
