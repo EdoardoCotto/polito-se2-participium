@@ -98,11 +98,33 @@ exports.isInternalStaffOrMaintainer = (req, res, next) => {
     return next(new UnauthorizedError('Access forbidden: technical office staff or external maintainer only'));
 };
 
-const isTechnicalOfficeStaffOrAdmin = (req, res, next) => {
-  if (req.user && (req.user.type === 'admin' || req.user.type === 'technical_office_staff_member')) {
+exports.isTechnicalOfficeStaffOrAdmin = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return next(new UnauthorizedError('User not authenticated'));
+  }
+
+  // Check if user is admin
+  if (req.user.type === 'admin') {
     return next();
   }
+
+  // Check if user has technical office roles
+  const userRoles = req.user.roles || [];
+  const isTechnicalStaff = userRoles.some(role => TECHNICAL_OFFICER_ROLES.includes(role));
+
+  if (isTechnicalStaff) {
+    return next();
+  }
+
   return res.status(403).json({ error: 'Access denied: requires technical office staff or admin privileges' });
 };
 
-module.exports = { isLoggedIn, isAdmin, isTechnicalOfficeStaff, isTechnicalOfficeStaffOrAdmin };
+module.exports = { 
+  isLoggedIn, 
+  isAdmin, 
+  isMunicipal_public_relations_officer,
+  isTechnicalOfficeStaff, 
+  isExternalMaintainer,
+  isInternalStaffOrMaintainer,
+  isTechnicalOfficeStaffOrAdmin 
+};
