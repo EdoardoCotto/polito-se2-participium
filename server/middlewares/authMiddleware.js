@@ -118,13 +118,3 @@ exports.isTechnicalOfficeStaffOrAdmin = (req, res, next) => {
 
   return res.status(403).json({ error: 'Access denied: requires technical office staff or admin privileges' });
 };
-
-module.exports = { 
-  isLoggedIn, 
-  isAdmin, 
-  isMunicipal_public_relations_officer,
-  isTechnicalOfficeStaff, 
-  isExternalMaintainer,
-  isInternalStaffOrMaintainer,
-  isTechnicalOfficeStaffOrAdmin 
-};
