@@ -148,7 +148,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.06495,
     longitude: 7.65922,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'citizen',
     technical_office: null
@@ -159,7 +159,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0538,
     longitude: 7.6835,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'citizen',
     technical_office: null
@@ -170,7 +170,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0709,
     longitude: 7.6857,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura.jpg',
     status: 'pending', 
     author_username: 'citizen',
     technical_office: null
@@ -181,7 +181,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0621,
     longitude: 7.661,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'citizen',
     technical_office: null
@@ -192,7 +192,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0653,
     longitude: 7.6809,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'citizen',
     technical_office: null
@@ -204,7 +204,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0672,
     longitude: 7.6785,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'mario_rossi',
     technical_office: null
@@ -215,7 +215,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0691,
     longitude: 7.6823,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'luisa_verdi',
     technical_office: null
@@ -226,7 +226,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0705,
     longitude: 7.6798,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'giovanni_bianchi',
     technical_office: null
@@ -237,7 +237,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0668,
     longitude: 7.6754,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'francesca_neri',
     technical_office: null
@@ -249,7 +249,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0634,
     longitude: 7.6721,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura.jpg',
     status: 'pending',
     author_username: 'andrea_ferrari',
     technical_office: null
@@ -260,7 +260,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0712,
     longitude: 7.6615,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura2.jpg',
     status: 'pending',
     author_username: 'chiara_esposito',
     technical_office: null
@@ -271,7 +271,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0587,
     longitude: 7.6842,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura.jpg',
     status: 'pending',
     author_username: 'luca_romano',
     technical_office: null
@@ -282,7 +282,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0659,
     longitude: 7.6738,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura2.jpg',
     status: 'pending',
     author_username: 'valentina_colombo',
     technical_office: null
@@ -294,7 +294,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0683,
     longitude: 7.6812,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'matteo_ricci',
     technical_office: null
@@ -305,7 +305,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0542,
     longitude: 7.6887,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'sofia_marino',
     technical_office: null
@@ -316,7 +316,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0627,
     longitude: 7.6776,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'alessandro_greco',
     technical_office: null
@@ -327,7 +327,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0718,
     longitude: 7.6654,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/semaforo spento.jpg',
     status: 'pending',
     author_username: 'elena_bruno',
     technical_office: null
@@ -338,7 +338,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0641,
     longitude: 7.6698,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'davide_gallo',
     technical_office: null
@@ -350,7 +350,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0697,
     longitude: 7.6834,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'giulia_conti',
     technical_office: null
@@ -361,7 +361,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0665,
     longitude: 7.6742,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'federico_costa',
     technical_office: null
@@ -372,7 +372,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0638,
     longitude: 7.6715,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'martina_fontana',
     technical_office: null
@@ -384,7 +384,7 @@ const reports = [
     category: 'Water Supply - Drinking Water',
     latitude: 45.0679,
     longitude: 7.6792,
-    image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
+    image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending',
     author_username: 'riccardo_caruso',
     technical_office: null
@@ -395,7 +395,7 @@ const reports = [
     category: 'Water Supply - Drinking Water',
     latitude: 45.0656,
     longitude: 7.6827,
-    image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
+    image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending',
     author_username: 'alice_mancini',
     technical_office: null
@@ -406,7 +406,7 @@ const reports = [
     category: 'Water Supply - Drinking Water',
     latitude: 45.0724,
     longitude: 7.6589,
-    image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
+    image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending',
     author_username: 'simone_serra',
     technical_office: null
@@ -418,7 +418,7 @@ const reports = [
     category: 'Sewer System',
     latitude: 45.0687,
     longitude: 7.6763,
-    image_path1: 'static/uploads/Sewer System.jpg',
+    image_path1: 'static/uploads/problemi idrici.jpeg.jpg',
     status: 'pending',
     author_username: 'beatrice_lombardi',
     technical_office: null
@@ -429,7 +429,7 @@ const reports = [
     category: 'Sewer System',
     latitude: 45.0593,
     longitude: 7.6751,
-    image_path1: 'static/uploads/Sewer System.jpg',
+    image_path1: 'static/uploads/problemi idrici.jpeg.jpg',
     status: 'pending',
     author_username: 'lorenzo_barbieri',
     technical_office: null
@@ -440,7 +440,7 @@ const reports = [
     category: 'Sewer System',
     latitude: 45.0645,
     longitude: 7.6801,
-    image_path1: 'static/uploads/Sewer System.jpg',
+    image_path1: 'static/uploads/problemi idrici.jpeg.jpg',
     status: 'pending',
     author_username: 'greta_fiore',
     technical_office: null
@@ -452,7 +452,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0701,
     longitude: 7.6778,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/semaforo spento.jpg',
     status: 'pending',
     author_username: 'tommaso_moretti',
     technical_office: null
@@ -463,7 +463,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0631,
     longitude: 7.6687,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'aurora_marchetti',
     technical_office: null
@@ -474,7 +474,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0662,
     longitude: 7.6819,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/semaforo-spento2.jpg',
     status: 'pending',
     author_username: 'nicola_ferretti',
     technical_office: null
@@ -485,7 +485,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0694,
     longitude: 7.6735,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/semaforo spento.jpg',
     status: 'pending',
     author_username: 'emma_santoro',
     technical_office: null
@@ -497,7 +497,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0615,
     longitude: 7.6865,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'gabriele_rinaldi',
     technical_office: null
@@ -508,7 +508,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0728,
     longitude: 7.6672,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'giorgia_palmieri',
     technical_office: null
@@ -519,7 +519,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0558,
     longitude: 7.6821,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'daniele_benedetti',
     technical_office: null
@@ -530,7 +530,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0689,
     longitude: 7.6703,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'caterina_pellegrini',
     technical_office: null
@@ -541,7 +541,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0572,
     longitude: 7.6795,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/ErbaAlta.jpg',
     status: 'pending',
     author_username: 'emanuele_vitale',
     technical_office: null
@@ -553,7 +553,7 @@ const reports = [
     category: 'Other',
     latitude: 45.0651,
     longitude: 7.6789,
-    image_path1: 'static/uploads/other.jpg',
+    image_path1: 'static/uploads/spazzatura.jpg',
     status: 'pending',
     author_username: 'isabella_sala',
     technical_office: null
@@ -564,7 +564,7 @@ const reports = [
     category: 'Other',
     latitude: 45.0715,
     longitude: 7.6847,
-    image_path1: 'static/uploads/other.jpg',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'filippo_martini',
     technical_office: null
@@ -576,7 +576,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0675,
     longitude: 7.6825,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'noemi_landi',
     technical_office: null
@@ -587,7 +587,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0608,
     longitude: 7.6718,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura2.jpg',
     status: 'pending',
     author_username: 'leonardo_battaglia',
     technical_office: null
@@ -598,7 +598,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0623,
     longitude: 7.6746,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'sara_bernardi',
     technical_office: null
@@ -609,7 +609,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0698,
     longitude: 7.6805,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'stefano_rossetti',
     technical_office: null
@@ -620,7 +620,7 @@ const reports = [
     category: 'Water Supply - Drinking Water',
     latitude: 45.0647,
     longitude: 7.6772,
-    image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
+    image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending',
     author_username: 'anna_parisi',
     technical_office: null
@@ -631,7 +631,7 @@ const reports = [
     category: 'Sewer System',
     latitude: 45.0711,
     longitude: 7.6698,
-    image_path1: 'static/uploads/Sewer System.jpg',
+    image_path1: 'static/uploads/problemi idrici.jpeg.jpg',
     status: 'pending',    
     author_username: 'marco_gentile',
     technical_office: null
@@ -642,7 +642,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0668,
     longitude: 7.6759,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/semaforo-spento2.jpg',
     status: 'pending',
     author_username: 'francesca_amato',
     technical_office: null
@@ -653,7 +653,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0564,
     longitude: 7.6853,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',    
     author_username: 'giacomo_baldini',
     technical_office: null
@@ -664,7 +664,7 @@ const reports = [
     category: 'Other',
     latitude: 45.0681,
     longitude: 7.6729,
-    image_path1: 'static/uploads/other.jpg',
+    image_path1: 'static/uploads/spazzatura2.jpg',
     status: 'pending',
     author_username: 'elisa_fabbri',
     technical_office: null
@@ -675,7 +675,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0636,
     longitude: 7.6794,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'pietro_sorrentino',
     technical_office: null
@@ -686,7 +686,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0707,
     longitude: 7.6783,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura.jpg',
     status: 'pending',
     author_username: 'ludovica_damico',
     technical_office: null
@@ -697,7 +697,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0619,
     longitude: 7.6732,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'cristian_pagano',
     technical_office: null
@@ -708,7 +708,7 @@ const reports = [
     category: 'Architectural Barriers',
     latitude: 45.0673,
     longitude: 7.6816,
-    image_path1: 'static/uploads/Architectural Barriers.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'viola_gatti',
     technical_office: null
@@ -719,7 +719,7 @@ const reports = [
     category: 'Water Supply - Drinking Water',
     latitude: 45.0654,
     longitude: 7.6767,
-    image_path1: 'static/uploads/Water Supply - Drinking Water.jpg',
+    image_path1: 'static/uploads/Fontanella.jpg',
     status: 'pending',
     author_username: 'samuele_guida',
     technical_office: null
@@ -730,7 +730,7 @@ const reports = [
     category: 'Sewer System',
     latitude: 45.0597,
     longitude: 7.6765,
-    image_path1: 'static/uploads/Sewer System.jpg',
+    image_path1: 'static/uploads/problemi idrici.jpeg.jpg',
     status: 'pending',
     author_username: 'rebecca_mazza',
     technical_office: null
@@ -741,7 +741,7 @@ const reports = [
     category: 'Road Signs and Traffic Lights',
     latitude: 45.0719,
     longitude: 7.6641,
-    image_path1: 'static/uploads/Road Signs and Traffic Lights.jpg',
+    image_path1: 'static/uploads/semaforo spento.jpg',
     status: 'pending',
     author_username: 'diego_testa',
     technical_office: null
@@ -752,7 +752,7 @@ const reports = [
     category: 'Public Green Areas and Playgrounds',
     latitude: 45.0548,
     longitude: 7.6871,
-    image_path1: 'static/uploads/Public Green Areas and Playgrounds.jpg',
+    image_path1: 'static/uploads/parcoGiochiAbbandonato.jpg',
     status: 'pending',
     author_username: 'camilla_ferrara',
     technical_office: null
@@ -763,7 +763,7 @@ const reports = [
     category: 'Other',
     latitude: 45.0665,
     longitude: 7.6797,
-    image_path1: 'static/uploads/other.jpg',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'mattia_russo',
     technical_office: null
@@ -774,7 +774,7 @@ const reports = [
     category: 'Public Lighting',
     latitude: 45.0628,
     longitude: 7.6781,
-    image_path1: 'static/uploads/public lighting.png',
+    image_path1: 'static/uploads/lampione-spento-di-notte.jpg',
     status: 'pending',
     author_username: 'ginevra_marini',
     technical_office: null
@@ -785,7 +785,7 @@ const reports = [
     category: 'Waste',
     latitude: 45.0692,
     longitude: 7.6828,
-    image_path1: 'static/uploads/waste.jpg',
+    image_path1: 'static/uploads/spazzatura2.jpg',
     status: 'pending',
     author_username: 'jacopo_grassi',
     technical_office: null
@@ -796,7 +796,7 @@ const reports = [
     category: 'Roads and Urban Furnishings',
     latitude: 45.0643,
     longitude: 7.6705,
-    image_path1: 'static/uploads/Roads and Urban Furnishings.png',
+    image_path1: 'static/uploads/buca.jpg',
     status: 'pending',
     author_username: 'bianca_valentini',
     technical_office: null
