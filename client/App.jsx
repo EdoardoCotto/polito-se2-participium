@@ -42,7 +42,7 @@ function App() {
           navigate('/admin');
         } else if (user?.type === 'citizen') {
           navigate('/citizen');
-        } else if (user?.roles === 'external_maintainer') {
+        } else if (user?.type === 'external_maintainer') {
           navigate('/external-maintainer');
         } else if (user?.roles?.[0] === 'municipal_public_relations_officer') {
           navigate('/public-relations-officer');

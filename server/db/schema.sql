@@ -9,6 +9,18 @@ DROP TABLE IF EXISTS UsersRoles;
 DROP TABLE IF EXISTS Reports;
 DROP TABLE IF EXISTS Streets;
 DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Companies;
+
+-- Create Companies table (for external maintainer companies like FixRoads Srl)
+CREATE TABLE IF NOT EXISTS Companies (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
@@ -21,6 +33,7 @@ CREATE TABLE IF NOT EXISTS Users (
   telegram_nickname TEXT,
   mail_notifications INTEGER NOT NULL DEFAULT 1,
   type TEXT NOT NULL DEFAULT 'citizen',
+  company_id INTEGER,
   password TEXT NOT NULL,
   salt TEXT NOT NULL,
   is_confirmed INTEGER NOT NULL DEFAULT 0,
@@ -28,7 +41,8 @@ CREATE TABLE IF NOT EXISTS Users (
   confirmation_code_expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  CHECK(type IN ('admin', 'citizen', 'municipality_user'))
+  FOREIGN KEY (company_id) REFERENCES Companies(id) ON DELETE SET NULL,
+  CHECK(type IN ('admin', 'citizen', 'municipality_user', 'external_maintainer'))
 );
 
 -- Create Reports table
@@ -139,6 +153,8 @@ CREATE TABLE IF NOT EXISTS Streets (
   UNIQUE(city, street_name)
 );
 
+-- UsersRoles: only for municipality_user type (technical office staff can have multiple roles)
+-- external_maintainer is now a separate user type with company_id, not a role
 CREATE TABLE IF NOT EXISTS UsersRoles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   userId INTEGER NOT NULL,

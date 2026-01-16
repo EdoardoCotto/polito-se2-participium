@@ -77,9 +77,13 @@ exports.getUser = (username, password) => {
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
     console.log('[DAO getUserById] START - id:', id);
-    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, UR.role, U.telegram_nickname, U.personal_photo_path, U.mail_notifications 
+    const sql = `SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.company_id,
+                        U.telegram_nickname, U.personal_photo_path, U.mail_notifications,
+                        UR.role,
+                        C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address
     FROM Users U
     LEFT JOIN UsersRoles UR ON U.id = UR.userId
+    LEFT JOIN Companies C ON U.company_id = C.id
     WHERE U.id = ?`;
     console.log('[DAO getUserById] Executing SQL:', sql);
     db.all(sql, [id], (err, rows) => {
@@ -87,13 +91,13 @@ exports.getUserById = (id) => {
       console.log('[DAO getUserById] err:', err);
       console.log('[DAO getUserById] rows:', rows);
       console.log('[DAO getUserById] rows length:', rows?.length);
-      
+
       if (err) {
         console.log('[DAO getUserById] Database error, rejecting');
         reject(err);
         return;
       }
-      
+
       if (!rows || rows.length === 0) {
         console.log('[DAO getUserById] No rows found, resolving null');
         resolve(null);
@@ -102,10 +106,10 @@ exports.getUserById = (id) => {
 
       // Prendi la prima riga per i dati comuni dell'utente
       const firstRow = rows[0];
-      
+
       // Estrai tutti i ruoli dall'array di righe (solo per municipality_user)
       const roles = rows.map(row => row.role).filter(role => role !== null);
-      
+
       // Costruisci l'oggetto user
       const user = {
         id: firstRow.id,
@@ -119,7 +123,18 @@ exports.getUserById = (id) => {
         mail_notifications: firstRow.mail_notifications,
         roles: roles
       };
-      
+
+      // Add company info for external_maintainer users
+      if (firstRow.type === 'external_maintainer' && firstRow.company_id) {
+        user.company = {
+          id: firstRow.company_id,
+          name: firstRow.company_name,
+          phone: firstRow.company_phone,
+          email: firstRow.company_email,
+          address: firstRow.company_address
+        };
+      }
+
       console.log('[DAO getUserById] END - Constructed user object:', user);
       resolve(user);
     });
@@ -229,20 +244,16 @@ function generateConfirmationCode() {
 
 /**
  * Create a new user (registration)
- * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, skipConfirmation?: boolean }} newUser
+ * @param {{ username: string, email: string, name: string, surname: string, password: string, type?: string, company_id?: number, roles?: string[], skipConfirmation?: boolean }} newUser
  * @returns {Promise<{ id: number, username: string, email: string, name: string, surname: string, type: string, confirmationCode?: string }>}
  */
-exports.createUser = ({ username, email, name, surname, password, type = 'citizen', skipConfirmation = false }) => {
+exports.createUser = ({ username, email, name, surname, password, type = 'citizen', company_id = null, roles = [], skipConfirmation = false }) => {
 
-  // 1. La funzione Executor della Promise NON è 'async' (OK per SonarQube)
   return new Promise((resolve, reject) => { 
 
-    // 2. Avviamo una Funzione Anonima Auto-Eseguita Asincrona (IIFE)
-    // Questo crea un contesto 'async' valido per 'await'
     (async () => {
       try {
 
-        // Uso di await qui DENTRO è ora consentito!
         const saltRounds = 10;
         const salt = await bcrypt.genSalt(saltRounds);
         const hash = await bcrypt.hash(password, salt);
@@ -254,16 +265,15 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
 
         if (type === 'citizen' && !skipConfirmation) {
           confirmationCode = generateConfirmationCode();
-          // Set expiry to 30 minutes from now
           const expiryDate = new Date(Date.now() + 30 * 60 * 1000);
           confirmationExpiresAt = expiryDate.toISOString();
           isConfirmed = 0; // Citizen needs to confirm
         }
 
-        const insertSql = `INSERT INTO Users (username, email, name, surname, type, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const insertSql = `INSERT INTO Users (username, email, name, surname, type, company_id, password, salt, is_confirmed, confirmation_code, confirmation_code_expires_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        db.run(insertSql, [username, email, name, surname, type, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
+        db.run(insertSql, [username, email, name, surname, type, company_id, hash, salt, isConfirmed, confirmationCode, confirmationExpiresAt], function (insertErr) {
           if (insertErr) {
             console.error('Error inserting user:', insertErr);
             reject(insertErr);
@@ -271,22 +281,47 @@ exports.createUser = ({ username, email, name, surname, password, type = 'citize
           }
           const userId = this.lastID;
 
-          const result = { id: userId, username, email, name, surname, type };
-          if (confirmationCode) {
-            result.confirmationCode = confirmationCode;
+          // Insert roles if provided
+          if (roles && roles.length > 0) {
+            const roleInsertPromises = roles.map(role => {
+              return new Promise((resolveRole, rejectRole) => {
+                const roleSql = `INSERT INTO UsersRoles (userId, role) VALUES (?, ?)`;
+                db.run(roleSql, [userId, role], (roleErr) => {
+                  if (roleErr) {
+                    console.error(`Error inserting role ${role} for user ${userId}:`, roleErr);
+                    rejectRole(roleErr);
+                  } else {
+                    resolveRole();
+                  }
+                });
+              });
+            });
+
+            Promise.all(roleInsertPromises)
+              .then(() => {
+                const result = { id: userId, username, email, name, surname, type };
+                if (confirmationCode) {
+                  result.confirmationCode = confirmationCode;
+                }
+                resolve(result);
+              })
+              .catch((roleErr) => {
+                reject(roleErr);
+              });
+          } else {
+            // No roles to insert
+            const result = { id: userId, username, email, name, surname, type };
+            if (confirmationCode) {
+              result.confirmationCode = confirmationCode;
+            }
+            resolve(result);
           }
-          resolve(result);
         });
 
       } catch (e) {
-        // Qualsiasi errore da await (bcrypt) viene catturato e rigetta la Promise esterna
         reject(e);
       }
-    })(); // La funzione viene eseguita immediatamente
-
-    // NOTA: il blocco try-catch esterno non è più necessario
-    // in quanto tutte le operazioni asincrone e sincrone sono gestite
-    // all'interno dell'IIFE
+    })();
     
   });
 };
@@ -326,28 +361,54 @@ exports.findMunicipalityUsers = () => {
 };
 
 /**
- * Get all external maintainers
+ * Get all external maintainers (now using type='external_maintainer' with company info)
  * @returns {Promise<Object[]>}
  */
-
-//TO UPDATE
 exports.getExternalMaintainers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, GROUP_CONCAT(UR.role) as roles
+      SELECT U.id, U.username, U.email, U.name, U.surname, U.type, U.company_id,
+             C.name as company_name, C.phone as company_phone, C.email as company_email, C.address as company_address, 
+             UR.role
       FROM Users U
-      INNER JOIN UsersRoles UR ON U.id = UR.userId
-      WHERE U.type = 'municipality_user' AND UR.role = 'external_maintainer'
-      GROUP BY U.id
-      ORDER BY U.surname ASC, U.name ASC, U.username ASC
+      LEFT JOIN Companies C ON U.company_id = C.id
+      LEFT JOIN UsersRoles UR ON U.id = UR.userId
+      WHERE U.type = 'external_maintainer'
+      ORDER BY C.name ASC, U.surname ASC, U.name ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(err);
-      // Trasforma roles da stringa a array
-      const users = rows.map(row => ({
-        ...row,
-        roles: row.roles ? row.roles.split(',') : []
-      }));
+      
+      // Raggruppa i risultati per utente (come in getUserById)
+      const usersMap = new Map();
+      
+      for (const row of rows) {
+        if (!usersMap.has(row.id)) {
+          usersMap.set(row.id, {
+            id: row.id,
+            username: row.username,
+            email: row.email,
+            name: row.name,
+            surname: row.surname,
+            type: row.type,
+            roles: [],
+            company: row.company_id ? {
+              id: row.company_id,
+              name: row.company_name,
+              phone: row.company_phone,
+              email: row.company_email,
+              address: row.company_address
+            } : null
+          });
+        }
+        
+        // Aggiungi il ruolo se esiste
+        if (row.role) {
+          usersMap.get(row.id).roles.push(row.role);
+        }
+      }
+      
+      const users = Array.from(usersMap.values());
       resolve(users);
     });
   });
@@ -642,6 +703,19 @@ exports.addRoleToUser = (userId, role) => {
         return;
       }
       resolve(this.lastID);
+    });
+  });
+};
+
+exports.getCompanies = () => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT id, name, phone, email, address FROM Companies ORDER BY name ASC';
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows);
     });
   });
 };

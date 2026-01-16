@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controller/userController');
-const { isLoggedIn, isAdmin, isTechnicalOfficeStaff } = require('../middlewares/authMiddleware');
+const { isLoggedIn, isAdmin, isTechnicalOfficeStaff, isTechnicalOfficeStaffOrAdmin } = require('../middlewares/authMiddleware');
 const { updateProfile } = require('../middlewares/uploadMiddleware')
 
 /**
@@ -250,6 +250,99 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
 /**
  * @swagger
  * /users/external-maintainers:
+ *   post:
+ *     summary: Create a new external maintainer (admin only)
+ *     description: Creates a new external maintainer user with associated company. The user type and role are automatically set to 'external_maintainer'.
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, email, name, surname, password, company_id]
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "fixroads_john"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john@fixroads.it"
+ *               name:
+ *                 type: string
+ *                 example: "John"
+ *               surname:
+ *                 type: string
+ *                 example: "Doe"
+ *               password:
+ *                 type: string
+ *                 example: "securePass123!"
+ *               company_id:
+ *                 type: integer
+ *                 example: 1
+ *                 description: ID of the company the maintainer works for
+ *     responses:
+ *       201:
+ *         description: External maintainer successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 10
+ *                 username:
+ *                   type: string
+ *                   example: "fixroads_john"
+ *                 email:
+ *                   type: string
+ *                   example: "john@fixroads.it"
+ *                 name:
+ *                   type: string
+ *                   example: "John"
+ *                 surname:
+ *                   type: string
+ *                   example: "Doe"
+ *                 type:
+ *                   type: string
+ *                   example: "external_maintainer"
+ *                 company_id:
+ *                   type: integer
+ *                   example: 1
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Username or email already taken
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/users/external-maintainers', isLoggedIn, isAdmin, userController.createExternalMaintainer);
+
+/**
+ * @swagger
+ * /users/external-maintainers:
  *   get:
  *     summary: Get all external maintainers
  *     description: Returns a list of all external maintainers. Available to technical office staff members.
@@ -303,7 +396,7 @@ router.put('/users/:id/update', isLoggedIn, updateProfile, userController.update
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaff, userController.getExternalMaintainers);
+router.get('/users/external-maintainers', isLoggedIn, isTechnicalOfficeStaffOrAdmin, userController.getExternalMaintainers);
 
 /**
  * @swagger
@@ -521,5 +614,66 @@ router.post('/users/:id/assign-role', isLoggedIn, isAdmin, userController.addRol
  *                   example: User does not have this role
  */
 router.delete('/users/:id/remove-role', isLoggedIn, isAdmin, userController.deleteRoleFromUser);
+
+/**
+ * @swagger
+ * /users/companies:
+ *   get:
+ *     summary: Get all companies
+ *     description: Returns a list of all registered companies (external maintainer companies). Available to admin users.
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of companies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "FixRoads Srl"
+ *                   phone:
+ *                     type: string
+ *                     example: "800 123 456"
+ *                   email:
+ *                     type: string
+ *                     example: "urban-reports-turin@fixroads.it"
+ *                   address:
+ *                     type: string
+ *                     example: "Via delle Strade 42, 10100 Torino"
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   updated_at:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/users/companies', isLoggedIn, isAdmin, userController.getCompanies);
 
 module.exports = router;

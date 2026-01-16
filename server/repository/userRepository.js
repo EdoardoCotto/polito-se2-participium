@@ -111,7 +111,13 @@ exports.createUserIfAdmin = async (adminId, userToInsert) => {
     if (existingEmail) {
         throw new ConflictError('Email already exists');
     }
-    const userToCreate = { ...userToInsert, type: 'municipality_user' };
+    
+    // Mantieni il tipo passato, usa 'municipality_user' solo se non specificato
+    const userToCreate = { 
+        ...userToInsert, 
+        type: userToInsert.type || 'municipality_user' 
+    };
+    
     const result = await userDao.createUser(userToCreate);
     return result;
 }
@@ -297,4 +303,12 @@ exports.addRoleToUser = async (adminId, targetUserId, roleToAdd) => {
     }
     const result = await userDao.addRoleToUser(targetUserId, roleToAdd);
     return result;
+}
+
+exports.getCompanies = async () => {
+    const companies = await userDao.getCompanies();
+    if (!companies) {
+        throw new NotFoundError('No companies found');
+    }   
+    return companies;
 }

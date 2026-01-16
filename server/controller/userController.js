@@ -61,6 +61,24 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.createExternalMaintainer = async (req, res) => {
+  try {
+    const externalMaintainerData = {
+      ...req.body,
+      type: 'external_maintainer',
+      roles: ['external_maintainer']
+    };
+    
+    const created = await userRepository.createUserIfAdmin(req.user.id, externalMaintainerData);
+    return res.status(201).json(created);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 /**
  * Admin creates any user with a specific role.
  */
@@ -138,6 +156,7 @@ exports.updateUserProfile = async (req, res) => {
 exports.getExternalMaintainers = async (req, res) => {
   try {
     const maintainers = await userRepository.getExternalMaintainers();
+    console.log('External maintainers retrieved:', maintainers);
     return res.status(200).json(maintainers);
   } catch (err) {
     if (err instanceof AppError) {
@@ -211,6 +230,19 @@ exports.addRoleToUser = async (req, res) => {
     const updatedUser = await userRepository.addRoleToUser(req.user.id, req.params.id, req.body.role);
     return res.status(200).json(updatedUser);
   } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.getCompanies = async (req, res) => {
+  try {
+    const companies = await userRepository.getCompanies();
+    return res.status(200).json(companies);
+  }
+  catch (err) {
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ error: err.message });
     }

@@ -45,6 +45,26 @@ export default function MapPage() {
   const [selectedRoles, setSelectedRoles] = useState([]); // Changed to array for multiple roles
   const [isSavingRoles, setIsSavingRoles] = useState(false);
 
+  // State for external maintainer modal
+  const [showExternalModal, setShowExternalModal] = useState(false);
+  const [externalFormData, setExternalFormData] = useState({
+    firstName: '',
+    lastName: '',
+    userName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    company_id: ''
+  });
+  const [externalErrors, setExternalErrors] = useState({});
+  const [isSubmittingExternal, setIsSubmittingExternal] = useState(false);
+  const [externalApiError, setExternalApiError] = useState('');
+  const [showExternalSuccess, setShowExternalSuccess] = useState(false);
+
+  // Companies state
+  const [companies, setCompanies] = useState([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+
   // Fetch users and roles on component mount
   useEffect(() => {
     fetchUsers();
@@ -55,8 +75,11 @@ export default function MapPage() {
     setIsLoadingUsers(true);
     setUsersError('');
     try {
-      const fetchedUsers = await API.getMunicipalityUsers();
-      setUsers(Array.isArray(fetchedUsers) ? fetchedUsers : []);
+      const fetchedUsers = await API.getMunicipalityUsers() ;
+      const fetchedExternalMaintainers = await API.getExternalMaintainers();
+      // Combine both user lists
+      const combinedUsers = [...fetchedUsers, ...fetchedExternalMaintainers];
+      setUsers(Array.isArray(combinedUsers) ? combinedUsers : []);
     } catch (err) {
       setUsersError(err?.message || 'Failed to load users');
       setUsers([]);
@@ -221,64 +244,70 @@ export default function MapPage() {
                             {getRoleLabel(role)}
                           </span>
                         ))}
+                        {/* Show modify button only if user is NOT external_maintainer */}
+                        {user.type !== 'external_maintainer' && (
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => handleOpenRoleModal(user)}
+                            className="d-flex align-items-center"
+                            style={{
+                              fontSize: '0.75rem',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              borderColor: '#5e7bb3',
+                              borderWidth: '1.5px',
+                              color: '#5e7bb3',
+                              backgroundColor: 'transparent',
+                              padding: '0.25rem 0.5rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                            title="Modify roles"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#5e7bb3';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = '#5e7bb3';
+                            }}
+                          >
+                            <i className="bi bi-pencil-square"></i>
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      /* Show "Assign Roles" button only if user is NOT external_maintainer */
+                      user.type !== 'external_maintainer' && (
                         <Button
                           variant="outline-primary"
                           size="sm"
                           onClick={() => handleOpenRoleModal(user)}
                           className="d-flex align-items-center"
                           style={{
-                            fontSize: '0.75rem',
-                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            borderRadius: '8px',
                             fontWeight: '500',
                             borderColor: '#5e7bb3',
                             borderWidth: '1.5px',
                             color: '#5e7bb3',
-                            backgroundColor: 'transparent',
-                            padding: '0.25rem 0.5rem',
+                            backgroundColor: '#f8f9ff',
+                            padding: '0.4rem 0.8rem',
                             transition: 'all 0.2s ease'
                           }}
-                          title="Modify roles"
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#5e7bb3';
                             e.currentTarget.style.color = '#ffffff';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.backgroundColor = '#f8f9ff';
                             e.currentTarget.style.color = '#5e7bb3';
                           }}
                         >
-                          <i className="bi bi-pencil-square"></i>
+                          <i className="bi bi-shield-check me-2"></i>{' '}
+                          Assign Roles
                         </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => handleOpenRoleModal(user)}
-                        className="d-flex align-items-center"
-                        style={{
-                          fontSize: '0.875rem',
-                          borderRadius: '8px',
-                          fontWeight: '500',
-                          borderColor: '#5e7bb3',
-                          borderWidth: '1.5px',
-                          color: '#5e7bb3',
-                          backgroundColor: '#f8f9ff',
-                          padding: '0.4rem 0.8rem',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#5e7bb3';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8f9ff';
-                          e.currentTarget.style.color = '#5e7bb3';
-                        }}
-                      >
-                        <i className="bi bi-shield-check me-2"></i>{' '}
-                        Assign Roles
-                      </Button>
+                      )
                     )}
                   </div>
                 </td>
@@ -308,11 +337,23 @@ export default function MapPage() {
 
   const handleRoleToggle = (role) => {
     setSelectedRoles(prev => {
+      const isPRO = role === 'municipal_public_relations_officer';
+      const hasPRO = prev.includes('municipal_public_relations_officer');
+      const hasOtherRoles = prev.some(r => r !== 'municipal_public_relations_officer');
+      
       if (prev.includes(role)) {
         // Remove role
         return prev.filter(r => r !== role);
       } else {
         // Add role
+        // If trying to add PRO but other roles exist, block it
+        if (isPRO && hasOtherRoles) {
+          return prev;
+        }
+        // If trying to add another role but PRO exists, block it
+        if (!isPRO && hasPRO) {
+          return prev;
+        }
         return [...prev, role];
       }
     });
@@ -420,11 +461,115 @@ export default function MapPage() {
     }
   };
 
+  // Fetch companies when external modal opens
+  useEffect(() => {
+    if (showExternalModal) {
+      fetchCompanies();
+    }
+  }, [showExternalModal]);
+
+  const fetchCompanies = async () => {
+    setIsLoadingCompanies(true);
+    try {
+      const fetchedCompanies = await API.getCompanies();
+      setCompanies(Array.isArray(fetchedCompanies) ? fetchedCompanies : []);
+    } catch (err) {
+      console.error('Failed to fetch companies:', err);
+      setExternalApiError(err?.message || 'Failed to load companies');
+      setCompanies([]);
+    } finally {
+      setIsLoadingCompanies(false);
+    }
+  };
+
+  const handleExternalChange = (e) => {
+    const { name, value } = e.target;
+    setExternalFormData(prev => ({ ...prev, [name]: value }));
+    if (externalErrors[name]) setExternalErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateExternalForm = () => {
+    const newErrors = {};
+    if (!externalFormData.firstName.trim()) newErrors.firstName = VALIDATION_MESSAGES.FIRST_NAME_REQUIRED;
+    if (!externalFormData.lastName.trim()) newErrors.lastName = VALIDATION_MESSAGES.LAST_NAME_REQUIRED;
+    if (!externalFormData.userName.trim()) newErrors.userName = VALIDATION_MESSAGES.USERNAME_REQUIRED;
+    if (!externalFormData.email.trim()) newErrors.email = VALIDATION_MESSAGES.EMAIL_REQUIRED;
+    else if (!/\S+@\S+\.\S+/.test(externalFormData.email)) newErrors.email = VALIDATION_MESSAGES.EMAIL_INVALID;
+    if (!externalFormData.company_id) newErrors.company_id = 'Company is required';
+    
+    if (!externalFormData.password) newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_REQUIRED;
+    else if (externalFormData.password.length < 8) newErrors.password = VALIDATION_MESSAGES.FIELD_PASSWORD_MIN_LENGTH;
+    if (!externalFormData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_CONFIRM_PASSWORD_REQUIRED;
+    else if (externalFormData.password !== externalFormData.confirmPassword) newErrors.confirmPassword = VALIDATION_MESSAGES.FIELD_PASSWORDS_MISMATCH;
+    return newErrors;
+  };
+
+  const handleExternalSubmit = async (e) => {
+    e.preventDefault();
+    const newErrors = validateExternalForm();
+    if (Object.keys(newErrors).length !== 0) {
+      setExternalErrors(newErrors);
+      return;
+    }
+
+    setIsSubmittingExternal(true);
+    setExternalApiError('');
+    try {
+      const userData = {
+        username: externalFormData.userName,
+        email: externalFormData.email,
+        name: externalFormData.firstName,
+        surname: externalFormData.lastName,
+        password: externalFormData.password,
+        company_id: parseInt(externalFormData.company_id)
+      };
+      await API.createExternalMaintainer(userData);
+      setShowExternalSuccess(true);
+      await fetchUsers();
+      setTimeout(() => {
+        setExternalFormData({
+          firstName: '',
+          lastName: '',
+          userName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          company_id: ''
+        });
+        setShowExternalSuccess(false);
+        setShowExternalModal(false);
+      }, 1200);
+    } catch (err) {
+      setExternalApiError(err?.message || 'Registration failed');
+    } finally {
+      setIsSubmittingExternal(false);
+    }
+  };
+
   return (
-      <div className="app-root d-flex flex-column min-vh-100">
+    <div className="app-root d-flex flex-column min-vh-100">
       <div className="position-relative w-100">
-        {/* top-right button - responsive positioning */}
-        <div className="position-absolute top-0 end-0 m-2 m-md-3" style={{ zIndex: 10 }}>
+        {/* top-right buttons - responsive positioning */}
+        <div className="position-absolute top-0 end-0 m-2 m-md-3 d-flex gap-2" style={{ zIndex: 10 }}>
+          <Button
+            variant="success"
+            onClick={() => setShowExternalModal(true)}
+            className="d-flex align-items-center"
+            style={{
+              backgroundColor: '#28a745',
+              borderColor: '#28a745',
+              fontWeight: '600',
+              boxShadow: '0 0.25rem 0.5rem rgba(0,0,0,0.3)',
+              borderRadius: '8px',
+              fontSize: 'clamp(0.75rem, 2.5vw, 1rem)',
+              padding: 'clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2.5vw, 1.25rem)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <i className="bi bi-building-add me-2"></i>
+            <span className="d-none d-md-inline">Add External Maintainer</span>
+            <span className="d-inline d-md-none">Add External</span>
+          </Button>
           <Button
             variant="primary"
             onClick={() => setShowModal(true)}
@@ -726,6 +871,19 @@ export default function MapPage() {
                 <div className="form-label fw-semibold mb-3" style={{ color: '#495057' }}>
                   <i className="bi bi-tag-fill me-2"></i>Available Roles
                 </div>
+                {/* Warning message for role exclusivity */}
+                {selectedRoles.includes('municipal_public_relations_officer') && (
+                  <Alert variant="info" className="mb-3">
+                    <i className="bi bi-info-circle me-2"></i>
+                    Public Relations Officer cannot have other roles. Deselect it to assign additional roles.
+                  </Alert>
+                )}
+                {selectedRoles.length > 0 && !selectedRoles.includes('municipal_public_relations_officer') && (
+                  <Alert variant="info" className="mb-3">
+                    <i className="bi bi-info-circle me-2"></i>
+                    Public Relations Officer cannot be combined with other roles. Deselect all roles first to assign it.
+                  </Alert>
+                )}
                 {usersError && (
                   <Alert variant="danger" dismissible onClose={() => setUsersError('')} className="mb-3">
                     <i className="bi bi-exclamation-triangle me-2"></i>{' '}
@@ -735,29 +893,38 @@ export default function MapPage() {
                 <div className="d-flex flex-column gap-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   {availableRoles.map((role) => {
                     const isSelected = selectedRoles.includes(role);
+                    const isPRO = role === 'municipal_public_relations_officer';
+                    const hasPRO = selectedRoles.includes('municipal_public_relations_officer');
+                    const hasOtherRoles = selectedRoles.some(r => r !== 'municipal_public_relations_officer');
+                    
+                    // Disable PRO if other roles are selected
+                    // Disable other roles if PRO is selected
+                    const isDisabled = (isPRO && hasOtherRoles) || (!isPRO && hasPRO);
+                    
                     return (
                       <label
                         key={role}
                         className="p-3"
                         style={{
-                          backgroundColor: isSelected ? '#e7f3ff' : '#ffffff',
-                          color: '#212529',
-                          border: isSelected ? '2px solid #5e7bb3' : '2px solid #e0e6ed',
+                          backgroundColor: isSelected ? '#e7f3ff' : (isDisabled ? '#f8f9fa' : '#ffffff'),
+                          color: isDisabled ? '#adb5bd' : '#212529',
+                          border: isSelected ? '2px solid #5e7bb3' : (isDisabled ? '2px solid #e9ecef' : '2px solid #e0e6ed'),
                           borderRadius: '10px',
-                          cursor: 'pointer',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
                           transition: 'all 0.2s ease',
                           fontWeight: isSelected ? '600' : '400',
                           boxShadow: isSelected ? '0 2px 8px rgba(94, 123, 179, 0.15)' : 'none',
-                          display: 'block'
+                          display: 'block',
+                          opacity: isDisabled ? 0.6 : 1
                         }}
                         onMouseEnter={(e) => {
-                          if (!isSelected) {
+                          if (!isSelected && !isDisabled) {
                             e.currentTarget.style.backgroundColor = '#f8f9ff';
                             e.currentTarget.style.borderColor = '#5e7bb3';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (!isSelected) {
+                          if (!isSelected && !isDisabled) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
                             e.currentTarget.style.borderColor = '#e0e6ed';
                           }
@@ -767,12 +934,13 @@ export default function MapPage() {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => handleRoleToggle(role)}
+                            onChange={() => !isDisabled && handleRoleToggle(role)}
+                            disabled={isDisabled}
                             className="me-3"
                             style={{
                               width: '1.25rem',
                               height: '1.25rem',
-                              cursor: 'pointer',
+                              cursor: isDisabled ? 'not-allowed' : 'pointer',
                               accentColor: '#5e7bb3'
                             }}
                           />
@@ -788,6 +956,12 @@ export default function MapPage() {
                             <i className="bi bi-check-circle-fill" style={{ 
                               fontSize: '1.25rem', 
                               color: '#5e7bb3' 
+                            }}></i>
+                          )}
+                          {isDisabled && !isSelected && (
+                            <i className="bi bi-lock-fill" style={{ 
+                              fontSize: '1.25rem', 
+                              color: '#adb5bd' 
                             }}></i>
                           )}
                         </div>
@@ -838,6 +1012,195 @@ export default function MapPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      </div>
+
+      {/* External Maintainer modal */}
+      <Modal show={showExternalModal} onHide={() => setShowExternalModal(false)} centered size="lg">
+        <Form onSubmit={handleExternalSubmit}>
+          <Modal.Header closeButton style={{ borderBottom: '2px solid #f0f0f0' }}>
+            <Modal.Title style={{ 
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #28a745, #20c997)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              <i className="bi bi-building-add me-2" style={{ WebkitTextFillColor: 'initial' }}></i>Add New External Maintainer
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            {showExternalSuccess && (
+              <Alert variant="success" className="d-flex align-items-center">
+                <i className="bi bi-check-circle-fill me-2"></i>{' '}
+                External maintainer created successfully!
+              </Alert>
+            )}
+            {externalApiError && (
+              <Alert variant="danger" onClose={() => setExternalApiError('')} dismissible>
+                <i className="bi bi-exclamation-triangle me-2"></i>{' '}
+                {typeof externalApiError === 'string' ? externalApiError : externalApiError?.message ?? String(externalApiError)}
+              </Alert>
+            )}
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-person me-2"></i>First Name
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="firstName"
+                    value={externalFormData.firstName}
+                    onChange={handleExternalChange}
+                    isInvalid={!!externalErrors.firstName}
+                    placeholder="Enter first name"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                  />
+                  <Form.Control.Feedback type="invalid">{externalErrors.firstName}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-person me-2"></i>Last Name
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="lastName"
+                    value={externalFormData.lastName}
+                    onChange={handleExternalChange}
+                    isInvalid={!!externalErrors.lastName}
+                    placeholder="Enter last name"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                  />
+                  <Form.Control.Feedback type="invalid">{externalErrors.lastName}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">
+                <i className="bi bi-at me-2"></i>Username
+              </Form.Label>
+              <Form.Control
+                type="text"
+                name="userName"
+                value={externalFormData.userName}
+                onChange={handleExternalChange}
+                isInvalid={!!externalErrors.userName}
+                placeholder="Choose a username"
+                style={{ borderRadius: '8px', padding: '0.6rem' }}
+              />
+              <Form.Control.Feedback type="invalid">{externalErrors.userName}</Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">
+                <i className="bi bi-envelope me-2"></i>Email
+              </Form.Label>
+              <Form.Control
+                type="email"
+                name="email"
+                value={externalFormData.email}
+                onChange={handleExternalChange}
+                isInvalid={!!externalErrors.email}
+                placeholder="Enter email address"
+                style={{ borderRadius: '8px', padding: '0.6rem' }}
+              />
+              <Form.Control.Feedback type="invalid">{externalErrors.email}</Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">
+                <i className="bi bi-building me-2"></i>Company
+              </Form.Label>
+              <Form.Select
+                name="company_id"
+                value={externalFormData.company_id}
+                onChange={handleExternalChange}
+                isInvalid={!!externalErrors.company_id}
+                disabled={isLoadingCompanies}
+                style={{ borderRadius: '8px', padding: '0.6rem' }}
+              >
+                <option value="">Select a company...</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Form.Select>
+              <Form.Control.Feedback type="invalid">{externalErrors.company_id}</Form.Control.Feedback>
+            </Form.Group>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-lock me-2"></i>Password
+                  </Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="password"
+                    value={externalFormData.password}
+                    onChange={handleExternalChange}
+                    isInvalid={!!externalErrors.password}
+                    placeholder="Create password (min. 8 chars)"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                  />
+                  <Form.Control.Feedback type="invalid">{externalErrors.password}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-shield-lock me-2"></i>Confirm Password
+                  </Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="confirmPassword"
+                    value={externalFormData.confirmPassword}
+                    onChange={handleExternalChange}
+                    isInvalid={!!externalErrors.confirmPassword}
+                    placeholder="Re-enter password"
+                    style={{ borderRadius: '8px', padding: '0.6rem' }}
+                  />
+                  <Form.Control.Feedback type="invalid">{externalErrors.confirmPassword}</Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer className="d-flex justify-content-between align-items-center w-100 border-0 pt-0">
+            <Button 
+              variant="outline-secondary" 
+              onClick={() => setShowExternalModal(false)} 
+              disabled={isSubmittingExternal}
+              style={{ borderRadius: '8px' }}
+            >
+              <i className="bi bi-x-circle me-2"></i>Cancel
+            </Button>
+            <Button 
+              variant="success" 
+              type="submit" 
+              disabled={isSubmittingExternal}
+              style={{ 
+                backgroundColor: '#28a745', 
+                borderColor: '#28a745',
+                borderRadius: '8px',
+                fontWeight: '600'
+              }}
+            >
+              {isSubmittingExternal ? (
+                <output>
+                  <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Creating...
+                </output>
+              ) : (
+                <>
+                  <i className="bi bi-building-add me-2"></i>Create External Maintainer
+                </>
+              )}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+    </div>
   );
 }
