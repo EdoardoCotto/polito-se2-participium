@@ -50,10 +50,10 @@ const workers = [
   // CITIZENS AND ADMIN
   { username: 'citizen', email: 'citizen@participium.test', name: 'Davide', surname: 'Idini', type: 'citizen', roles: [] },
   { username: 'admin_main', email: 'admin@participium.test', name: 'Super', surname: 'Admin', type: 'admin', roles: [] },
-  { username: 'pr_officer1', email: 'pr@comune.test.it', name: 'Sara', surname: 'Comunicazione', type: 'municipality_user', roles: ['municipal_public_relations_officer'] },
+  { username: 'pr_officer1', email: 'pr@comune.test.it', name: 'Mimmo', surname: 'Schillaci', type: 'municipality_user', roles: ['municipal_public_relations_officer'] },
 
   // DEMO USER: Rosa (citizen who reports the pothole)
-  { username: 'rosa_bianchi', email: 'rosa.bianchi@email.it', name: 'Rosa', surname: 'Bianchi', type: 'citizen', roles: [] },
+  { username: 'rosa_bianca', email: 'rosa.bianca@email.it', name: 'Rosa', surname: 'Bianca', type: 'citizen', roles: [] },
 
   // TECHNICIANS
   { username: 'urban_planner1', email: 'planner@comune.test.it', name: 'Giulia', surname: 'Rossi', type: 'municipality_user', roles: ['urban_planner'] },
@@ -64,7 +64,7 @@ const workers = [
   { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'municipality_user', roles: ['building_inspector'] },
 
   // DEMO USER: Ada Lovelace (technical office staff member - public works engineer)
-  { username: 'ada_lovelace', email: 'ada.lovelace@comune.torino.it', name: 'Ada', surname: 'Lovelace', type: 'municipality_user', roles: ['public_works_engineer'] },
+  { username: 'ada_lovelace', email: 'ada.lovelace@comune.torino.it', name: 'Ada', surname: 'Lovelace', type: 'municipality_user', roles: ['technical_office_staff_member'] },
 
   // EXTERNAL MAINTAINERS (now with type 'external_maintainer' and company association)
   // FixRoads Srl employees
