@@ -64,7 +64,7 @@ const workers = [
   { username: 'inspector1', email: 'inspector@comune.test.it', name: 'Anna', surname: 'Viola', type: 'municipality_user', roles: ['building_inspector'] },
 
   // DEMO USER: Ada Lovelace (technical office staff member - public works engineer)
-  { username: 'ada_lovelace', email: 'ada.lovelace@comune.torino.it', name: 'Ada', surname: 'Lovelace', type: 'municipality_user', roles: ['technical_office_staff_member'] },
+  { username: 'ada_lovelace', email: 'ada.lovelace@comune.torino.it', name: 'Ada', surname: 'Lovelace', type: 'municipality_user', roles: ['public_works_engineer'] },
 
   // EXTERNAL MAINTAINERS (now with type 'external_maintainer' and company association)
   // FixRoads Srl employees
