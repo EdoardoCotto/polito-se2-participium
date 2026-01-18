@@ -49,11 +49,23 @@ docker compose -f docker/docker-compose.yml down -v
 
 #### Backend (Express + SQLite)
 
-From the repository root:
+From the server root:
 
 ```bash
 npm install
-npm run dev
+```
+
+From the db root:
+```bash
+node init.js
+node seedCitizen.js
+node seedStreets.js
+```
+
+From the server root:
+
+```bash
+node index.js
 ```
 
 The backend listens on **PORT 3001** by default and serves Swagger at `http://localhost:3001/api-docs`.
