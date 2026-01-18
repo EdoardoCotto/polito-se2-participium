@@ -210,17 +210,6 @@ Clicking the title opens the full description with attached photos (if present).
 
 ---
 
-### Statistics
-
-The system provides both **public** and **private** statistics.
-
-#### Public Statistics
-
-(visible also to unregistered users)
-
-- Number of reports by category
-- Trends by day, week, or month
-
 
 ### Interaction with Telegram Bot
 
