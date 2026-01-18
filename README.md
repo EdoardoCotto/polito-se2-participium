@@ -133,7 +133,7 @@ End-to-end tests live under `client/cypress/` (Cypress is installed in `client/`
 | admin_main      |  test1234         | ADMIN                           |
 | ada_lovelace    |  test1234         | TECHNICAL_OFFICER               |
 | pr_officer1     |  test1234         | PUBLIC_RELATIONS_OFFICER        |
-| fixroads_luigi  |  test1234         | EXTERNAL_MAINTAINER_WITH_ACCESS |
+| fixroads_luigi  |  test1234         | EXTERNAL_MAINTAINER             |
 | rosa_bianca     |  test1234         | CITIZEN                         |
 
 
