@@ -115,6 +115,16 @@ End-to-end tests live under `client/cypress/` (Cypress is installed in `client/`
 
 ## Functional overview
 
+### Users credentials
+| Username        | Password          | Role                            |
+| --------------- | ----------------- | ------------------------------- |
+| admin_main      |  test1234         | ADMIN                           |
+| ada_lovelace    |  test1234         | TECHNICAL_OFFICER               |
+| pr_officer1     |  test1234         | PUBLIC_RELATIONS_OFFICER        |
+| fixroads_luigi  |  test1234         | EXTERNAL_MAINTAINER_WITH_ACCESS |
+| rosa_bianca     |  test1234         | CITIZEN                         |
+
+
 ### Reports
 
 Citizens can submit reports **only if they have registered** in the system with:
@@ -211,20 +221,6 @@ The system provides both **public** and **private** statistics.
 - Number of reports by category
 - Trends by day, week, or month
 
-#### Private Statistics
-
-(visible only to administrators, includes public stats + additional data)
-
-- Number of reports by status
-- Number of reports by type
-- Number of reports by type and status
-- Number of reports by reporter
-- Number of reports by reporter and type
-- Number of reports by reporter, type, and status
-- Number of reports by the **top 1% of reporters**, by type
-- Number of reports by the **top 5% of reporters**, by type
-
----
 
 ### Interaction with Telegram Bot
 
