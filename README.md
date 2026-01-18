@@ -202,22 +202,19 @@ To strengthen trust between citizens and institutions, citizens are kept updated
 
 - **Platform notifications** at each status change
 - **Messages** from municipal operators (citizens can reply within the platform)
-- **Email notifications**, sent for every platform notification
+- **Email notifications**, sent to confirm the registration
 
   - Email notifications can be disabled in the user’s configuration panel
   - Citizens can also upload a **personal photo** and their **Telegram username** in this panel
 
-#### Public Visibility
+#### Report Visibility
 
 After approval, accepted reports immediately become visible on the Participium portal. They appear both:
 
 1. **On an interactive map of Turin**, geolocated at the indicated point
-2. **In a summary table**, allowing:
+2. **In a summary table**, allowing to see details for each report
 
-   - Filtering and sorting by category, status, or period
-   - Data export as a **CSV file**
-
-In both views, the reporter’s name is shown (or **“anonymous”** if chosen), along with the report title.
+The reporter’s name is shown (or **“anonymous”** if chosen), along with the report title.
 Clicking the title opens the full description with attached photos (if present).
 
 ---
@@ -229,5 +226,4 @@ Citizens who have provided their **Telegram username** can interact with a **Tel
 
 - Create a new report through a guided process
 - Check the status of their own reports (with updated lists and status changes)
-- Receive **real-time push notifications** when a report changes status
 - Get quick assistance via commands (system usage info and useful contacts)
