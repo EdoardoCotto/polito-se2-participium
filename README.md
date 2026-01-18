@@ -49,20 +49,20 @@ docker compose -f docker/docker-compose.yml down -v
 
 #### Backend (Express + SQLite)
 
-From the server root:
+From the server folder:
 
 ```bash
 npm install
 ```
 
-From the db root:
+From the db folder:
 ```bash
 node init.js
 node seedCitizen.js
 node seedStreets.js
 ```
 
-From the server root:
+From the server folder:
 
 ```bash
 node index.js
